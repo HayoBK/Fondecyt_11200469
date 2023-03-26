@@ -1,0 +1,10 @@
+# created by virtualenv automatically
+.idea/
+
+# dotenv
+.env
+
+# virtualenv
+.venv
+venv/
+ENV/
