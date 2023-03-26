@@ -18,11 +18,17 @@ import seaborn as sns   #Estetica de gráficos
 import matplotlib.pyplot as plt    #Graficos
 import numpy as np
 
+from pathlib import Path
+
+home= str(Path.home()) # Obtener el directorio raiz en cada computador distinto
+Py_Processing_Dir=home+"/OneDrive/2-Casper/00-CurrentResearch/001-FONDECYT_11200469/002-LUCIEN/Py_Processing/"
+
+
 home= str(Path.home()) # Obtener el directorio raiz en cada computador distinto
 BaseDir=home+"/OneDrive/2-Casper/00-CurrentResearch/001-FONDECYT_11200469/002-LUCIEN/SUJETOS/"
 
 # Aqui incluimos un csv de pupil Labs de prueba...
-test_df = pd.read_csv('test_gaze.csv')
+#test_df = pd.read_csv('test_gaze.csv')
 
 def Extract(lst,place):
     return [item[place] for item in lst]
@@ -196,7 +202,7 @@ for Pupil_f in Pupil_files:
         try_df = t_df
         try_df['OW_Trial'] = pd.cut(t_df['gaze_timestamp'],bins).map(dict(zip(bins,trial_labels)))
 #LSL_df['OW_Trial_info'] = LSL_df['OW_Trial'].apply(lambda x: trials.iloc[x])
-        codex = pd.read_excel('AB_OverWatch_Codex.xlsx',index_col=0) # Aqui estoy cargando como DataFrame la lista de códigos que voy a usar, osea, los datos del diccionario. Es super
+        codex = pd.read_excel((Py_Processing_Dir+'AB_OverWatch_Codex.xlsx'),index_col=0) # Aqui estoy cargando como DataFrame la lista de códigos que voy a usar, osea, los datos del diccionario. Es super
 # imporatante el index_col=0 porque determina que la primera columna es el indice del diccionario, el valor que usaremos para guiar los reemplazos.
         Codex_Dict = codex.to_dict('series') # Aqui transformo esa Dataframe en una serie, que podré usar como diccionario
         try_df['MWM_Block'] = try_df['OW_Trial'] # Aqui empieza la magia, creo una nueva columna llamada MWM_Bloque, que es una simple copia de la columna OverWatch_Trial.
@@ -214,7 +220,7 @@ for Pupil_f in Pupil_files:
         try_df['first'] = (try_df.groupby('OW_Trial').cumcount() == 0).astype(int)
         Df_List.append(try_df)
 
-        codex2 = pd.read_excel('AA_CODEX.xlsx', index_col=0)
+        codex2 = pd.read_excel((Py_Processing_Dir+'AA_CODEX.xlsx'), index_col=0)
         Codex_Dict2 = codex2.to_dict('series')
         try_df['Edad'] = try_df['Sujeto']
         try_df['Edad'].replace(Codex_Dict2['Edad'], inplace=True)

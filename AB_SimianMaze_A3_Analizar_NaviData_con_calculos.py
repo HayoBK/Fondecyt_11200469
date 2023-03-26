@@ -10,9 +10,14 @@ import seaborn as sns   #Estetica de gráficos
 import matplotlib.pyplot as plt    #Graficos
 from pathlib import Path
 
-codex_df = pd.read_csv('AB_SimianMaze_Z4_Resumen_Pacientes_Analizados.csv', index_col=0)
-m_df = pd.read_csv('AB_SimianMaze_Z3_NaviDataBreve_con_calculos.csv', index_col=0)
-p_df = pd.read_csv('AB_SimianMaze_Z2_NaviData_con_posicion.csv', index_col=0)
+home= str(Path.home()) # Obtener el directorio raiz en cada computador distinto
+Py_Processing_Dir=home+"/OneDrive/2-Casper/00-CurrentResearch/001-FONDECYT_11200469/002-LUCIEN/Py_Processing/"
+
+
+
+codex_df = pd.read_csv((Py_Processing_Dir+'AB_SimianMaze_Z4_Resumen_Pacientes_Analizados.csv'), index_col=0)
+m_df = pd.read_csv((Py_Processing_Dir+'AB_SimianMaze_Z3_NaviDataBreve_con_calculos.csv'), index_col=0)
+p_df = pd.read_csv((Py_Processing_Dir+'AB_SimianMaze_Z2_NaviData_con_posicion.csv'), index_col=0)
 p_df= p_df.reset_index(drop=True)
     # Invocamos en m_df (main Dataframe) la base de datos "corta" con calculo de CSE por Trial
     # Invocamos en p_df (position Dataframe) la base con tutti cuanti - sobre todo datos posicionales
