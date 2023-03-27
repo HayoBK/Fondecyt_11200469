@@ -27,6 +27,35 @@ Py_Processing_Dir=home+"/OneDrive/2-Casper/00-CurrentResearch/001-FONDECYT_11200
 home= str(Path.home()) # Obtener el directorio raiz en cada computador distinto
 BaseDir=home+"/OneDrive/2-Casper/00-CurrentResearch/001-FONDECYT_11200469/002-LUCIEN/SUJETOS/"
 
+
+Navi_df = pd.read_csv((Py_Processing_Dir+'AB_SimianMaze_Z3_NaviDataBreve_con_calculos.csv'), index_col=0)
+Navi_df = Navi_df.loc[Navi_df['Modalidad']=='No Inmersivo']
+print ('si?')
+def MWM_to_OW_trials (df):
+    OW_t = 100
+    New_column = []
+    for row in df.itertuples():
+        if row.True_Block == 'FreeNav':
+            OW_t = 1
+        elif row.True_Block == 'Training':
+            OW_t = 2
+        elif row.True_Block == 'VisibleTarget_1':
+            OW_t = 2 + row.True_Trial
+        elif row.True_Block == 'VisibleTarget_2':
+            OW_t = 30 + row.True_Trial
+        elif row.True_Block == 'HiddenTarget_1':
+            OW_t = 6 + row.True_Trial
+        elif row.True_Block == 'HiddenTarget_2':
+            OW_t = 14 + row.True_Trial
+        elif row.True_Block == 'HiddenTarget_3':
+            OW_t = 22 + row.True_Trial
+        New_column.append(OW_t)
+    df['OW_trial'] = New_column
+    return df
+
+Navi_df = MWM_to_OW_trials(Navi_df)
+
+print('hello hello')
 # Aqui incluimos un csv de pupil Labs de prueba...
 #test_df = pd.read_csv('test_gaze.csv')
 
@@ -231,6 +260,13 @@ for Pupil_f in Pupil_files:
         try_df.insert(1, 'Grupo', move)
         try_df.rename(columns={'gaze_timestamp' : 'timestamp'}, inplace=True)
         a = try_df.pop('world_timestamp')
+
+        ForCodex3 = Navi_df.loc[Navi_df['Sujeto']==CodigoPxx]
+        ForCodex3 = ForCodex3.set_index('OW_trial')
+        Codex3 = ForCodex3.to_dict('series')
+        try_df['CSE'] = try_df['OW_Trial']
+        try_df['CSE'].replace(Codex3['CSE'],inplace=True)
+
     print('Almost there...', CodigoPxx)
     print('Terminé con ',CodigoPxx)
 
@@ -247,7 +283,10 @@ final_df.loc[(final_df.Main_Block == 'VisibleTarget_2'),'Main_Block']='Target_is
 final_df.loc[(final_df.Main_Block == 'HiddenTarget_1'),'Main_Block']='Target_is_Hidden'
 final_df.loc[(final_df.Main_Block == 'HiddenTarget_2'),'Main_Block']='Target_is_Hidden'
 final_df.loc[(final_df.Main_Block == 'HiddenTarget_3'),'Main_Block']='Target_is_Hidden'
-final_df.to_csv(BaseDir+'AC_PupilLabs_SyncData_Faundez.csv')
+final_df = final_df.loc[final_df['Sujeto']!='P13']
+final_df = final_df.loc[final_df['Sujeto']!='P06']
+
+final_df.to_csv(Py_Processing_Dir+'AC_PupilLabs_SyncData_Faundez.csv')
 #%%
 
 
