@@ -15,10 +15,22 @@ codex2 = pd.read_excel((Py_Processing_Dir+'AA_CODEX.xlsx'), index_col=0)
 Codex_Dict2 = codex2.to_dict('series')
 df['Grupo'] = df.index
 df['Grupo'].replace(Codex_Dict2['Grupo'], inplace=True)
+df['Edad'] = df.index
+df['Edad'].replace(Codex_Dict2['Edad'], inplace=True)
 print('Cargada la base de datos')
+Banish_List =['P13','P06','P18','P30']
+df = df[~df.index.isin(Banish_List)]
 column_names = df.columns.values.tolist()
 
+df2 = df[['Grupo','Edad']].copy()
+print (df2.sort_values(['Grupo', 'Edad'], ascending=[True, True]))
+print(df2.groupby(['Grupo']).mean())
+print(df2.groupby(['Grupo']).size())
+ax= sns.boxplot(data=df2, x= 'Grupo', y='Edad')   # Aqui construimos el grafico.
+plt.show()
+
 sns.set(style= 'white', palette='pastel', font_scale=2,rc={'figure.figsize':(28,12)})
+
 
 for c in column_names:
     if c != 'Grupo':
@@ -26,6 +38,8 @@ for c in column_names:
         plt.show()
         sns.barplot(data=df, x=df.index, y=c, hue='Grupo')
         plt.show()
-
+        sns.scatterplot(data=df, x='Edad', y=c, hue='Grupo',s=95)
+        plt.show()
+        print(df.sort_values(['Grupo', c], ascending=[True, True]))
 
 print('Ready')
