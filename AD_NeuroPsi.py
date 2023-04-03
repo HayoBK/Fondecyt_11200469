@@ -18,28 +18,50 @@ df['Grupo'].replace(Codex_Dict2['Grupo'], inplace=True)
 df['Edad'] = df.index
 df['Edad'].replace(Codex_Dict2['Edad'], inplace=True)
 print('Cargada la base de datos')
-Banish_List =['P13','P06','P18','P30']
+# Empujando hacia arriba! Banish_List =['P13','P06','P18','P20','P19','P26','P30','P25']
+Banish_List =['P13','P30','P34','P02','P07','P15','P10']
+#Ver más abajo reporte de eliminados
+Banish_List=['P06','P18','P19']
+
+b_df = df[df.index.isin(Banish_List)]
+
 df = df[~df.index.isin(Banish_List)]
+df = df.loc[df['MOCA']>22]
 column_names = df.columns.values.tolist()
 
 df2 = df[['Grupo','Edad']].copy()
 print (df2.sort_values(['Grupo', 'Edad'], ascending=[True, True]))
 print(df2.groupby(['Grupo']).mean())
 print(df2.groupby(['Grupo']).size())
+print (df2.sort_values(['Grupo', 'Edad'], ascending=[True, True]))
+
 ax= sns.boxplot(data=df2, x= 'Grupo', y='Edad')   # Aqui construimos el grafico.
 plt.show()
 
-sns.set(style= 'white', palette='pastel', font_scale=2,rc={'figure.figsize':(28,12)})
+df2 = b_df[['Grupo','Edad']].copy()
+print('Estos son los eliminados')
+print (df2.sort_values(['Grupo', 'Edad'], ascending=[True, True]))
+print(df2.groupby(['Grupo']).mean())
+print(df2.groupby(['Grupo']).size())
+print (df2.sort_values(['Grupo', 'Edad'], ascending=[True, True]))
+
+sns.scatterplot(data=df, x='Edad', y='MOCA', hue='Grupo', s=95)
+plt.show()
+
+
+#sns.set(style= 'white', palette='pastel', font_scale=2,rc={'figure.figsize':(28,12)})
 
 
 for c in column_names:
     if c != 'Grupo':
         sns.boxplot(data=df, x='Grupo', y=c)
         plt.show()
-        sns.barplot(data=df, x=df.index, y=c, hue='Grupo')
+        sns.barplot(data=df, x='Grupo', y=c, errorbar='se')
         plt.show()
-        sns.scatterplot(data=df, x='Edad', y=c, hue='Grupo',s=95)
-        plt.show()
+        #sns.barplot(data=df, x=df.index, y=c, hue='Grupo')
+        #plt.show()
+        #sns.scatterplot(data=df, x='Edad', y=c, hue='Grupo',s=95)
+        #plt.show()
         print(df.sort_values(['Grupo', c], ascending=[True, True]))
 
 print('Ready')
