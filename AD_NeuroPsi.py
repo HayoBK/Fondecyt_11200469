@@ -2,6 +2,11 @@ import pandas as pd     #Bilioteca para manejar Base de datos. Es el equivalente
 import seaborn as sns   #Biblioteca para generar graficos con linda Estetica de gráficos
 import matplotlib.pyplot as plt    #Biblioteca para generar Graficos en general
 from pathlib import Path # Una sola función dentro de la Bilioteca Path para encontrar archivos en el disco duro
+import statsmodels.api as sm
+from statsmodels.formula.api import ols
+from statsmodels.stats.multicomp import pairwise_tukeyhsd
+
+
 
 # Aqui vienen una lineas de código solo para encontrar el archivo con la base de datos en el compu:
 home= str(Path.home())
@@ -22,11 +27,15 @@ print('Cargada la base de datos')
 Banish_List =['P13','P30','P34','P02','P07','P15','P10']
 #Ver más abajo reporte de eliminados
 Banish_List=['P06','P18','P19']
+Banish_List=['P06','P26','P36','P17']
 
 b_df = df[df.index.isin(Banish_List)]
 
 df = df[~df.index.isin(Banish_List)]
-df = df.loc[df['MOCA']>22]
+df = df.loc[df['MOCA']>17]
+
+
+#df = df.loc[df['Edad']<64]
 column_names = df.columns.values.tolist()
 
 df2 = df[['Grupo','Edad']].copy()
@@ -51,17 +60,35 @@ plt.show()
 
 #sns.set(style= 'white', palette='pastel', font_scale=2,rc={'figure.figsize':(28,12)})
 
+dummy_cols = pd.get_dummies(df['Grupo'], prefix='group')
+df3 = pd.concat([df, dummy_cols], axis=1)
 
 for c in column_names:
     if c != 'Grupo':
+        X = df3[['Edad', 'group_MPPP', 'group_Vestibular']]
+        y = df3[c]
+        model = sm.OLS(y, X).fit()
+
+        #print(model.summary())
+        df['Var'] = df[c]
+        model = ols('Var ~ Grupo + Edad', data=df).fit()
+        print ('-------')
+        print ('ANALIZANDO = ** ',c)
+        print(sm.stats.anova_lm(model, typ=2))
+        posthoc = pairwise_tukeyhsd(df[c], df['Grupo'])
+        print(posthoc)
+
+
+        sns.scatterplot(data=df, x='Edad', y=c, hue='Grupo', s=95)
+        plt.show()
         sns.boxplot(data=df, x='Grupo', y=c)
         plt.show()
-        sns.barplot(data=df, x='Grupo', y=c, errorbar='se')
-        plt.show()
+        #sns.barplot(data=df, x='Grupo', y=c, errorbar='se')
+        #plt.show()
         #sns.barplot(data=df, x=df.index, y=c, hue='Grupo')
         #plt.show()
         #sns.scatterplot(data=df, x='Edad', y=c, hue='Grupo',s=95)
         #plt.show()
-        print(df.sort_values(['Grupo', c], ascending=[True, True]))
+        show_df = df.sort_values(['Grupo', c], ascending=[True, True])
 
 print('Ready')
