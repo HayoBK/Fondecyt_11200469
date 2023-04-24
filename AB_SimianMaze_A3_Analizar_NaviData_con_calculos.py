@@ -157,20 +157,31 @@ sns.set(style='white', palette='pastel', font_scale=2, rc={'figure.figsize': (12
 # Mapa de Calor
 #-------------------------------------------------------------------------------
 #%%
-def MapaDeCalor(dat,Grupo,Column,Condition,Titulo):
-    show_df = dat.loc[dat[Column] == Condition]
-    show_df = show_df.loc[show_df['Grupo']==Grupo]
+
+ax =sns.boxplot(data=posNI_df, y='P_position_x')
+plt.show()
+
+def MapaDeCalor(dat,Titulo):
+
     show_df.reset_index()
     sns.set_context("paper", font_scale = 2, rc={"font.size":20,"axes.titlesize":20,"axes.labelsize":18})
     ax = sns.kdeplot(data=show_df, x='P_position_x', y='P_position_y', cmap='coolwarm', n_levels=50, shade=True, shade_lowest=True, cbar=True)
-    ax.set(ylim=(0, 1), xlim=(0, 1), aspect=1)
+    ax.set(ylim=(-0,535, 0,535), xlim=(-0,535, ), aspect=1)
     ax.tick_params(labelsize=13)
     ax.figure.set_size_inches(7,7)
     ax.set_title(Titulo)
+    circle = plt.Circle((0, 0), 0.5, color='b', fill=False)
+    ax.add_artist(circle)
+
     plt.savefig(BaseDir + '030_'+Titulo+'.png')
     plt.show()
 
-MapaDeCalor(posNI_df,'Vestibular','Main_Block','Target_is_Hidden','Mapa de Calor_Voluntarios Sanos_Target Oculto')
+show_df = posNI_df.loc[posNI_df['Sujeto']=='P06']
+show_df = show_df.loc[show_df['True_Block']=='HiddenTarget_2']
+
+
+MapaDeCalor(show_df,'Mapa de Calor_Voluntarios Sanos_Target Oculto')
+
 
 #%%
 # Tesis Rosario
