@@ -9,7 +9,6 @@ import numpy as np
 import seaborn as sns   #Estetica de gráficos
 import matplotlib.pyplot as plt    #Graficos
 from pathlib import Path
-
 home= str(Path.home()) # Obtener el directorio raiz en cada computador distinto
 Py_Processing_Dir=home+"/OneDrive/2-Casper/00-CurrentResearch/001-FONDECYT_11200469/002-LUCIEN/Py_Processing/"
 
@@ -24,6 +23,7 @@ p_df= p_df.reset_index(drop=True)
 
 home= str(Path.home()) # Obtener el directorio raiz en cada computador distinto
 BaseDir=home+"/OneDrive/2-Casper/00-CurrentResearch/001-FONDECYT_11200469/002-LUCIEN/Outputs/MorrisWMz/"
+SavePlotDir = home+"/OneDrive/2-Casper/00-CurrentResearch/001-FONDECYT_11200469/002-LUCIEN/Outputs/FINO/"
 sns.set_palette('pastel')
 pal = sns.color_palette(n_colors=3)
 pal = pal.as_hex()
@@ -157,30 +157,46 @@ sns.set(style='white', palette='pastel', font_scale=2, rc={'figure.figsize': (12
 # Mapa de Calor
 #-------------------------------------------------------------------------------
 #%%
+# MAPAS DE CALOR DEF
 
-ax =sns.boxplot(data=posNI_df, y='P_position_x')
-plt.show()
 
-def MapaDeCalor(dat,Titulo):
+def MapaDeCalor(dat,num,Titulo):
+    colores = sns.color_palette('coolwarm',n_colors=100)
+    dat.reset_index()
+    sns.set_style("ticks")
+    sns.set(style='ticks',rc={"axes.facecolor":colores[0]},font_scale=1.5)
+    ax = sns.kdeplot(data=dat, x='P_position_x', y='P_position_y', cmap='coolwarm', n_levels=100, thresh=0, fill=True, cbar=True)
 
-    show_df.reset_index()
-    sns.set_context("paper", font_scale = 2, rc={"font.size":20,"axes.titlesize":20,"axes.labelsize":18})
-    ax = sns.kdeplot(data=show_df, x='P_position_x', y='P_position_y', cmap='coolwarm', n_levels=50, shade=True, shade_lowest=True, cbar=True)
-    ax.set(ylim=(-0,535, 0,535), xlim=(-0,535, ), aspect=1)
+    sns.set_context(font_scale=3)
+    ax.set(ylim=(-0.535, 0.535), xlim=(-0.535, 0.535), aspect=1)
     ax.tick_params(labelsize=13)
-    ax.figure.set_size_inches(7,7)
-    ax.set_title(Titulo)
-    circle = plt.Circle((0, 0), 0.5, color='b', fill=False)
+    ax.set_title(Titulo, fontsize=22)
+    circle = plt.Circle((0, 0), 0.5, color='w',linewidth= 2, fill=False)
     ax.add_artist(circle)
+    ax.set(xlabel='East-West (virtual units in Pool-Diameters)', ylabel='North-South (virtual units in Pool-Diameters)')
+    plt.xlabel('East-West (virtual units in Pool-Diameters)', fontsize=18)
+    plt.ylabel('North-South (virtual units in Pool-Diameters)', fontsize=18)
+    ax.figure.set_size_inches(10, 10)
+    #plt.grid(False)
+    plt.xticks(np.arange(-0.5, 0.75, 0.25))
+    plt.yticks(np.arange(-0.5, 0.75, 0.25))
 
-    plt.savefig(BaseDir + '030_'+Titulo+'.png')
+    PSize = (100 / 560)
+    rectA = plt.Rectangle(
+        (show_df['platformPosition_x'].iloc[0] - (PSize / 2), show_df['platformPosition_y'].iloc[0] - (PSize / 2)),
+        PSize, PSize, linewidth=2.5, edgecolor='yellow',linestyle='--',
+        facecolor='none')
+
+    ax.add_artist(rectA)
+    plt.savefig(SavePlotDir + num +Titulo+'.png')
+
     plt.show()
 
 show_df = posNI_df.loc[posNI_df['Sujeto']=='P06']
 show_df = show_df.loc[show_df['True_Block']=='HiddenTarget_2']
 
 
-MapaDeCalor(show_df,'Mapa de Calor_Voluntarios Sanos_Target Oculto')
+MapaDeCalor(show_df,'test', 'Paciente06')
 
 
 #%%
