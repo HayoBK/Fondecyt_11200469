@@ -21,6 +21,9 @@ p_df= p_df.reset_index(drop=True)
     # Invocamos en m_df (main Dataframe) la base de datos "corta" con calculo de CSE por Trial
     # Invocamos en p_df (position Dataframe) la base con tutti cuanti - sobre todo datos posicionales
 
+
+
+
 home= str(Path.home()) # Obtener el directorio raiz en cada computador distinto
 BaseDir=home+"/OneDrive/2-Casper/00-CurrentResearch/001-FONDECYT_11200469/002-LUCIEN/Outputs/MorrisWMz/"
 SavePlotDir = home+"/OneDrive/2-Casper/00-CurrentResearch/001-FONDECYT_11200469/002-LUCIEN/Outputs/FINO/"
@@ -192,38 +195,43 @@ def MapaDeCalor(dat,num,Titulo):
 
     plt.show()
 
-BanishList=['P01','P03', 'P05', 'P24', 'P35']
-BanishList=['P01','P03', 'P05', 'P07', 'P12', 'P23', 'P24', 'P25', 'P35', 'P30']
+BanishList=['P01','P03', 'P05', 'P24', 'P30','P35']
+#BanishList=['P01','P03', 'P05', 'P07', 'P12', 'P23', 'P24', 'P25', 'P35', 'P30']
 
-pre_df = posNI_df.loc[posNI_df['True_Block']=='HiddenTarget_3']
+pre_df = posNI_df.loc[posNI_df['True_Block']=='HiddenTarget_1']
 pre_df = pre_df[~pre_df['Sujeto'].isin(BanishList)]
 show_df = pre_df.loc[pre_df['Grupo']=='MPPP']
-MapaDeCalor(show_df,'FINO-NI', 'MPPP')
+MapaDeCalor(show_df,'1FINO-NI', 'MPPP')
 show_df = pre_df.loc[pre_df['Grupo']=='Vestibular']
-MapaDeCalor(show_df,'FINO-NI', 'Vestibular (no-MPPP)')
+MapaDeCalor(show_df,'1FINO-NI', 'Vestibular (no-MPPP)')
 show_df = pre_df.loc[pre_df['Grupo']=='Voluntario Sano']
-MapaDeCalor(show_df,'FINO-NI', 'Voluntario Sano')
+MapaDeCalor(show_df,'1FINO-NI', 'Voluntario Sano')
 
 
-pre_df = posRV_df.loc[posRV_df['True_Block']=='HiddenTarget_3']
+pre_df = posRV_df.loc[posRV_df['True_Block']=='HiddenTarget_1']
 pre_df = pre_df[~pre_df['Sujeto'].isin(BanishList)]
 show_df = pre_df.loc[pre_df['Grupo']=='MPPP']
-MapaDeCalor(show_df,'FINO-RV', 'MPPP')
+MapaDeCalor(show_df,'1FINO-RV', 'MPPP')
 show_df = pre_df.loc[pre_df['Grupo']=='Vestibular']
-MapaDeCalor(show_df,'FINO-RV', 'Vestibular (no-MPPP)')
+MapaDeCalor(show_df,'1FINO-RV', 'Vestibular (no-MPPP)')
 show_df = pre_df.loc[pre_df['Grupo']=='Voluntario Sano']
-MapaDeCalor(show_df,'FINO-RV', 'Voluntario Sano')
+MapaDeCalor(show_df,'1FINO-RV', 'Voluntario Sano')
 
 
-sns.set(style= 'white', palette='pastel',font_scale=4, rc={'figure.figsize':(21,12)})
 #%%
 show_df= r_df[~r_df['Sujeto'].isin(BanishList)]
-show_df = show_df.loc[show_df['True_Block']=='HiddenTarget_3']
-ax=sns.boxplot(data=show_df, x='Modalidad', y='CSE',ylabel='Error acumulado de búsqueda/Navegación', xlabel='Modalidad de la prueba de Navegación',hue='Grupo',order=Mi_Orden).set(title=('Error Acumulado en Navegación'))
+show_df = show_df.loc[show_df['True_Block']=='HiddenTarget_1']
+sns.set(style= 'white', palette='pastel', font_scale=2.5,rc={'figure.figsize':(18,12)})
+
+ax=sns.boxplot(data=show_df, x='Modalidad', y='CSE',hue='Grupo',hue_order=Mi_Orden).set(title=('Error Acumulado en Navegación'))
 #sns.set(ylabel='Error acumulado de búsqueda/Navegación')
 #ax.set(xlabel='Modalidad de la prueba de Navegación')
+plt.legend(loc='center left', bbox_to_anchor=(1, 0.5))
 
-plt.savefig(SavePlotDir + 'FINO-resumen.png')
+plt.ylim(0,300)
+plt.xlabel('Modalidad')
+plt.ylabel('Error acumulado de búsqueda')
+plt.savefig(SavePlotDir + '1FINO-resumen.png', bbox_inches='tight')
 plt.show()
 
 #%%

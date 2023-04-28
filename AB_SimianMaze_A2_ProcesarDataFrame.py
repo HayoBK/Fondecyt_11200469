@@ -3,11 +3,12 @@
 # Fondecyt 11200469
 # Hayo Breinbauer
 # ---------------------------------------------------------
-
+#%%
 import pandas as pd     #Base de datos
 import numpy as np
 import matplotlib.pyplot as plt    #Graficos
 import seaborn as sns   #Estetica de gráficos
+import math
 pd.options.mode.chained_assignment = None  # default='warn'
 
 from pathlib import Path
@@ -19,6 +20,34 @@ Py_Processing_Dir=home+"/OneDrive/2-Casper/00-CurrentResearch/001-FONDECYT_11200
 m_df = pd.read_csv((Py_Processing_Dir+'AB_SimianMaze_Z1_RawMotion.csv'), index_col=0)
 m_df.rename(columns = {'platformPosition.x':'platformPosition_x', 'platformPosition.y':'platformPosition_y'}, inplace = True)
 m_df = m_df[m_df.True_Trial < 8] #Aqui eliminamos esos primeros sujetos en que hicimios demasiados trials por bloques
+#%%
+def DEL_POSZERO(data): # ELiminamos todos los primeros momentos muertos antes que el sujeto empiece a moverse...
+    Ban=[]
+    First=0
+    Moving=False
+    x1=0
+    y1=0
+    for row in data.itertuples():
+        if row.Trial_Unique_ID != First:
+            Moving=False
+            First=row.Trial_Unique_ID
+            x1=row.P_position_x
+            y1=row.P_position_y
+        Distance = math.sqrt((row.P_position_x - x1)**2 + (row.P_position_y - y1)**2)
+        if Distance > 0.05:
+            Moving=True
+        if Moving==False:
+            Ban.append('1')
+        if Moving==True:
+            Ban.append('0')
+    data['to_Ban']=Ban
+    data = data.loc[data['to_Ban']=='0']
+    data = data.drop('to_Ban', axis=1)
+    return data
+
+
+m_df = DEL_POSZERO(m_df)
+
 for col in m_df.columns:
     print(col)
 FirstRow=True
