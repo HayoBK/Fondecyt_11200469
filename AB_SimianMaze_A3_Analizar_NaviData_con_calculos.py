@@ -192,12 +192,39 @@ def MapaDeCalor(dat,num,Titulo):
 
     plt.show()
 
-show_df = posNI_df.loc[posNI_df['Sujeto']=='P06']
-show_df = show_df.loc[show_df['True_Block']=='HiddenTarget_2']
+BanishList=['P01','P03', 'P05', 'P24', 'P35']
+BanishList=['P01','P03', 'P05', 'P07', 'P12', 'P23', 'P24', 'P25', 'P35', 'P30']
+
+pre_df = posNI_df.loc[posNI_df['True_Block']=='HiddenTarget_3']
+pre_df = pre_df[~pre_df['Sujeto'].isin(BanishList)]
+show_df = pre_df.loc[pre_df['Grupo']=='MPPP']
+MapaDeCalor(show_df,'FINO-NI', 'MPPP')
+show_df = pre_df.loc[pre_df['Grupo']=='Vestibular']
+MapaDeCalor(show_df,'FINO-NI', 'Vestibular (no-MPPP)')
+show_df = pre_df.loc[pre_df['Grupo']=='Voluntario Sano']
+MapaDeCalor(show_df,'FINO-NI', 'Voluntario Sano')
 
 
-MapaDeCalor(show_df,'test', 'Paciente06')
+pre_df = posRV_df.loc[posRV_df['True_Block']=='HiddenTarget_3']
+pre_df = pre_df[~pre_df['Sujeto'].isin(BanishList)]
+show_df = pre_df.loc[pre_df['Grupo']=='MPPP']
+MapaDeCalor(show_df,'FINO-RV', 'MPPP')
+show_df = pre_df.loc[pre_df['Grupo']=='Vestibular']
+MapaDeCalor(show_df,'FINO-RV', 'Vestibular (no-MPPP)')
+show_df = pre_df.loc[pre_df['Grupo']=='Voluntario Sano']
+MapaDeCalor(show_df,'FINO-RV', 'Voluntario Sano')
 
+
+sns.set(style= 'white', palette='pastel',font_scale=4, rc={'figure.figsize':(21,12)})
+#%%
+show_df= r_df[~r_df['Sujeto'].isin(BanishList)]
+show_df = show_df.loc[show_df['True_Block']=='HiddenTarget_3']
+ax=sns.boxplot(data=show_df, x='Modalidad', y='CSE',ylabel='Error acumulado de búsqueda/Navegación', xlabel='Modalidad de la prueba de Navegación',hue='Grupo',order=Mi_Orden).set(title=('Error Acumulado en Navegación'))
+#sns.set(ylabel='Error acumulado de búsqueda/Navegación')
+#ax.set(xlabel='Modalidad de la prueba de Navegación')
+
+plt.savefig(SavePlotDir + 'FINO-resumen.png')
+plt.show()
 
 #%%
 # Tesis Rosario
