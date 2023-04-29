@@ -198,29 +198,29 @@ def MapaDeCalor(dat,num,Titulo):
 BanishList=['P01','P03', 'P05', 'P24', 'P30','P35']
 #BanishList=['P01','P03', 'P05', 'P07', 'P12', 'P23', 'P24', 'P25', 'P35', 'P30']
 
-pre_df = posNI_df.loc[posNI_df['True_Block']=='HiddenTarget_1']
+pre_df = posNI_df.loc[posNI_df['True_Block']=='HiddenTarget_3']
 pre_df = pre_df[~pre_df['Sujeto'].isin(BanishList)]
 show_df = pre_df.loc[pre_df['Grupo']=='MPPP']
-MapaDeCalor(show_df,'1FINO-NI', 'MPPP')
+MapaDeCalor(show_df,'5FINO-NI', 'MPPP')
 show_df = pre_df.loc[pre_df['Grupo']=='Vestibular']
-MapaDeCalor(show_df,'1FINO-NI', 'Vestibular (no-MPPP)')
+MapaDeCalor(show_df,'5FINO-NI', 'Vestibular (no-MPPP)')
 show_df = pre_df.loc[pre_df['Grupo']=='Voluntario Sano']
-MapaDeCalor(show_df,'1FINO-NI', 'Voluntario Sano')
+MapaDeCalor(show_df,'5FINO-NI', 'Voluntario Sano')
 
 
-pre_df = posRV_df.loc[posRV_df['True_Block']=='HiddenTarget_1']
+pre_df = posRV_df.loc[posRV_df['True_Block']=='HiddenTarget_3']
 pre_df = pre_df[~pre_df['Sujeto'].isin(BanishList)]
 show_df = pre_df.loc[pre_df['Grupo']=='MPPP']
-MapaDeCalor(show_df,'1FINO-RV', 'MPPP')
+MapaDeCalor(show_df,'5FINO-RV', 'MPPP')
 show_df = pre_df.loc[pre_df['Grupo']=='Vestibular']
-MapaDeCalor(show_df,'1FINO-RV', 'Vestibular (no-MPPP)')
+MapaDeCalor(show_df,'5FINO-RV', 'Vestibular (no-MPPP)')
 show_df = pre_df.loc[pre_df['Grupo']=='Voluntario Sano']
-MapaDeCalor(show_df,'1FINO-RV', 'Voluntario Sano')
+MapaDeCalor(show_df,'5FINO-RV', 'Voluntario Sano')
 
 
 #%%
 show_df= r_df[~r_df['Sujeto'].isin(BanishList)]
-show_df = show_df.loc[show_df['True_Block']=='HiddenTarget_1']
+show_df = show_df.loc[show_df['True_Block']=='HiddenTarget_2']
 sns.set(style= 'white', palette='pastel', font_scale=2.5,rc={'figure.figsize':(18,12)})
 
 ax=sns.boxplot(data=show_df, x='Modalidad', y='CSE',hue='Grupo',hue_order=Mi_Orden).set(title=('Error Acumulado en Navegación'))
@@ -231,7 +231,7 @@ plt.legend(loc='center left', bbox_to_anchor=(1, 0.5))
 plt.ylim(0,300)
 plt.xlabel('Modalidad')
 plt.ylabel('Error acumulado de búsqueda')
-plt.savefig(SavePlotDir + '1FINO-resumen.png', bbox_inches='tight')
+plt.savefig(SavePlotDir + '4FINO-resumen.png', bbox_inches='tight')
 plt.show()
 
 #%%

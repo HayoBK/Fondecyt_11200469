@@ -34,7 +34,7 @@ def DEL_POSZERO(data): # ELiminamos todos los primeros momentos muertos antes qu
             x1=row.P_position_x
             y1=row.P_position_y
         Distance = math.sqrt((row.P_position_x - x1)**2 + (row.P_position_y - y1)**2)
-        if Distance > 0.05:
+        if Distance > 0.075:
             Moving=True
         if Moving==False:
             Ban.append('1')
