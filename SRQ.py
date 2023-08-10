@@ -11,9 +11,13 @@ import pandas as pd     #Base de datos
 import numpy as np      # Libreria de calculos científicos
 import seaborn as sns   #Estetica de gráficos
 import matplotlib.pyplot as plt    #Graficos
+from pathlib import Path # Una sola función dentro de la Bilioteca Path para encontrar archivos en el disco duro
 
 
-data = pd.read_csv('SRQ.csv', index_col=0)
+home= str(Path.home())
+Fenrir_Processing_Dir=home+"/OneDrive/2-Casper/00-CurrentResearch/001-FONDECYT_11200469/006-Writing/04 - Paper Fondecyt 1/DataFrames/"
+file = Fenrir_Processing_Dir+'SRQ.csv'
+data = pd.read_csv(file,sep=';', index_col=0)
 
     # Aqui leo el CSV que descargué de Google Forms. Ojo que le cambié el nombre para dejar marcada
     # la fecha en que lo bajé.
@@ -81,7 +85,7 @@ for index, row in data.iterrows():
 
 data['Col'] = HedonicCategoria #Añadimos la lista HedonicCategoria como columna a los datos
 Col = data.pop('Col') #Sacamos la nueva columna y....
-data.insert(1,"Categoria Hedónico",Col) #La ponemos en el lugar 1, que es en realidad el segundo lugar... la primera columna es siempre la columna 0
+#data.insert(1,"Categoria Hedónico",Col) #La ponemos en el lugar 1, que es en realidad el segundo lugar... la primera columna es siempre la columna 0
 
 # Y repetimos...
 data['Col'] = HedonicResults
@@ -90,12 +94,12 @@ data.insert(1,"Puntaje Hedónico",Col)
 
 data['Col'] = AversiveCategoria
 Col = data.pop('Col')
-data.insert(1,"Categoria Aversivo", Col)
+#data.insert(1,"Categoria Aversivo", Col)
 
 data['Col'] = AversiveResults
 Col = data.pop('Col')
 data.insert(1,"Puntaje Aversivo", Col)
-
-data.to_excel('Puntajes SQR Calculados.xlsx')
+data = data.iloc[:, :3]
+data.to_excel(Fenrir_Processing_Dir+'SRQ_c.xlsx')
 
 print(data)

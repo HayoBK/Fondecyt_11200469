@@ -62,7 +62,54 @@ df_N=df_N[['Edinburgo']]
 
 df_merged = pd.merge(df_merged,df_N,left_index=True,right_index=True, how='left')
 
+#Niigata
+file =Fenrir_Processing_Dir+'NIIGATA.csv'
+df_N = pd.read_csv(file,sep=';',index_col=1) #sep es porque un csv procesado en NUMBERS de MAC usa ; en vez de , como separador
+del df_N[df_N.columns[0]]
+
+df_N['Niigata'] = df_N.sum(axis=1)
+df_N=df_N[['Niigata']]
+df_merged = pd.merge(df_merged,df_N,left_index=True,right_index=True, how='left')
+
+#STAI_A
+file =Fenrir_Processing_Dir+'STAI_A.csv'
+df_N = pd.read_csv(file,sep=';',index_col=1) #sep es porque un csv procesado en NUMBERS de MAC usa ; en vez de , como separador
+del df_N[df_N.columns[0]]
+df_N = df_N.applymap(keep_first_letter)
+df_N = df_N.apply(pd.to_numeric, errors='coerce')
+df_N['STAI_Rasgo'] = df_N.sum(axis=1)
+df_N=df_N[['STAI_Rasgo']]
+df_merged = pd.merge(df_merged,df_N,left_index=True,right_index=True, how='left')
+
+#STAI_E
+file =Fenrir_Processing_Dir+'STAI_E.csv'
+df_N = pd.read_csv(file,sep=';',index_col=1) #sep es porque un csv procesado en NUMBERS de MAC usa ; en vez de , como separador
+del df_N[df_N.columns[2]]
+del df_N[df_N.columns[0]]
+df_N = df_N.applymap(keep_first_letter)
+df_N = df_N.apply(pd.to_numeric, errors='coerce')
+df_N['STAI_Estado'] = df_N.sum(axis=1)
+df_N=df_N[['STAI_Estado']]
+df_merged = pd.merge(df_merged,df_N,left_index=True,right_index=True, how='left')
 
 
+# Neurocognitivo
+file =Fenrir_Processing_Dir+'NeuroCognitivo.xlsx'
+df_N = pd.read_excel(file,index_col=0)
+df_merged = pd.merge(df_merged,df_N,left_index=True,right_index=True, how='left')
 
+# Vestibular
+file =Fenrir_Processing_Dir+'VEST.xlsx'
+df_N = pd.read_excel(file,index_col=0)
+df_N = df_N.applymap(keep_first_letter)
+df_N = df_N.apply(pd.to_numeric, errors='coerce')
+df_merged = pd.merge(df_merged,df_N,left_index=True,right_index=True, how='left')
+
+# SRQ
+file =Fenrir_Processing_Dir+'SRQ_c.xlsx'
+df_N = pd.read_excel(file,index_col=1)
+del df_N[df_N.columns[0]]
+df_merged = pd.merge(df_merged,df_N,left_index=True,right_index=True, how='left')
+
+df.to_csv((Py_Processing_Dir + 'FENRIR_CODEX.csv'))
 print('Done')
