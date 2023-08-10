@@ -70,8 +70,9 @@ def PathGraph(data, Subj, Mod, Bloc, Titulo):
     Title = Titulo + '_' + Subj + '_' + Mod + '_' + Bloc
 
     show_df = data.loc[(data['Sujeto'] == Subj) & (data['Modalidad'] == Mod) & (data['True_Block'] == Bloc)]
-
+    Grupo = 'NaN'
     if len(show_df) > 0:
+        Grupo = show_df['Grupo'].iloc[0]
         unique_count = show_df['True_Trial'].nunique()
         if unique_count > 1:
             ax = sns.lineplot(x="P_position_x", y="P_position_y", hue="True_Trial", data=show_df, linewidth=3, alpha=0.8,
@@ -81,7 +82,7 @@ def PathGraph(data, Subj, Mod, Bloc, Titulo):
                               alpha=0.8,
                               legend='full', sort=False)  #
         sns.set_context("paper", rc={"font.size": 20, "axes.titlesize": 20, "axes.labelsize": 18})
-        sns.set_style('whitegrid')
+        #sns.set_style('whitegrid')
         circle = plt.Circle((0, 0), 0.5, color='b', fill=False)
         ax.add_artist(circle)
         ax.set(ylim=(-0.535, 0.535), xlim=(-0.535, 0.535),
@@ -104,13 +105,21 @@ def PathGraph(data, Subj, Mod, Bloc, Titulo):
                 facecolor='none')
 
             ax.add_artist(rectA)
-
-        directory_path = Output_Dir + 'PathGraph/'+Subj+'/'
+        # por Paciente
+        directory_path = Output_Dir + 'PathGraph/Por_Sujeto/'+Subj+'/'
         if not os.path.exists(directory_path):
             os.makedirs(directory_path)
-        plt.savefig(Output_Dir + 'PathGraph/'+Subj+'/'+Title + '.png')
-        #plt.show()
+        plt.savefig(Output_Dir + 'PathGraph/Por_Sujeto/'+Subj+'/'+Title + '.png')
 
+        # por Bloque
+        Title = str(Bloc) + '_' + str(Mod) + '_' + str(Grupo) + '_' + str(Subj)
+        directory_path = Output_Dir + 'PathGraph/Por_Bloques/' + Bloc + '/'
+        if not os.path.exists(directory_path):
+            os.makedirs(directory_path)
+        plt.savefig(Output_Dir + 'PathGraph/Por_Bloques/' + Bloc + '/' + Title + '.png')
+
+        #plt.show()
+        plt.clf()
         print('Path Graph '+Title+' Listo')
 
 
