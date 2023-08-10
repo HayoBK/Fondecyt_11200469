@@ -110,6 +110,7 @@ def PathGraph(data, Subj, Mod, Bloc, Titulo):
             os.makedirs(directory_path)
         plt.savefig(Output_Dir + 'PathGraph/'+Subj+'/'+Title + '.png')
         #plt.show()
+
         print('Path Graph '+Title+' Listo')
 
 
