@@ -111,5 +111,5 @@ df_N = pd.read_excel(file,index_col=1)
 del df_N[df_N.columns[0]]
 df_merged = pd.merge(df_merged,df_N,left_index=True,right_index=True, how='left')
 
-df.to_csv((Py_Processing_Dir + 'FENRIR_CODEX.csv'))
+df_merged.to_excel((Py_Processing_Dir + 'FENRIR_CODEX.xlsx'))
 print('Done')
