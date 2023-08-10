@@ -12,6 +12,7 @@ file = Py_Processing_Dir+'AA_CODEX.xlsx'
 df = pd.read_excel(file, index_col=0) #Aqui cargamos tu base de datos en la variable "df"
 df = df[['Grupo','Edad']].copy()
 Banish_List =['P13','P06','P18','P19','P20','P30']
+Banish_List =[]
 df = df[~df.index.isin(Banish_List)]
 df = df.dropna()
 df = df[df.index.notnull()]
