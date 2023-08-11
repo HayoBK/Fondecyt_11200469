@@ -38,9 +38,10 @@ df_CSE = m_df.merge(f_df, on='Sujeto', how='left',suffixes=('', '_f'))
 df_Pos = p_df.merge(f_df, on='Sujeto', how='left',suffixes=('', '_f'))
 df_Small = f_df
 
+Group_List = ['MPPP', 'Vestibular', 'Voluntario Sano']
 Mod_List=['No Inmersivo','Realidad Virtual']
 Block_List = ['FreeNav','Training','VisibleTarget_1','VisibleTarget_2','HiddenTarget_1','HiddenTarget_2','HiddenTarget_3']
-
+Subj_List = df_Small['Sujeto'].to_list()
 #--------------------------------------------------------------------------------------------------------------------
 #   PREPARAR ESTÉTICA EN SEABORN
 #--------------------------------------------------------------------------------------------------------------------
@@ -81,6 +82,10 @@ def PathGraph(data, Subj, Mod, Bloc, Titulo):
             ax = sns.lineplot(x="P_position_x", y="P_position_y", hue="True_Trial", data=show_df, linewidth=3,
                               alpha=0.8,
                               legend='full', sort=False)  #
+        first_datapoints = show_df.groupby('True_Trial')['P_position_x','P_position_y'].first().reset_index()
+        for index, row in first_datapoints.iterrows():
+            circle = plt.Circle((row['P_position_x'],row['P_position_y']),0.01,color='darkblue',fill=True)
+            ax.add_artist(circle)
         sns.set_context("paper", rc={"font.size": 20, "axes.titlesize": 20, "axes.labelsize": 18})
         #sns.set_style('whitegrid')
         circle = plt.Circle((0, 0), 0.5, color='b', fill=False)
@@ -101,7 +106,7 @@ def PathGraph(data, Subj, Mod, Bloc, Titulo):
             PSize = (100 / 560)
             rectA = plt.Rectangle(
                 (show_df['platformPosition_x'].iloc[0] - (PSize / 2), show_df['platformPosition_y'].iloc[0] - (PSize / 2)),
-                PSize, PSize, linewidth=1, edgecolor='b',
+                PSize, PSize, linewidth=2, edgecolor='b',
                 facecolor='none')
 
             ax.add_artist(rectA)
@@ -128,7 +133,8 @@ def PathGraph(data, Subj, Mod, Bloc, Titulo):
 #   Correr los análisis propiamente tal.
 #--------------------------------------------------------------------------------------------------------------------
 
-PathGraph(df_Pos, 'P06', 'No Inmersivo', 'HiddenTarget_1', 'Test')
+#%%
+# Hacer GraphPaths para todos los sujetos, todos los trials
 
 for index, value in df_Small['Sujeto'].iteritems():
     i=0
@@ -136,6 +142,56 @@ for index, value in df_Small['Sujeto'].iteritems():
         for B in Block_List:
             i+=1
             PathGraph(df_Pos, value, M, B, ('Fig_'+str(i)))
+print('Todos los Path Graphs, listos')
+#--------------------------------------------------------------------------------------------------------------------
+
+#%%
+# Revisar los puntos de CSE de algunos trials en particular para identificar outliers.
+data = df_CSE
+selection = ['VisibleTarget_1','VisibleTarget_2']
+data = data[data['True_Block'].isin(selection)]
+
+ax= sns.scatterplot(data, x='Sujeto', y='CSE', hue = 'True_Trial')
+plt.show()
+#--------------------------------------------------------------------------------------------------------------------
+#%%
+# Hacer un resumen de CSE global por Bloque
+for B in Block_List:
+    for M in Mod_List:
+        for G in Group_List:
+            data = df_CSE.loc[(df_CSE['True_Block']==B) & (df_CSE['Grupo']==G) & (df_CSE['Modalidad']==M)]
+            Title = B + '_'+M+'_' + G
+            ax = sns.barplot(data = data, x='Sujeto', y = 'CSE')
+            ax.set(ylim = (0,400),title=Title)
+            directory_path = Output_Dir + 'CSE_summary/Por_Bloques/' + B + '/'
+            if not os.path.exists(directory_path):
+                os.makedirs(directory_path)
+            plt.savefig(directory_path + Title + '.png')
+            plt.clf()
+
+print('Ready')
+
+#--------------------------------------------------------------------------------------------------------------------
+#%%
+# Hacer un resumen de CSE global por Trial!
+for B in Block_List:
+    for M in Mod_List:
+        for S in Subj_List:
+            data = df_CSE.loc[(df_CSE['True_Block']==B) & (df_CSE['Sujeto']==S) & (df_CSE['Modalidad']==M)]
+            if len(data) > 0:
+                Title = S + '_' + M + '_' + B + str(data['Grupo'].iloc[0])
+
+                print(B,M,S,Title)
+                ax = sns.barplot(data = data, x='True_Trial', y = 'CSE', hue='Trial_Unique_ID')
+                ax.set(ylim = (0,400),title=Title)
+                directory_path = Output_Dir + 'CSE_summary/Por_Trial/' + S + '/'
+                if not os.path.exists(directory_path):
+                   os.makedirs(directory_path)
+                plt.savefig(directory_path + Title + '.png')
+                plt.clf()
+
+print('We are Ready!!!!')
+
 
 #--------------------------------------------------------------------------------------------------------------------
 #   End of File

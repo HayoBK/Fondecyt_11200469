@@ -123,6 +123,15 @@ Banish_List.extend([30009,30010,30011,30400,31007,30608,31101,31302,30501,30802,
 #a_partir de P40 a P49 - 10 de agosto
 Banish_List.extend([38912,39406,39700,42604,43400,43801,44000,45700,48200,48003,48104])
 
+#Aqui vamos a limpiar los Trials conde NaviVissible tengan un error
+for row in short_df.itertuples():
+    if ((row.True_Block == 'VisibleTarget_1') or (row.True_Block == 'VisibleTarget_2')) and (row.CSE > 33):
+        Banish_List.extend([row.Trial_Unique_ID])
+
+
+
+
+
 # Aqui vamos a hacer una lista de los trials que eliminamos.
 Banished_short_df = short_df[short_df['Trial_Unique_ID'].isin(Banish_List)]
 Banished_short_df.to_excel(Py_Processing_Dir+'AB_SimianMaze_Z2_Banished_NaviData.xlsx')
@@ -179,6 +188,8 @@ for row in e_df.itertuples():
         plt.show()
         print('check')
 print('¿Hubo conflicto? --> ',Conflict)
+
+
 
 #-------------------------------------------------------------------------------------------------------------
 #Ahora quiero corregir algunos errores puntuales interpolando datos especificos en Rows faltantes....
