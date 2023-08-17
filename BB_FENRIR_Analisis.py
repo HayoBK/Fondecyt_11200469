@@ -56,7 +56,45 @@ Mi_Orden = ['MPPP', 'Vestibular', 'Voluntario Sano']
 #   Gráfico Mapa de Calor
 #--------------------------------------------------------------------------------------------------------------------
 
+def MapaDeCalor(dat, Mod, Bloc, Grupo, Titulo):
+    colores = sns.color_palette('coolwarm',n_colors=100)
+    dat = dat.loc[(dat['Grupo'] == Grupo) & (dat['Modalidad'] == Mod) & (dat['True_Block'] == Bloc)]
+    Title = str(Titulo) + str(Mod) + '_' + str(Bloc) + '_' + str(Grupo)
+    dat.reset_index()
+    sns.set_style("ticks")
+    sns.set(style='ticks',rc={"axes.facecolor":colores[0]},font_scale=1.5)
+    ax = sns.kdeplot(data=dat, x='P_position_x', y='P_position_y', cmap='coolwarm', n_levels=100, thresh=0, fill=True, cbar=True)
 
+    sns.set_context(font_scale=3)
+    ax.set(ylim=(-0.535, 0.535), xlim=(-0.535, 0.535), aspect=1)
+    ax.tick_params(labelsize=13)
+    ax.set_title(Title, fontsize=22)
+    circle = plt.Circle((0, 0), 0.5, color='w',linewidth= 2, fill=False)
+    ax.add_artist(circle)
+    ax.set(xlabel='East-West (virtual units in Pool-Diameters)', ylabel='North-South (virtual units in Pool-Diameters)')
+    plt.xlabel('East-West (virtual units in Pool-Diameters)', fontsize=18)
+    plt.ylabel('North-South (virtual units in Pool-Diameters)', fontsize=18)
+    ax.figure.set_size_inches(10, 10)
+    #plt.grid(False)
+    plt.xticks(np.arange(-0.5, 0.75, 0.25))
+    plt.yticks(np.arange(-0.5, 0.75, 0.25))
+
+    PSize = (100 / 560)
+    rectA = plt.Rectangle(
+        (dat['platformPosition_x'].iloc[0] - (PSize / 2), dat['platformPosition_y'].iloc[0] - (PSize / 2)),
+        PSize, PSize, linewidth=2.5, edgecolor='yellow',linestyle='--',
+        facecolor='none')
+
+    ax.add_artist(rectA)
+
+    directory_path = Output_Dir + 'MapaDeCalor/'
+    if not os.path.exists(directory_path):
+        os.makedirs(directory_path)
+    plt.savefig(directory_path + Title + '.png')
+
+    # plt.show()
+    plt.clf()
+    print('Mapa de Calor ' + Title + ' Listo')
 
 #--------------------------------------------------------------------------------------------------------------------
 #   Grafico Path
@@ -141,7 +179,7 @@ for index, value in df_Small['Sujeto'].iteritems():
     for M in Mod_List:
         for B in Block_List:
             i+=1
-            PathGraph(df_Pos, value, M, B, ('Fig_'+str(i)))
+            PathGraph(df_Pos, value, M, B, ('FigB_'+str(i)))
 print('Todos los Path Graphs, listos')
 #--------------------------------------------------------------------------------------------------------------------
 
@@ -191,6 +229,15 @@ for B in Block_List:
                 plt.clf()
 
 print('We are Ready!!!!')
+
+#--------------------------------------------------------------------------------------------------------------------
+#%%
+# Heat Maps!
+for B in Block_List:
+    for M in Mod_List:
+        for G in Group_List:
+            MapaDeCalor(df_Pos,M,B,G,'T01')
+print('We are Ready with HeatMaps!!!!')
 
 
 #--------------------------------------------------------------------------------------------------------------------
