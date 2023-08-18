@@ -10,6 +10,7 @@ import seaborn as sns   #Estetica de gráficos
 import matplotlib.pyplot as plt    #Graficos
 from pathlib import Path
 import os
+import tqdm
 
 #--------------------------------------------------------------------------------------------------------------------
 #   PREPARAR DIRECTORIOS PARA MANEJO DE DATOS
@@ -41,6 +42,7 @@ df_Small = f_df
 Group_List = ['MPPP', 'Vestibular', 'Voluntario Sano']
 Mod_List=['No Inmersivo','Realidad Virtual']
 Block_List = ['FreeNav','Training','VisibleTarget_1','VisibleTarget_2','HiddenTarget_1','HiddenTarget_2','HiddenTarget_3']
+Nav_List = ['HiddenTarget_1','HiddenTarget_2','HiddenTarget_3']
 Subj_List = df_Small['Sujeto'].to_list()
 #--------------------------------------------------------------------------------------------------------------------
 #   PREPARAR ESTÉTICA EN SEABORN
@@ -237,8 +239,129 @@ for B in Block_List:
     for M in Mod_List:
         for G in Group_List:
             MapaDeCalor(df_Pos,M,B,G,'T01')
+sns.reset_defaults()
+sns.set_palette('pastel')
+pal = sns.color_palette(n_colors=3)
+pal = pal.as_hex()
+sns.set(style= 'white', palette='pastel', font_scale=2,rc={'figure.figsize':(12,12)})
 print('We are Ready with HeatMaps!!!!')
 
+
+#--------------------------------------------------------------------------------------------------------------------
+#%%
+# GRAFICO A!
+data = df_CSE[df_CSE['True_Block'].isin(Nav_List)]
+data = data[data['Modalidad'].isin(['No Inmersivo'])]
+
+Title = 'A1-CSE por Grupo Global (No Inmersivo)'
+
+ax = sns.boxplot(data, x='Grupo', y='CSE', order=Mi_Orden)
+ax.set(ylim=(0, 300), title = Title)
+directory_path = Output_Dir + 'Fenir_Outputs/'
+if not os.path.exists(directory_path):
+    os.makedirs(directory_path)
+plt.savefig(directory_path + Title + '.png')
+plt.show()
+plt.clf()
+
+data = df_CSE[df_CSE['True_Block'].isin(Nav_List)]
+
+Title = 'A2-CSE por Grupo Global'
+
+ax = sns.boxplot(data, x='Grupo', y='CSE',hue='Modalidad', order=Mi_Orden)
+ax.set(ylim=(0, 300), title = Title)
+directory_path = Output_Dir + 'Fenir_Outputs/'
+if not os.path.exists(directory_path):
+    os.makedirs(directory_path)
+plt.savefig(directory_path + Title + '.png')
+plt.show()
+plt.clf()
+
+#--------------------------------------------------------------------------------------------------------------------
+#%%
+# GRAFICO B!
+data = df_CSE[df_CSE['Modalidad'].isin(['No Inmersivo'])]
+data = data[data['True_Block'].isin(Nav_List)]
+
+Title = 'B1-CSE por Bloque por Grupo (No Inmersivo)'
+ax = sns.boxplot(data, x='True_Block', y='CSE',hue='Grupo', hue_order=Mi_Orden)
+ax.set(ylim=(0, 300), title = Title)
+directory_path = Output_Dir + 'Fenir_Outputs/'
+if not os.path.exists(directory_path):
+    os.makedirs(directory_path)
+plt.savefig(directory_path + Title + '.png')
+plt.show()
+plt.clf()
+
+data = df_CSE[df_CSE['Modalidad'].isin(['Realidad Virtual'])]
+data = data[data['True_Block'].isin(Nav_List)]
+
+Title = 'B2-CSE por Bloque por Grupo (Realidad Virtual)'
+ax = sns.boxplot(data, x='True_Block', y='CSE',hue='Grupo', hue_order=Mi_Orden)
+ax.set(ylim=(0, 300), title = Title)
+directory_path = Output_Dir + 'Fenir_Outputs/'
+if not os.path.exists(directory_path):
+    os.makedirs(directory_path)
+plt.savefig(directory_path + Title + '.png')
+plt.show()
+plt.clf()
+
+#--------------------------------------------------------------------------------------------------------------------
+#%%
+# GRAFICO C!
+
+for S in tqdm.tqdm(Subj_List, leave=True):
+    for M in Mod_List:
+        for B in Nav_List:
+            data = df_CSE[df_CSE['Modalidad'].isin([M])]
+            data = data[data['True_Block'].isin([B])]
+            data = data[data['Sujeto'].isin([S])]
+            if len(data)>0:
+                Title = 'D-'+S + M + B + ' CSE LearningAng'
+                ax = sns.lineplot(data, x='True_Trial', y='CSE')
+                ax.set(ylim=(0, 300), title=Title)
+                directory_path = Output_Dir + 'Fenir_Outputs/LearningSub/'+S+'/'
+                if not os.path.exists(directory_path):
+                    os.makedirs(directory_path)
+                plt.savefig(directory_path + Title + '.png')
+                plt.clf()
+                Title = 'D-' + S + M + B + ' CSE LearningBAR'
+                ax = sns.barplot(data, x='True_Trial', y='CSE',hue='Trial_Unique_ID')
+                ax.set(ylim=(0, 300), title=Title)
+                directory_path = Output_Dir + 'Fenir_Outputs/LearningSub/' + S + '/'
+                if not os.path.exists(directory_path):
+                    os.makedirs(directory_path)
+                plt.savefig(directory_path + Title + '.png')
+                plt.clf()
+
+for M in Mod_List:
+    for B in tqdm.tqdm(Nav_List,M, leave=True):
+        data = df_CSE[df_CSE['Modalidad'].isin([M])]
+        data = data[data['True_Block'].isin([B])]
+
+        Title = 'C-'+M+' '+B+' CSE Learning through trial'
+        ax = sns.lineplot(data, x='True_Trial', y='CSE', hue='Grupo', hue_order=Mi_Orden)
+        ax.set(ylim=(0, 150), title=Title)
+        directory_path = Output_Dir + 'Fenir_Outputs/'
+        if not os.path.exists(directory_path):
+            os.makedirs(directory_path)
+        plt.savefig(directory_path + Title + '.png')
+        #plt.show()
+        plt.clf()
+
+        for G in Group_List:
+            data = df_CSE[df_CSE['Modalidad'].isin([M])]
+            data = data[data['True_Block'].isin([B])]
+            data = data[data['Grupo'].isin([G])]
+            Title = 'C2-' + M + ' ' + B + G+ ' CSE Learning'
+            ax = sns.lineplot(data, x='True_Trial', y='CSE', hue='Sujeto')
+            ax.set(ylim=(0, 150), title=Title)
+            directory_path = Output_Dir + 'Fenir_Outputs/'
+            if not os.path.exists(directory_path):
+                os.makedirs(directory_path)
+            plt.savefig(directory_path + Title + '.png')
+            #plt.show()
+            plt.clf()
 
 #--------------------------------------------------------------------------------------------------------------------
 #   End of File

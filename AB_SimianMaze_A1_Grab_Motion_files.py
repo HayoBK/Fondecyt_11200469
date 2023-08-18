@@ -152,7 +152,7 @@ BaseDir=home+"/OneDrive/2-Casper/00-CurrentResearch/001-FONDECYT_11200469/002-LU
 #----------------------------------------------------
 
 Px_list = ['P06','P12','P01','P02','P03','P04','P05','P07','P08','P10','P11','P13','P14','P15','P16','P17','P18','P19','P20','P21','P22','P23','P24','P25','P26','P28',
-           'P29','P27','P30','P31','P32','P33','P34','P35','P40','P43','P44','P45','P46','P47','P48','P49'] # Lista de pacientes a incorporar en el análisis.
+           'P29','P27','P30','P31','P32','P33','P34','P35','P40','P43','P44','P45','P46','P47','P48','P49','P51'] # Lista de pacientes a incorporar en el análisis.
 # Horror Missing = P36;P37;P39;P41;P42
 # Pendiente = P38
 #----------------------------------------------------
