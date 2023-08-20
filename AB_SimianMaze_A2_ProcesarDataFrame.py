@@ -221,8 +221,8 @@ def Interpolar_Row(Data,Suj,Bloq,TT): #Datos para localizar el Trial faltante
     return Data
 
 short_df = Interpolar_Row(short_df,'P12','HiddenTarget_3',2)
-#short_df = Interpolar_Row(short_df,'P07','VisibleTarget_2',3)
-#short_df = Interpolar_Row(short_df,'P19','HiddenTarget_3',3)
+short_df = Interpolar_Row(short_df,'P07','VisibleTarget_2',3)
+short_df = Interpolar_Row(short_df,'P19','HiddenTarget_3',3)
 short_df = Interpolar_Row(short_df,'P21','HiddenTarget_3',2)
 short_df = Interpolar_Row(short_df,'P28','HiddenTarget_3',2)
 
@@ -267,7 +267,7 @@ def Interpolar_Row_TT7_Missing(Data,Suj,Bloq,TT): #Datos para localizar el Trial
 
     return Data
 
-#short_df = Interpolar_Row_TT7_Missing(short_df,'P11','HiddenTarget_3',7)
+short_df = Interpolar_Row_TT7_Missing(short_df,'P11','HiddenTarget_3',7)
 short_df = Interpolar_Row_TT7_Missing(short_df,'P23','HiddenTarget_3',7)
 short_df = Interpolar_Row_TT7_Missing(short_df,'P24','HiddenTarget_3',7)
 
@@ -277,15 +277,15 @@ short_df = Interpolar_Row_TT7_Missing(short_df,'P01','HiddenTarget_2',4)
 short_df = Interpolar_Row_TT7_Missing(short_df,'P01','HiddenTarget_2',5)
 short_df = Interpolar_Row_TT7_Missing(short_df,'P01','HiddenTarget_2',6)
 short_df = Interpolar_Row_TT7_Missing(short_df,'P01','HiddenTarget_2',7)
-#short_df = Interpolar_Row_TT7_Missing(short_df,'P01','HiddenTarget_3',5)
-#short_df = Interpolar_Row_TT7_Missing(short_df,'P01','HiddenTarget_3',6)
-#short_df = Interpolar_Row_TT7_Missing(short_df,'P01','HiddenTarget_3',7)
-#short_df = Interpolar_Row_TT7_Missing(short_df,'P01','VisibleTarget_2',3)
+short_df = Interpolar_Row_TT7_Missing(short_df,'P01','HiddenTarget_3',5)
+short_df = Interpolar_Row_TT7_Missing(short_df,'P01','HiddenTarget_3',6)
+short_df = Interpolar_Row_TT7_Missing(short_df,'P01','HiddenTarget_3',7)
+short_df = Interpolar_Row_TT7_Missing(short_df,'P01','VisibleTarget_2',3)
 
 
 
 #Repetir V2 desde V1 en P05
-""" 
+
 Data= short_df
 Data = Data.reset_index(drop=True)
 Copy_Row = Data.loc[(Data['Modalidad']=='No Inmersivo') & (Data['Sujeto']=='P05') & (Data['True_Block']=='VisibleTarget_1') & (Data['True_Trial']<4)]
@@ -298,7 +298,7 @@ Ind = Ind[0]+1
 DataA = short_df.iloc[:Ind, ]
 DataB = short_df.iloc[Ind:, ]
 short_df = DataA.append(Copy_Row).append(DataB).reset_index(drop=True)
-"""
+
 
 #-------------------------------------------------------------------------------------------------------------
 

@@ -181,7 +181,9 @@ for index, value in df_Small['Sujeto'].iteritems():
     for M in Mod_List:
         for B in Block_List:
             i+=1
-            PathGraph(df_Pos, value, M, B, ('FigB_'+str(i)))
+            NoGO = False # Para no repetir los GraphPaths..
+            if NoGO == False:
+                PathGraph(df_Pos, value, M, B, ('FigB_'+str(i)))
 print('Todos los Path Graphs, listos')
 #--------------------------------------------------------------------------------------------------------------------
 
@@ -309,30 +311,31 @@ plt.clf()
 #--------------------------------------------------------------------------------------------------------------------
 #%%
 # GRAFICO C!
-
-for S in tqdm.tqdm(Subj_List, leave=True):
-    for M in Mod_List:
-        for B in Nav_List:
-            data = df_CSE[df_CSE['Modalidad'].isin([M])]
-            data = data[data['True_Block'].isin([B])]
-            data = data[data['Sujeto'].isin([S])]
-            if len(data)>0:
-                Title = 'D-'+S + M + B + ' CSE LearningAng'
-                ax = sns.lineplot(data, x='True_Trial', y='CSE')
-                ax.set(ylim=(0, 300), title=Title)
-                directory_path = Output_Dir + 'Fenir_Outputs/LearningSub/'+S+'/'
-                if not os.path.exists(directory_path):
-                    os.makedirs(directory_path)
-                plt.savefig(directory_path + Title + '.png')
-                plt.clf()
-                Title = 'D-' + S + M + B + ' CSE LearningBAR'
-                ax = sns.barplot(data, x='True_Trial', y='CSE',hue='Trial_Unique_ID')
-                ax.set(ylim=(0, 300), title=Title)
-                directory_path = Output_Dir + 'Fenir_Outputs/LearningSub/' + S + '/'
-                if not os.path.exists(directory_path):
-                    os.makedirs(directory_path)
-                plt.savefig(directory_path + Title + '.png')
-                plt.clf()
+for M in Mod_List:
+    for B in Nav_List:
+        for G in Group_List:
+            for S in tqdm.tqdm(Subj_List, (B+G),leave=True):
+                data = df_CSE[df_CSE['Modalidad'].isin([M])]
+                data = data[data['True_Block'].isin([B])]
+                data = data[data['Sujeto'].isin([S])]
+                data = data[data['Grupo'].isin([G])]
+                if len(data)>0:
+                    Title = 'D-'+S + ' CSE LearningAng'
+                    ax = sns.lineplot(data, x='True_Trial', y='CSE')
+                    ax.set(ylim=(0, 300), title=Title)
+                    directory_path = Output_Dir + 'Fenir_Outputs/LearningSub/Check_'+M+B+G+'/'
+                    if not os.path.exists(directory_path):
+                        os.makedirs(directory_path)
+                    plt.savefig(directory_path + Title + '.png')
+                    plt.clf()
+                    Title = 'D-'+S + ' CSE LearningBAR'
+                    ax = sns.barplot(data, x='True_Trial', y='CSE',hue='Trial_Unique_ID')
+                    ax.set(ylim=(0, 300), title=Title)
+                    directory_path = Output_Dir + 'Fenir_Outputs/LearningSub/Check_'+M+B+G+'/'
+                    if not os.path.exists(directory_path):
+                        os.makedirs(directory_path)
+                    plt.savefig(directory_path + Title + '.png')
+                    plt.clf()
 
 for M in Mod_List:
     for B in tqdm.tqdm(Nav_List,M, leave=True):
@@ -343,6 +346,11 @@ for M in Mod_List:
         ax = sns.lineplot(data, x='True_Trial', y='CSE', hue='Grupo', hue_order=Mi_Orden)
         ax.set(ylim=(0, 150), title=Title)
         directory_path = Output_Dir + 'Fenir_Outputs/'
+        if not os.path.exists(directory_path):
+            os.makedirs(directory_path)
+        plt.savefig(directory_path + Title + '.png')
+
+        directory_path = Output_Dir + 'Fenir_Outputs/LearningSub/'
         if not os.path.exists(directory_path):
             os.makedirs(directory_path)
         plt.savefig(directory_path + Title + '.png')
