@@ -166,7 +166,10 @@ def PathGraph(data, Subj, Mod, Bloc, Titulo):
         #plt.show()
         plt.clf()
         print('Path Graph '+Title+' Listo')
-
+# ----------------------------------------------------------------------------
+# Resumir CSE por Bloque
+CSE_average= df_CSE.groupby(['Sujeto','True_Block'])['CSE'].mean().reset_index()
+#CSE_average=
 
 #%%
 #--------------------------------------------------------------------------------------------------------------------
@@ -370,7 +373,38 @@ for M in Mod_List:
             plt.savefig(directory_path + Title + '.png')
             #plt.show()
             plt.clf()
+#--------------------------------------------------------------------------------------------------------------------
+#%%
+# REvision de datos No MWM
 
+sel_cols = df_Small.iloc[:, 9:26]
+
+for column in tqdm.tqdm(sel_cols.columns):
+    data=df_Small
+    Title = column + '_Box'
+    ax = sns.boxplot(data, x='Grupo', y=column, order=Mi_Orden)
+    ax.set(title=Title)
+    directory_path = Output_Dir + 'Non-MWM/'
+    if not os.path.exists(directory_path):
+        os.makedirs(directory_path)
+    plt.savefig(directory_path + Title + '.png')
+    plt.clf()
+
+    for G in Group_List:
+        data = df_Small
+        data = data[data['Grupo'].isin([G])]
+        Title = column + '_'+G+'_Scatter'
+        ax = sns.scatterplot(data, x='Sujeto', y=column, s=200)
+        for i, row in data.iterrows():
+            plt.annotate(row['Sujeto'], (row['Sujeto'], row[column]), textcoords="offset points", xytext=(10, 10), ha='center')
+
+        ax.set(title=Title)
+        directory_path = Output_Dir + 'Non-MWM/'
+        if not os.path.exists(directory_path):
+            os.makedirs(directory_path)
+        plt.savefig(directory_path + Title + '.png')
+        plt.clf()
+print('End of Segmento')
 #--------------------------------------------------------------------------------------------------------------------
 #   End of File
 #--------------------------------------------------------------------------------------------------------------------
