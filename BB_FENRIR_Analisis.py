@@ -166,9 +166,19 @@ def PathGraph(data, Subj, Mod, Bloc, Titulo):
         #plt.show()
         plt.clf()
         print('Path Graph '+Title+' Listo')
-# ----------------------------------------------------------------------------
+
 # Resumir CSE por Bloque
-CSE_average= df_CSE.groupby(['Sujeto','True_Block'])['CSE'].mean().reset_index()
+CSE_average= df_CSE.groupby(['Sujeto','Modalidad','True_Block'])['CSE'].mean().reset_index()
+CSE_average = CSE_average[CSE_average['True_Block'].isin(Nav_List)]
+CSE_average = CSE_average.pivot_table(index=['Sujeto'], columns=['Modalidad','True_Block'], values='CSE', aggfunc='first')
+CSE_average = CSE_average.reset_index()
+df_Small = df_Small.merge(CSE_average, on='Sujeto',how='left',suffixes=('', '_ff') )
+CSE_average = df_CSE
+CSE_average = CSE_average[CSE_average['True_Block'].isin(Nav_List)]
+CSE_average = CSE_average.groupby(['Sujeto','Modalidad'])['CSE'].mean().reset_index()
+CSE_average = CSE_average.pivot_table(index=['Sujeto'], columns=['Modalidad'], values='CSE', aggfunc='first')
+df_Small = df_Small.merge(CSE_average, on='Sujeto',how='left',suffixes=('', '_fff') )
+
 #CSE_average=
 
 #%%
@@ -184,7 +194,7 @@ for index, value in df_Small['Sujeto'].iteritems():
     for M in Mod_List:
         for B in Block_List:
             i+=1
-            NoGO = False # Para no repetir los GraphPaths..
+            NoGO = True # Para no repetir los GraphPaths..
             if NoGO == False:
                 PathGraph(df_Pos, value, M, B, ('FigB_'+str(i)))
 print('Todos los Path Graphs, listos')
@@ -196,8 +206,8 @@ data = df_CSE
 selection = ['VisibleTarget_1','VisibleTarget_2']
 data = data[data['True_Block'].isin(selection)]
 
-ax= sns.scatterplot(data, x='Sujeto', y='CSE', hue = 'True_Trial')
-plt.show()
+#ax= sns.scatterplot(data, x='Sujeto', y='CSE', hue = 'True_Trial')
+#plt.show()
 #--------------------------------------------------------------------------------------------------------------------
 #%%
 # Hacer un resumen de CSE global por Bloque
@@ -377,7 +387,7 @@ for M in Mod_List:
 #%%
 # REvision de datos No MWM
 
-sel_cols = df_Small.iloc[:, 9:26]
+sel_cols = df_Small.iloc[:, 9:27]
 
 for column in tqdm.tqdm(sel_cols.columns):
     data=df_Small
@@ -405,6 +415,56 @@ for column in tqdm.tqdm(sel_cols.columns):
         plt.savefig(directory_path + Title + '.png')
         plt.clf()
 print('End of Segmento')
+
+#%%
+
+sel_cols = df_Small.iloc[:, -8:]
+for column in tqdm.tqdm(sel_cols.columns):
+    data=df_Small
+    Title = str(column) + '_Box'
+    ax = sns.boxplot(data, x='Grupo', y=column, order=Mi_Orden)
+    ax.set(title=Title)
+    directory_path = Output_Dir + 'CSEs/'
+    if not os.path.exists(directory_path):
+        os.makedirs(directory_path)
+    plt.savefig(directory_path + Title + '.png')
+    plt.clf()
+
+    for G in Group_List:
+        data = df_Small
+        data = data[data['Grupo'].isin([G])]
+        Title = str(column) + '_'+G+'_Scatter'
+        ax = sns.scatterplot(data, x='Sujeto', y=column, s=200)
+        for i, row in data.iterrows():
+            plt.annotate(row['Sujeto'], (row['Sujeto'], row[column]), textcoords="offset points", xytext=(10, 10), ha='center')
+
+        ax.set(title=Title)
+        directory_path = Output_Dir + 'CSEs/'
+        if not os.path.exists(directory_path):
+            os.makedirs(directory_path)
+        plt.savefig(directory_path + Title + '.png')
+        plt.clf()
+
+#%%
+
+data= df_Small
+
+sel_cols = df_Small.iloc[:, 9:27]
+for column in tqdm.tqdm(sel_cols.columns):
+    data=df_Small
+    Title = 'Cruce ' + column + ' CSE_NI'
+
+    ax = sns.scatterplot(data, x='No Inmersivo', y=column, hue='Grupo', hue_order=Mi_Orden, s=200)
+    ax.set(title=Title)
+    for i, row in data.iterrows():
+        plt.annotate(row['Sujeto'], (row['No Inmersivo'], row[column]), textcoords="offset points", fontsize=9, xytext=(10, 10), ha='center')
+
+    directory_path = Output_Dir + 'Cruces/'
+    if not os.path.exists(directory_path):
+        os.makedirs(directory_path)
+    plt.savefig(directory_path + Title + '.png')
+    plt.clf()
+
 #--------------------------------------------------------------------------------------------------------------------
 #   End of File
 #--------------------------------------------------------------------------------------------------------------------
