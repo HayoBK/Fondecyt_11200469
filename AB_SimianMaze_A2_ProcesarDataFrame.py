@@ -34,7 +34,7 @@ def DEL_POSZERO(data): # ELiminamos todos los primeros momentos muertos antes qu
             x1=row.P_position_x
             y1=row.P_position_y
         Distance = math.sqrt((row.P_position_x - x1)**2 + (row.P_position_y - y1)**2)
-        if Distance > 0.075:    #Para los mapas de calor 0.25
+        if Distance > 0.25:    #Para los mapas de calor 0.25 / 0.075 en modo original
             Moving=True
         if Moving==False:
             Ban.append('1')
@@ -221,8 +221,8 @@ def Interpolar_Row(Data,Suj,Bloq,TT): #Datos para localizar el Trial faltante
     return Data
 
 short_df = Interpolar_Row(short_df,'P12','HiddenTarget_3',2)
-short_df = Interpolar_Row(short_df,'P07','VisibleTarget_2',3)
-short_df = Interpolar_Row(short_df,'P19','HiddenTarget_3',3)
+#short_df = Interpolar_Row(short_df,'P07','VisibleTarget_2',3)
+#short_df = Interpolar_Row(short_df,'P19','HiddenTarget_3',3)
 short_df = Interpolar_Row(short_df,'P21','HiddenTarget_3',2)
 short_df = Interpolar_Row(short_df,'P28','HiddenTarget_3',2)
 
@@ -267,7 +267,7 @@ def Interpolar_Row_TT7_Missing(Data,Suj,Bloq,TT): #Datos para localizar el Trial
 
     return Data
 
-short_df = Interpolar_Row_TT7_Missing(short_df,'P11','HiddenTarget_3',7)
+#short_df = Interpolar_Row_TT7_Missing(short_df,'P11','HiddenTarget_3',7)
 short_df = Interpolar_Row_TT7_Missing(short_df,'P23','HiddenTarget_3',7)
 short_df = Interpolar_Row_TT7_Missing(short_df,'P24','HiddenTarget_3',7)
 
@@ -277,15 +277,15 @@ short_df = Interpolar_Row_TT7_Missing(short_df,'P01','HiddenTarget_2',4)
 short_df = Interpolar_Row_TT7_Missing(short_df,'P01','HiddenTarget_2',5)
 short_df = Interpolar_Row_TT7_Missing(short_df,'P01','HiddenTarget_2',6)
 short_df = Interpolar_Row_TT7_Missing(short_df,'P01','HiddenTarget_2',7)
-short_df = Interpolar_Row_TT7_Missing(short_df,'P01','HiddenTarget_3',5)
-short_df = Interpolar_Row_TT7_Missing(short_df,'P01','HiddenTarget_3',6)
-short_df = Interpolar_Row_TT7_Missing(short_df,'P01','HiddenTarget_3',7)
-short_df = Interpolar_Row_TT7_Missing(short_df,'P01','VisibleTarget_2',3)
+#short_df = Interpolar_Row_TT7_Missing(short_df,'P01','HiddenTarget_3',5)
+#short_df = Interpolar_Row_TT7_Missing(short_df,'P01','HiddenTarget_3',6)
+#short_df = Interpolar_Row_TT7_Missing(short_df,'P01','HiddenTarget_3',7)
+#short_df = Interpolar_Row_TT7_Missing(short_df,'P01','VisibleTarget_2',3)
 
 
 
 #Repetir V2 desde V1 en P05
-
+"""
 Data= short_df
 Data = Data.reset_index(drop=True)
 Copy_Row = Data.loc[(Data['Modalidad']=='No Inmersivo') & (Data['Sujeto']=='P05') & (Data['True_Block']=='VisibleTarget_1') & (Data['True_Trial']<4)]
@@ -299,7 +299,7 @@ DataA = short_df.iloc[:Ind, ]
 DataB = short_df.iloc[Ind:, ]
 short_df = DataA.append(Copy_Row).append(DataB).reset_index(drop=True)
 
-
+"""
 #-------------------------------------------------------------------------------------------------------------
 
 # Ahora enriquecemos la base de datos con datos de los pacientes

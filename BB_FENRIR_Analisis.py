@@ -19,7 +19,7 @@ import tqdm
 
 home= str(Path.home()) # Obtener el directorio raiz en cada computador distinto
 Py_Processing_Dir= home+"/OneDrive/2-Casper/00-CurrentResearch/001-FONDECYT_11200469/002-LUCIEN/Py_Processing/"
-Output_Dir=        home+"/OneDrive/2-Casper/00-CurrentResearch/001-FONDECYT_11200469/002-LUCIEN/Outputs/FENRIR/"
+Output_Dir=        home+"/OneDrive/2-Casper/00-CurrentResearch/001-FONDECYT_11200469/002-LUCIEN/Outputs/FENRIR 0.25/"
 
 #--------------------------------------------------------------------------------------------------------------------
 #   IMPORTAR BASES DE DATOS
@@ -194,7 +194,7 @@ for index, value in df_Small['Sujeto'].iteritems():
     for M in Mod_List:
         for B in Block_List:
             i+=1
-            NoGO = True # Para no repetir los GraphPaths..
+            NoGO = False # Para no repetir los GraphPaths..
             if NoGO == False:
                 PathGraph(df_Pos, value, M, B, ('FigB_'+str(i)))
 print('Todos los Path Graphs, listos')
