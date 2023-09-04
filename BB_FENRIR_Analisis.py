@@ -469,4 +469,19 @@ for column in tqdm.tqdm(sel_cols.columns):
 #   End of File
 #--------------------------------------------------------------------------------------------------------------------
 
+
+#%%
+df = df_Small
+df.drop(df.columns[27:43], axis=1, inplace=True)
+corr_matrix = df.corr(method='pearson')
+
+#cse_corr = corr_matrix[['No Inmersivo/HiddenTarget_2']]
+
+plt.figure(figsize=(50, 50))
+sns.heatmap(corr_matrix, annot=True, cmap='coolwarm', vmin=-1, vmax=1)
+plt.title('Correlation with CSE')
+plt.show()
+
+
+
 print('Listoco - Hayo')
