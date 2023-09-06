@@ -1,9 +1,9 @@
 # ---------------------------------------------------------
-# Lab ONCE - Agosto 2023
+# Lab ONCE - Septiembre 2023
 # Fondecyt 11200469
 # Hayo Breinbauer
 # ---------------------------------------------------------
-#%%
+
 import pandas as pd     #Base de datos
 import numpy as np
 import seaborn as sns   #Estetica de gráficos
@@ -11,6 +11,7 @@ import matplotlib.pyplot as plt    #Graficos
 from pathlib import Path
 import os
 import tqdm
+import scipy.stats as stats
 
 #--------------------------------------------------------------------------------------------------------------------
 #   PREPARAR DIRECTORIOS PARA MANEJO DE DATOS
@@ -180,7 +181,7 @@ CSE_average = CSE_average.pivot_table(index=['Sujeto'], columns=['Modalidad'], v
 df_Small = df_Small.merge(CSE_average, on='Sujeto',how='left',suffixes=('', '_fff') )
 
 #CSE_average=
-
+print('Manejo inicial de datos listos - Segmento listo')
 #%%
 #--------------------------------------------------------------------------------------------------------------------
 #   Correr los análisis propiamente tal.
@@ -483,6 +484,140 @@ plt.title('Correlation with CSE')
 plt.show()
 
 #%%
+#--------------------------------------------------------------------------------------------------------------------
+#   INICIO Graficos finales para Paper 1
+#--------------------------------------------------------------------------------------------------------------------
 
+#%%
+#--------------------------------------------------------------------------------------------------------------------
+#   Edad - Genero -  Nivel educacional
+#--------------------------------------------------------------------------------------------------------------------
+print('Resumen de edad por grupo')
+print (df.sort_values(['Grupo', 'Edad'], ascending=[True, True]))
+print(df.groupby(['Grupo']).mean())
+print(df.groupby(['Grupo']).size())
 
-print('Listoco - Hayo')
+df= df_Small
+
+descriptiva = df.groupby('Grupo')['Edad'].describe()
+print(descriptiva)
+
+f_val, p_val = stats.f_oneway(df['Edad'][df['Grupo'] == 'MPPP'],
+                              df['Edad'][df['Grupo'] == 'Vestibular'],
+                              df['Edad'][df['Grupo'] == 'Voluntario Sano'])
+print('ANOVA para Edad')
+print("Valor F:", f_val)
+print("P-valor:", p_val)
+print (' ')
+print ('Genero')
+distribucion_genero = df.groupby(['Grupo', 'Genero']).size().unstack()
+distribucion_genero = (distribucion_genero.divide(distribucion_genero.sum(axis=1), axis=0) * 100).round(2)
+
+print(distribucion_genero)
+
+print(' ')
+print(' Nivel Educacional ')
+descriptiva = df.groupby('Grupo')['N_Educacional'].describe()
+print(descriptiva)
+f_val, p_val = stats.f_oneway(df['N_Educacional'][df['Grupo'] == 'MPPP'],
+                              df['N_Educacional'][df['Grupo'] == 'Vestibular'],
+                              df['N_Educacional'][df['Grupo'] == 'Voluntario Sano'])
+print('ANOVA para N_Educacional')
+print("Valor F:", f_val)
+print("P-valor:", p_val)
+
+#%%
+#--------------------------------------------------------------------------------------------------------------------
+#   Diagnosticos
+#--------------------------------------------------------------------------------------------------------------------
+print(' ')
+df= df_Small
+diagnosticos_expandidos = df['Dg'].str.split(',').explode()
+diagnosticos_expandidos = diagnosticos_expandidos.apply(lambda x: x.strip() if isinstance(x, str) else x)
+# Une los diagnósticos expandidos al DataFrame original para mantener el grupo correspondiente
+df_expandido = df.join(diagnosticos_expandidos, rsuffix='_expandido').drop(columns=['Dg'])
+
+# Renombra la columna por claridad
+df_expandido = df_expandido.rename(columns={"Dg_expandido": "Diagnostico"})
+
+# Cuenta cada diagnóstico por grupo
+conteo_diagnosticos = df_expandido.groupby(['Grupo', 'Diagnostico']).size().unstack(fill_value=0)
+
+# Calcula porcentajes del total de cada grupo
+porcentajes_diagnosticos = (conteo_diagnosticos.divide(conteo_diagnosticos.sum(axis=1), axis=0) * 100).round(2)
+print (porcentajes_diagnosticos)
+#%%
+#--------------------------------------------------------------------------------------------------------------------
+#   Figura 1
+#--------------------------------------------------------------------------------------------------------------------
+print(' ')
+data = df_CSE[df_CSE['True_Block'].isin(Nav_List)]
+data = data[data['Modalidad'].isin(['No Inmersivo'])]
+
+Title = 'Figure 1 - Spatial Navigation Error per Group'
+
+ax = sns.boxplot(data, x='Grupo', y='CSE', linewidth=6, order=Mi_Orden)
+ax.set(ylim=(0, 300), title = Title)
+directory_path = Output_Dir + 'Paper1_Figures/'
+if not os.path.exists(directory_path):
+    os.makedirs(directory_path)
+plt.savefig(directory_path + Title + '.png')
+plt.show()
+plt.clf()
+
+data = df_CSE[df_CSE['True_Block'].isin(Nav_List)]
+
+print('Segmento de script completo - Hayo')
+#%%
+#--------------------------------------------------------------------------------------------------------------------
+#   Figura 2
+#--------------------------------------------------------------------------------------------------------------------
+print(' ')
+data = df_CSE[df_CSE['Modalidad'].isin(['No Inmersivo'])]
+data = data[data['True_Block'].isin(Nav_List)]
+
+Title = 'Figure 2 - Spatial Navigation Error per Group at each Experimental Block'
+ax = sns.boxplot(data, x='True_Block', y='CSE',hue='Grupo', linewidth=6, hue_order=Mi_Orden)
+ax.set(ylim=(0, 300), title = Title)
+new_labels = ["Block C", "Block D", "Block E"]
+plt.xticks(ticks=range(3), labels=new_labels)
+directory_path = Output_Dir + 'Paper1_Figures/'
+if not os.path.exists(directory_path):
+    os.makedirs(directory_path)
+plt.savefig(directory_path + Title + '.png')
+plt.show()
+plt.clf()
+
+print('Segmento de script completo - Hayo')
+#%%
+#--------------------------------------------------------------------------------------------------------------------
+#   Figura 3
+#--------------------------------------------------------------------------------------------------------------------
+print(' ')
+
+data = df_CSE[df_CSE['Modalidad'].isin(['No Inmersivo'])]
+#data = data[data['True_Block'].isin([B])]
+data = data[data['True_Trial'] != 3]
+Title = 'Figura 3 - Spatial Navigation learning through trials'
+ax = sns.lineplot(data, x='True_Trial', y='CSE', linewidth = 4, hue='Grupo', hue_order=Mi_Orden)
+ax.set(ylim=(0, 150), title=Title)
+directory_path = Output_Dir + 'Paper1_Figures/'
+if not os.path.exists(directory_path):
+    os.makedirs(directory_path)
+plt.savefig(directory_path + Title + '.png')
+
+plt.show()
+plt.clf()
+
+print('Segmento de script completo - Hayo')
+
+#%%
+#--------------------------------------------------------------------------------------------------------------------
+#   Figura 6
+#--------------------------------------------------------------------------------------------------------------------
+print(' ')
+
+print('Segmento de script completo - Hayo')
+#%%
+
+print('Listoco (Script completo) - Hayo')
