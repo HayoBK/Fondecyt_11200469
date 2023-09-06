@@ -34,7 +34,7 @@ def DEL_POSZERO(data): # ELiminamos todos los primeros momentos muertos antes qu
             x1=row.P_position_x
             y1=row.P_position_y
         Distance = math.sqrt((row.P_position_x - x1)**2 + (row.P_position_y - y1)**2)
-        if Distance > 0.25:    #Para los mapas de calor 0.25 / 0.075 en modo original
+        if Distance > 0.005:    #Para los mapas de calor 0.25 / 0.075 en modo original
             Moving=True
         if Moving==False:
             Ban.append('1')
@@ -129,7 +129,7 @@ Banish_List.extend([2309,3507,3106,2502,4010,4104,4801,4405,5801,6604,9402,1604,
 #Dudosos
 Banish_List.extend([4006,4100,5200,301,8902,9704,2304,7106,9600,12300,12302,13700,14302,15105,16611,18205])
 Banish_List.extend([18302,19009,198009,19806,20306,21204,25508,22600,24303,25201,25204,26500,28204,3106,31607,31700])
-Banish_List.extend([31800,32310,32401,34601,36009,36709,40910,41105,40210,47501,39900])
+Banish_List.extend([46900,44800,46705,44001,43700,42505,38600,40200,31800,32310,32401,34601,36009,36709,40910,41105,40210,47501,39900])
 #Aqui vamos a limpiar los Trials conde NaviVissible tengan un error
 for row in short_df.itertuples():
     if ((row.True_Block == 'VisibleTarget_1') or (row.True_Block == 'VisibleTarget_2')) and (row.CSE > 33):

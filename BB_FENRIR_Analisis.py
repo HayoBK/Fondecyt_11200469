@@ -19,7 +19,7 @@ import tqdm
 
 home= str(Path.home()) # Obtener el directorio raiz en cada computador distinto
 Py_Processing_Dir= home+"/OneDrive/2-Casper/00-CurrentResearch/001-FONDECYT_11200469/002-LUCIEN/Py_Processing/"
-Output_Dir=        home+"/OneDrive/2-Casper/00-CurrentResearch/001-FONDECYT_11200469/002-LUCIEN/Outputs/FENRIR 0.25/"
+Output_Dir=        home+"/OneDrive/2-Casper/00-CurrentResearch/001-FONDECYT_11200469/002-LUCIEN/Outputs/FENRIR v2/"
 
 #--------------------------------------------------------------------------------------------------------------------
 #   IMPORTAR BASES DE DATOS
