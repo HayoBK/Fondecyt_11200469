@@ -12,7 +12,11 @@ from pathlib import Path
 import os
 import tqdm
 import scipy.stats as stats
-
+import statsmodels.api as sm
+from statsmodels.formula.api import ols
+from statsmodels.stats.multicomp import pairwise_tukeyhsd
+from sklearn.decomposition import FactorAnalysis
+from sklearn.preprocessing import StandardScaler
 #--------------------------------------------------------------------------------------------------------------------
 #   PREPARAR DIRECTORIOS PARA MANEJO DE DATOS
 #--------------------------------------------------------------------------------------------------------------------
@@ -598,7 +602,7 @@ print(' ')
 data = df_CSE[df_CSE['Modalidad'].isin(['No Inmersivo'])]
 #data = data[data['True_Block'].isin([B])]
 data = data[data['True_Trial'] != 3]
-Title = 'Figura 3 - Spatial Navigation learning through trials'
+Title = 'Figure 3 - Spatial Navigation learning through trials'
 ax = sns.lineplot(data, x='True_Trial', y='CSE', linewidth = 4, hue='Grupo', hue_order=Mi_Orden)
 ax.set(ylim=(0, 150), title=Title)
 directory_path = Output_Dir + 'Paper1_Figures/'
@@ -616,6 +620,67 @@ print('Segmento de script completo - Hayo')
 #   Figura 5
 #--------------------------------------------------------------------------------------------------------------------
 print(' ')
+df = df_Small
+df['Grupo'] = df['Grupo'].replace({"MPPP":"PPPD", "Vestibular":"Vestibular", "Voluntario Sano":"Control"})
+Title= 'Figure 5 - Cognitive tests per group'
+df_melted = df.melt(id_vars="Grupo",
+                    value_vars=['Niigata', 'DHI','EVA','BDI','STAI_Estado','STAI_Rasgo','MOCA','WAIS_d','WAIS_i','TMT_A_s','TMT_B_s','Corsi_d','Corsi_i','London'],
+                    var_name="Variable",
+                    value_name="value_column")
+
+g = sns.catplot(
+    data=df_melted,
+    x='Grupo',
+    y='value_column',
+    col='Variable',
+    col_wrap=3,
+    kind='box',
+    height=4.5,
+    aspect=1.2,
+    sharey = False,
+    linewidth=4,
+    order= ['PPPD','Vestibular','Control']
+)
+g.set_axis_labels("", "")
+custom_labels = {"MPPP":"PPPD", "Vestibular":"Vestibular","Voluntario Sano":"Control"}
+
+g.set_titles("{col_name}")
+ax.set(title=Title)
+directory_path = Output_Dir + 'Paper1_Figures/'
+if not os.path.exists(directory_path):
+    os.makedirs(directory_path)
+plt.savefig(directory_path + Title + '.png')
+
+plt.show()
+plt.clf()
+plt.show()
+
+variables = ['Niigata', 'DHI','EVA','BDI','STAI_Estado','STAI_Rasgo','MOCA','WAIS_d','WAIS_i','TMT_A_s','TMT_B_s','Corsi_d','Corsi_i','London']
+df = df.dropna(subset=variables)
+for var in variables:
+    modelo = ols(f"{var} ~ Grupo", data=df).fit()
+    anova = sm.stats.anova_lm(modelo, typ=2)
+
+    print(f"ANOVA para {var}:")
+    print(anova)
+
+    # Si el p-valor es menor a 0.05, entonces realizamos pruebas post-hoc
+    if anova["PR(>F)"]["Grupo"] < 0.07:
+        posthoc = pairwise_tukeyhsd(df[var], df["Grupo"])
+        print("\nPruebas post-hoc (Tukey):")
+        print(posthoc)
+
+    print("\n" + "-" * 50 + "\n")
+
+print('Segmento de script completo - Hayo')
+#%%
+#--------------------------------------------------------------------------------------------------------------------
+#   Factor Analysys
+#--------------------------------------------------------------------------------------------------------------------
+print(' ')
+df= df_Small
+df = df.dropna(subset=variables)
+
 
 print('Segmento de script completo - Hayo')
 #%%
