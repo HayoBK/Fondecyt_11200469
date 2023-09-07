@@ -17,6 +17,7 @@ from statsmodels.formula.api import ols
 from statsmodels.stats.multicomp import pairwise_tukeyhsd
 from sklearn.decomposition import FactorAnalysis
 from sklearn.preprocessing import StandardScaler
+
 #--------------------------------------------------------------------------------------------------------------------
 #   PREPARAR DIRECTORIOS PARA MANEJO DE DATOS
 #--------------------------------------------------------------------------------------------------------------------
@@ -679,7 +680,34 @@ print('Segmento de script completo - Hayo')
 #--------------------------------------------------------------------------------------------------------------------
 print(' ')
 df= df_Small
-df = df.dropna(subset=variables)
+print(df.columns)
+cols = ['No Inmersivo', 'Edad','N_Educacional','Edinburgo','Niigata', 'DHI','EVA','BDI','STAI_Estado','STAI_Rasgo','MOCA','WAIS_d','WAIS_i','TMT_A_s','TMT_B_s','Corsi_d','Corsi_i','London']
+df= df[cols]
+#df.columns = ['_'.join(col).strip() for col in df.columns.values]
+
+df = df.dropna()
+# Standardizing the data
+scaler = StandardScaler()
+df_scaled = scaler.fit_transform(df)
+
+# Applying Factor Analysis
+fa = FactorAnalysis(n_components=3,rotation='varimax')  # Here, we're extracting two factors. You can adjust 'n_components' accordingly.
+fa_components = fa.fit_transform(df_scaled)
+
+# Loading scores (factor loadings)
+loadings = pd.DataFrame(fa.components_, columns=df.columns)
+print(loadings.transpose())
+
+# Eigenvalues
+eigenvalues = fa.noise_variance_
+
+plt.plot(range(1, df_scaled.shape[1] + 1), eigenvalues, marker='o')
+plt.title('Scree Plot')
+plt.xlabel('Factors')
+plt.ylabel('Eigenvalue')
+plt.grid(True)
+plt.show()
+
 
 
 print('Segmento de script completo - Hayo')
