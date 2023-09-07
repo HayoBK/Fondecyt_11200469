@@ -15,6 +15,7 @@ import scipy.stats as stats
 import statsmodels.api as sm
 from statsmodels.formula.api import ols
 from statsmodels.stats.multicomp import pairwise_tukeyhsd
+from statsmodels.formula.api import mnlogit
 from sklearn.decomposition import FactorAnalysis
 from sklearn.preprocessing import StandardScaler
 
@@ -622,6 +623,8 @@ print('Segmento de script completo - Hayo')
 #--------------------------------------------------------------------------------------------------------------------
 print(' ')
 df = df_Small
+df = df[df['Sujeto'] != 'P13']
+df = df[df['Sujeto'] != 'P49']
 df['Grupo'] = df['Grupo'].replace({"MPPP":"PPPD", "Vestibular":"Vestibular", "Voluntario Sano":"Control"})
 Title= 'Figure 5 - Cognitive tests per group'
 df_melted = df.melt(id_vars="Grupo",
@@ -646,7 +649,7 @@ g.set_axis_labels("", "")
 custom_labels = {"MPPP":"PPPD", "Vestibular":"Vestibular","Voluntario Sano":"Control"}
 
 g.set_titles("{col_name}")
-ax.set(title=Title)
+#ax.set(title=Title)
 directory_path = Output_Dir + 'Paper1_Figures/'
 if not os.path.exists(directory_path):
     os.makedirs(directory_path)
@@ -656,10 +659,10 @@ plt.show()
 plt.clf()
 plt.show()
 
-variables = ['Niigata', 'DHI','EVA','BDI','STAI_Estado','STAI_Rasgo','MOCA','WAIS_d','WAIS_i','TMT_A_s','TMT_B_s','Corsi_d','Corsi_i','London']
+variables = ['Niigata', 'DHI','EVA','BDI','STAI_Estado','STAI_Rasgo','MOCA','WAIS_d','WAIS_i','TMT_A_e','TMT_B_e','TMT_A_s','TMT_B_s','Corsi_d','Corsi_i','London']
 df = df.dropna(subset=variables)
 for var in variables:
-    modelo = ols(f"{var} ~ Grupo", data=df).fit()
+    modelo = ols(f"{var} ~ Grupo + Edad", data=df).fit()
     anova = sm.stats.anova_lm(modelo, typ=2)
 
     print(f"ANOVA para {var}:")
@@ -680,12 +683,16 @@ print('Segmento de script completo - Hayo')
 #--------------------------------------------------------------------------------------------------------------------
 print(' ')
 df= df_Small
+df = df[df['Sujeto'] != 'P13']
+df = df[df['Sujeto'] != 'P49']
 print(df.columns)
 cols = ['No Inmersivo', 'Edad','N_Educacional','Edinburgo','Niigata', 'DHI','EVA','BDI','STAI_Estado','STAI_Rasgo','MOCA','WAIS_d','WAIS_i','TMT_A_s','TMT_B_s','Corsi_d','Corsi_i','London']
 df= df[cols]
+
 #df.columns = ['_'.join(col).strip() for col in df.columns.values]
 
-df = df.dropna()
+#df = df.dropna()
+df.fillna(df.mean(), inplace=True)
 # Standardizing the data
 scaler = StandardScaler()
 df_scaled = scaler.fit_transform(df)
@@ -707,10 +714,80 @@ plt.xlabel('Factors')
 plt.ylabel('Eigenvalue')
 plt.grid(True)
 plt.show()
+print('Segmento de script completo - Hayo')
+#%%
+#--------------------------------------------------------------------------------------------------------------------
+#   Regresiones
+#--------------------------------------------------------------------------------------------------------------------
+print(' ')
+df= df_Small
+df = df[df['Sujeto'] != 'P13']
+cols = ['Grupo','No Inmersivo', 'Edad','N_Educacional','Edinburgo','Niigata', 'DHI','EVA','BDI','STAI_Estado','STAI_Rasgo','MOCA','WAIS_d','WAIS_i','TMT_A_s','TMT_B_s','Corsi_d','Corsi_i','London']
+df= df[cols]
+df['Grupo'] = pd.Categorical(df['Grupo'])
+#df.fillna(df.mean(), inplace=True)
+df = df.dropna()
+grupo_dummies = pd.get_dummies(df['Grupo'], prefix='Grupo', drop_first=False)
+
+# Add the dummy columns back to the dataframe
+df = pd.concat([df, grupo_dummies], axis=1)
 
 
+# Define dependent and independent variables
+X = df[['No Inmersivo', 'Edad','N_Educacional','Edinburgo','Niigata', 'DHI','EVA','BDI','STAI_Estado','STAI_Rasgo','MOCA','WAIS_d','WAIS_i','TMT_A_s','TMT_B_s','Corsi_d','Corsi_i','London']]
+X = sm.add_constant(X)  # Adds a constant column for the intercept
+y = df['Niigata']
+
+# Create the model
+model = sm.OLS(y, X)
+
+# Fit the model
+results = model.fit()
+
+# Print out the statistics
+print(results.summary())
+
+# Setting up the logistic regression model
+formula = "Grupo_MPPP ~ Edad + N_Educacional  +  BDI + STAI_Estado + STAI_Rasgo + MOCA + WAIS_i + TMT_A_s + TMT_B_s + Corsi_i + London"  # ... add all other independent variables
+model = mnlogit(formula, data=df).fit()
+
+# Print the summary
+print(model.summary())
+
+print('Segmento de script completo - Hayo')
+
+
+#%%
+#--------------------------------------------------------------------------------------------------------------------
+#   Figura 6 Correlaciones.
+#--------------------------------------------------------------------------------------------------------------------
+print(' ')
+data= df_Small
+
+Title = 'Figure 6.A - PPPD severity and Spatial Navigation Impairment'
+
+ax = sns.scatterplot(data, x='Niigata', y='No Inmersivo', style='Grupo' , hue='Grupo', palette="deep", hue_order=Mi_Orden, s=100 )
+ax.set(title=Title)
+plt.xlabel('CSE - Spatial Navigation error')
+directory_path = Output_Dir + 'Paper1_Figures/'
+if not os.path.exists(directory_path):
+    os.makedirs(directory_path)
+plt.savefig(directory_path + Title + '.png')
+plt.show()
+plt.clf()
+
+Title = 'Figure 6.A(b) - PPPD severity and Spatial Navigation Impairment'
+
+ax = sns.lmplot(data, x='Niigata', y='No Inmersivo', markers=['o','s','x'] , hue='Grupo', palette="deep", hue_order=Mi_Orden, )
+ax.set(title=Title)
+plt.xlabel('CSE - Spatial Navigation error')
+directory_path = Output_Dir + 'Paper1_Figures/'
+if not os.path.exists(directory_path):
+    os.makedirs(directory_path)
+plt.savefig(directory_path + Title + '.png')
+plt.show()
+plt.clf()
 
 print('Segmento de script completo - Hayo')
 #%%
-
 print('Listoco (Script completo) - Hayo')
