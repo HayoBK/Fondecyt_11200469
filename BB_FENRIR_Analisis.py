@@ -790,4 +790,12 @@ plt.clf()
 
 print('Segmento de script completo - Hayo')
 #%%
+#%%
+#--------------------------------------------------------------------------------------------------------------------
+#   OUTLIER MANAGEMENT.
+#--------------------------------------------------------------------------------------------------------------------
+df_Small.to_excel(Output_Dir + 'Paper1_Figures/df_Small.xlsx')
+
+print('Segmento de script completo - Hayo')
+#%%
 print('Listoco (Script completo) - Hayo')
