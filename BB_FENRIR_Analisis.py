@@ -859,7 +859,7 @@ mask = np.invert(np.triu(pvals_matrix<0.05))
 # Plotting
 plt.figure(figsize=(24, 20))
 sns.heatmap(corr_matrix, annot=True, center=0, fmt=".2f", cmap="coolwarm", mask=mask, linewidths=1, linecolor="lightgray", cbar_kws={"label": "Correlation coefficient"})
-Title = "Figure 6 - Spearman Correlation with Significance (p < 0.05)"
+Title = "Figure 6 - Spearman Correlation with Significance"
 plt.title("Spearman Correlation with Significance (p < 0.05)")
 directory_path = Output_Dir + 'Paper1_Figures/'
 if not os.path.exists(directory_path):
