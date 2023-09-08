@@ -685,9 +685,10 @@ print('Segmento de script completo - Hayo')
 #--------------------------------------------------------------------------------------------------------------------
 print(' ')
 df= df_Small
+df = df.rename(columns={"No Inmersivo": "CSE"})
 df = df[df['Sujeto'] != 'P13']
 print(df.columns)
-cols = ['No Inmersivo', 'Edad','N_Educacional','Edinburgo','Niigata', 'DHI','EVA','BDI','STAI_Estado','STAI_Rasgo','MOCA','WAIS_d','WAIS_i','TMT_A_s','TMT_B_s','Corsi_d','Corsi_i','London']
+cols = ['CSE', 'Edad','N_Educacional','Edinburgo','Niigata', 'DHI','EVA','BDI','STAI_Estado','STAI_Rasgo','MOCA','WAIS_d','WAIS_i','TMT_A_s','TMT_B_s','Corsi_d','Corsi_i','London']
 df= df[cols]
 
 #df.columns = ['_'.join(col).strip() for col in df.columns.values]
@@ -699,12 +700,28 @@ scaler = StandardScaler()
 df_scaled = scaler.fit_transform(df)
 
 # Applying Factor Analysis
-fa = FactorAnalysis(n_components=3,rotation='varimax')  # Here, we're extracting two factors. You can adjust 'n_components' accordingly.
+fa = FactorAnalysis(n_components=3, rotation = 'varimax')  # Here, we're extracting two factors. You can adjust 'n_components' accordingly.
 fa_components = fa.fit_transform(df_scaled)
 
 # Loading scores (factor loadings)
 loadings = pd.DataFrame(fa.components_, columns=df.columns)
-print(loadings.transpose())
+loadings = loadings.transpose()
+print(loadings)
+
+
+
+# Heatmap visualization
+plt.figure(figsize=(15, 12))
+sns.heatmap(loadings, annot=True, cmap="coolwarm", center=0, linewidths=.5, linecolor='black', fmt=".2f")
+plt.title('Factor Loadings Heatmap')
+plt.xlabel('Factors')
+Title = 'Figure 8 - Factor Loadings Heatmap'
+directory_path = Output_Dir + 'Paper1_Figures/'
+if not os.path.exists(directory_path):
+    os.makedirs(directory_path)
+plt.savefig(directory_path + Title + '.png')
+plt.show()
+plt.clf()
 
 # Eigenvalues
 eigenvalues = fa.noise_variance_
@@ -760,14 +777,15 @@ print('Segmento de script completo - Hayo')
 
 #%%
 #--------------------------------------------------------------------------------------------------------------------
-#   Figura 6 Correlaciones.
+#   Figura 7 Correlaciones.
 #--------------------------------------------------------------------------------------------------------------------
 print(' ')
 data= df_Small
+data = data.rename(columns={"No Inmersivo": "CSE"})
 
-Title = 'Figure 6.A - PPPD severity and Spatial Navigation Impairment'
+Title = 'Figure 7 - PPPD symptoms and Spatial Navigation Impairment'
 
-ax = sns.scatterplot(data, x='Niigata', y='No Inmersivo', style='Grupo' , hue='Grupo', palette="deep", hue_order=Mi_Orden, s=100 )
+ax = sns.scatterplot(data, x='Niigata', y='CSE', style='Grupo' , hue='Grupo', palette="deep", hue_order=Mi_Orden, s=100 )
 ax.set(title=Title)
 plt.xlabel('CSE - Spatial Navigation error')
 directory_path = Output_Dir + 'Paper1_Figures/'
@@ -777,17 +795,38 @@ plt.savefig(directory_path + Title + '.png')
 plt.show()
 plt.clf()
 
-Title = 'Figure 6.A(b) - PPPD severity and Spatial Navigation Impairment'
-
-ax = sns.lmplot(data, x='Niigata', y='No Inmersivo', markers=['o','s','x'] , hue='Grupo', palette="deep", hue_order=Mi_Orden, )
+Title = 'Figure 7 - PPPD symptoms and Spatial Navigation Impairment'
+#plt.figure(figsize=(24, 20))
+ax = sns.lmplot(data, x='Niigata', y='CSE', markers=['o','s','x'] , hue='Grupo', palette="deep", hue_order=Mi_Orden,
+                height=8, aspect =1, ci= None, scatter_kws={'s': 75})
 ax.set(title=Title)
-plt.xlabel('CSE - Spatial Navigation error')
+plt.xlabel('Niigata - PPPD symptoms level')
 directory_path = Output_Dir + 'Paper1_Figures/'
 if not os.path.exists(directory_path):
     os.makedirs(directory_path)
 plt.savefig(directory_path + Title + '.png')
 plt.show()
 plt.clf()
+
+# Store regression coefficients and p-values
+regression_info = {}
+
+# Loop through each unique group in 'Grupo' column
+for group in data['Grupo'].unique():
+    # Subset the data for that group
+    subset = data[data['Grupo'] == group]
+
+    # Fit a linear regression model and get p-value
+    slope, intercept, r_value, p_value, std_err = stats.linregress(subset['Niigata'], subset['CSE'])
+
+    # Store the slope, intercept, and p-value in the dictionary
+    regression_info[group] = (slope, intercept, p_value)
+
+# Print regression coefficients and p-values
+for group, (slope, intercept, p_value) in regression_info.items():
+    print(f"For {group} group:")
+    print(f"y = {slope:.3f}x + {intercept:.3f}")
+    print(f"p-value = {p_value:.5f}\n")
 
 print('Segmento de script completo - Hayo')
 #%%
@@ -819,7 +858,7 @@ mask = np.invert(np.triu(pvals_matrix<0.05))
 
 # Plotting
 plt.figure(figsize=(24, 20))
-sns.heatmap(corr_matrix, annot=True, fmt=".2f", cmap="coolwarm", mask=mask, linewidths=1, linecolor="lightgray", cbar_kws={"label": "Correlation coefficient"})
+sns.heatmap(corr_matrix, annot=True, center=0, fmt=".2f", cmap="coolwarm", mask=mask, linewidths=1, linecolor="lightgray", cbar_kws={"label": "Correlation coefficient"})
 Title = "Figure 6 - Spearman Correlation with Significance (p < 0.05)"
 plt.title("Spearman Correlation with Significance (p < 0.05)")
 directory_path = Output_Dir + 'Paper1_Figures/'
