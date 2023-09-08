@@ -186,6 +186,8 @@ CSE_average = CSE_average.groupby(['Sujeto','Modalidad'])['CSE'].mean().reset_in
 CSE_average = CSE_average.pivot_table(index=['Sujeto'], columns=['Modalidad'], values='CSE', aggfunc='first')
 df_Small = df_Small.merge(CSE_average, on='Sujeto',how='left',suffixes=('', '_fff') )
 
+df_Small=  pd.read_excel((Output_Dir + 'Paper1_Figures/df_Small_Loki.xlsx'), index_col=0)
+
 #CSE_average=
 print('Manejo inicial de datos listos - Segmento listo')
 #%%
@@ -624,7 +626,6 @@ print('Segmento de script completo - Hayo')
 print(' ')
 df = df_Small
 df = df[df['Sujeto'] != 'P13']
-df = df[df['Sujeto'] != 'P49']
 df['Grupo'] = df['Grupo'].replace({"MPPP":"PPPD", "Vestibular":"Vestibular", "Voluntario Sano":"Control"})
 Title= 'Figure 5 - Cognitive tests per group'
 df_melted = df.melt(id_vars="Grupo",
@@ -684,7 +685,6 @@ print('Segmento de script completo - Hayo')
 print(' ')
 df= df_Small
 df = df[df['Sujeto'] != 'P13']
-df = df[df['Sujeto'] != 'P49']
 print(df.columns)
 cols = ['No Inmersivo', 'Edad','N_Educacional','Edinburgo','Niigata', 'DHI','EVA','BDI','STAI_Estado','STAI_Rasgo','MOCA','WAIS_d','WAIS_i','TMT_A_s','TMT_B_s','Corsi_d','Corsi_i','London']
 df= df[cols]
