@@ -18,6 +18,7 @@ from statsmodels.stats.multicomp import pairwise_tukeyhsd
 from statsmodels.formula.api import mnlogit
 from sklearn.decomposition import FactorAnalysis
 from sklearn.preprocessing import StandardScaler
+from scipy.stats import spearmanr
 
 #--------------------------------------------------------------------------------------------------------------------
 #   PREPARAR DIRECTORIOS PARA MANEJO DE DATOS
@@ -186,7 +187,7 @@ CSE_average = CSE_average.groupby(['Sujeto','Modalidad'])['CSE'].mean().reset_in
 CSE_average = CSE_average.pivot_table(index=['Sujeto'], columns=['Modalidad'], values='CSE', aggfunc='first')
 df_Small = df_Small.merge(CSE_average, on='Sujeto',how='left',suffixes=('', '_fff') )
 
-df_Small=  pd.read_excel((Output_Dir + 'Paper1_Figures/df_Small_Loki.xlsx'), index_col=0)
+df_Small=  pd.read_excel((Output_Dir + 'Paper1_Figures/df_Loki.xlsx'), index_col=0)
 
 #CSE_average=
 print('Manejo inicial de datos listos - Segmento listo')
@@ -663,7 +664,7 @@ plt.show()
 variables = ['Niigata', 'DHI','EVA','BDI','STAI_Estado','STAI_Rasgo','MOCA','WAIS_d','WAIS_i','TMT_A_e','TMT_B_e','TMT_A_s','TMT_B_s','Corsi_d','Corsi_i','London']
 df = df.dropna(subset=variables)
 for var in variables:
-    modelo = ols(f"{var} ~ Grupo + Edad", data=df).fit()
+    modelo = ols(f"{var} ~ Grupo", data=df).fit()
     anova = sm.stats.anova_lm(modelo, typ=2)
 
     print(f"ANOVA para {var}:")
@@ -795,7 +796,37 @@ print('Segmento de script completo - Hayo')
 #   OUTLIER MANAGEMENT.
 #--------------------------------------------------------------------------------------------------------------------
 df_Small.to_excel(Output_Dir + 'Paper1_Figures/df_Small.xlsx')
+print('Segmento de script completo - Hayo')
 
+#%%
+#--------------------------------------------------------------------------------------------------------------------
+#   Figura 6? Matriz de Correlacion.
+#--------------------------------------------------------------------------------------------------------------------
+df=df_Small
+df = df.rename(columns={"No Inmersivo": "CSE"})
+df = df[['Niigata', 'DHI','EVA','CSE','Edinburgo','BDI','STAI_Estado','STAI_Rasgo','MOCA','WAIS_d','WAIS_i','TMT_A_s','TMT_B_s','Corsi_d','Corsi_i','London', 'Edad','N_Educacional']]
+corr = np.zeros((len(df.columns), len(df.columns)))
+pvals = np.zeros((len(df.columns), len(df.columns)))
+
+for i, a in enumerate(df.columns):
+    for j, b in enumerate(df.columns):
+        corr[i, j], pvals[i, j] = spearmanr(df[a], df[b])
+corr_matrix = pd.DataFrame(corr, index=df.columns, columns=df.columns)
+pvals_matrix = pd.DataFrame(pvals, index=df.columns, columns=df.columns)
+
+# Create a mask for non-significant p-values
+mask = np.invert(np.triu(pvals_matrix<0.05))
+
+# Plotting
+plt.figure(figsize=(24, 20))
+sns.heatmap(corr_matrix, annot=True, fmt=".2f", cmap="coolwarm", mask=mask, linewidths=1, linecolor="lightgray", cbar_kws={"label": "Correlation coefficient"})
+Title = "Figure 6 - Spearman Correlation with Significance (p < 0.05)"
+plt.title("Spearman Correlation with Significance (p < 0.05)")
+directory_path = Output_Dir + 'Paper1_Figures/'
+if not os.path.exists(directory_path):
+    os.makedirs(directory_path)
+plt.savefig(directory_path + Title + '.png')
+plt.show()
 print('Segmento de script completo - Hayo')
 #%%
 print('Listoco (Script completo) - Hayo')
