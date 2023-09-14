@@ -583,16 +583,20 @@ print('Segmento de script completo - Hayo')
 #--------------------------------------------------------------------------------------------------------------------
 print(' ')
 data = df_CSE[df_CSE['Modalidad'].isin(['No Inmersivo'])]
-data = data[data['True_Block'].isin(Nav_List)]
+This_List=[]
+This_List = Nav_List
+This_List.extend(['Training', 'VisibleTarget_1','VisibleTarget_2'])
+data = data[data['True_Block'].isin(This_List)]
 
 Title = 'Figure 2 - Spatial Navigation Error per Group at each Experimental Block'
 ax = sns.boxplot(data, x='True_Block', y='CSE',hue='Grupo', linewidth=6, hue_order=Mi_Orden)
 ax.set(ylim=(0, 300), title = Title)
-new_labels = ["Block C", "Block D", "Block E"]
-plt.xticks(ticks=range(3), labels=new_labels)
+new_labels = ["Block A\nTraining", "Block B\nTarget \nVisible", "Block C\nTarget\nHidden","Block D\nTarget\nHidden","Block E\nTarget\nHidden\nRandom \nstarting\npoint","Block F\nTarget \nVisible"]
+plt.xticks(ticks=range(6), labels=new_labels)
 directory_path = Output_Dir + 'Paper1_Figures/'
 if not os.path.exists(directory_path):
     os.makedirs(directory_path)
+plt.tight_layout()
 plt.savefig(directory_path + Title + '.png')
 plt.show()
 plt.clf()
