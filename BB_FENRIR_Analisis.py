@@ -712,6 +712,70 @@ loadings = pd.DataFrame(fa.components_, columns=df.columns)
 loadings = loadings.transpose()
 print(loadings)
 
+data = {
+    0: {
+        "CSE": -0.316401,
+        "Edad": -0.074150,
+        "N_Educacional": 0.157497,
+        "Edinburgo": -0.332090,
+        "Niigata": -0.723562,
+        "DHI": -0.931750,
+        "EVA": -0.921200,
+        "BDI": -0.411383,
+        "STAI_Estado": -0.120432,
+        "STAI_Rasgo": -0.445399,
+        "MOCA": 0.193202,
+        "WAIS_d": 0.213498,
+        "WAIS_i": 0.217129,
+        "TMT_A_s": -0.212810,
+        "TMT_B_s": -0.076990,
+        "Corsi_d": 0.230282,
+        "Corsi_i": 0.250927,
+        "London": 0.114779,
+    },
+    1: {
+        "CSE": 0.577380,
+        "Edad": 0.767359,
+        "N_Educacional": -0.374981,
+        "Edinburgo": 0.036441,
+        "Niigata": 0.174412,
+        "DHI": 0.160030,
+        "EVA": 0.070375,
+        "BDI": 0.004473,
+        "STAI_Estado": 0.116069,
+        "STAI_Rasgo": 0.105681,
+        "MOCA": -0.502769,
+        "WAIS_d": -0.085023,
+        "WAIS_i": 0.045009,
+        "TMT_A_s": 0.747984,
+        "TMT_B_s": 0.616490,
+        "Corsi_d": -0.242118,
+        "Corsi_i": -0.440112,
+        "London": -0.299767,
+    },
+    2: {
+        "CSE": -0.252049,
+        "Edad": 0.190805,
+        "N_Educacional": 0.120156,
+        "Edinburgo": -0.332576,
+        "Niigata": -0.392546,
+        "DHI": -0.097016,
+        "EVA": -0.104390,
+        "BDI": -0.191333,
+        "STAI_Estado": 0.103416,
+        "STAI_Rasgo": -0.121329,
+        "MOCA": 0.306277,
+        "WAIS_d": 0.453122,
+        "WAIS_i": 0.825399,
+        "TMT_A_s": -0.036014,
+        "TMT_B_s": -0.444738,
+        "Corsi_d": 0.423343,
+        "Corsi_i": 0.386639,
+        "London": 0.548620,
+    }
+}
+
+loadings = pd.DataFrame(data)
 
 
 # Heatmap visualization
