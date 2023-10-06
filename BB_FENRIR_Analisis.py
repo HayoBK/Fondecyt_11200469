@@ -563,10 +563,40 @@ print(' ')
 data = df_CSE[df_CSE['True_Block'].isin(Nav_List)]
 data = data[data['Modalidad'].isin(['No Inmersivo'])]
 
+
+groups = [data['CSE'][data['Grupo'] == g] for g in data['Grupo'].unique()]
+f_val, p_val = stats.f_oneway(*groups)
+
+print("ANOVA results:")
+print("F-value:", f_val)
+print("P-value:", p_val)
+
+posthoc = pairwise_tukeyhsd(data['CSE'], data['Grupo'], alpha=0.05)
+print(posthoc)
+
 Title = 'Figure 1 - Spatial Navigation Error per Group'
 
 ax = sns.boxplot(data, x='Grupo', y='CSE', linewidth=6, order=Mi_Orden)
-ax.set(ylim=(0, 300), title = Title)
+
+ax.set_ylabel("Cummulative search error (CSE) in pool diameters", weight='bold')
+ax.set_xlabel("Group", weight='bold')
+ax.set_xticklabels(["PPPD", "Vestibular", "Healthy control"])
+
+ax.set(ylim=(0, 350))
+ax.set_title(Title, weight='bold')
+# Determine the y position for the line and annotation
+y_max = 270 + 10  # 10 units above the highest data point; adjust as needed
+
+# Draw lines for PPPD vs Vestibular
+plt.plot([0, 0, 1, 1], [y_max, y_max + 5, y_max + 5, y_max], lw=4.5, color='black')
+plt.text(0.5, y_max - 2, "*", ha='center', va='bottom', color='black', weight='bold', fontsize=40)
+
+# For PPPD vs Healthy control, we adjust the y-values to place the annotation a bit higher
+y_max += 20  # Adjusting for the next significant difference bar; tweak as necessary
+plt.plot([0, 0, 2, 2], [y_max, y_max + 5, y_max + 5, y_max], lw=4.5, color='black')
+plt.text(1, y_max - 2, "*", ha='center', va='bottom', color='black', weight='bold', fontsize=40)
+
+
 directory_path = Output_Dir + 'Paper1_Figures/'
 if not os.path.exists(directory_path):
     os.makedirs(directory_path)
