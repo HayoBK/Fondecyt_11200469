@@ -1127,6 +1127,7 @@ plt.yticks(fontsize=26, weight='bold')  # Adjust rotation as needed; 'ha' stands
 
 plt.tight_layout()  # Ensure everything fits in the saved figure
 
+
 directory_path = Output_Dir + 'Paper1_Figures/'
 if not os.path.exists(directory_path):
     os.makedirs(directory_path)
