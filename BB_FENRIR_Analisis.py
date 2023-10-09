@@ -1076,7 +1076,35 @@ print('Segmento de script completo - Hayo')
 #--------------------------------------------------------------------------------------------------------------------
 df=df_Small
 df = df.rename(columns={"No Inmersivo": "CSE"})
-df = df[['Niigata', 'DHI','EVA','CSE','Edinburgo','BDI','STAI_Estado','STAI_Rasgo','MOCA','WAIS_d','WAIS_i','TMT_A_s','TMT_B_s','Corsi_d','Corsi_i','London', 'Edad','N_Educacional']]
+df = df[['Niigata', 'DHI','EVA','CSE','BDI','STAI_Estado','STAI_Rasgo','MOCA','WAIS_d','WAIS_i','TMT_A_s','TMT_B_s','Corsi_d','Corsi_i','London', 'Edad','N_Educacional']]
+df['MOCA'] *= -1
+df['WAIS_d'] *= -1
+df['WAIS_i'] *= -1
+df['Corsi_d'] *= -1
+df['Corsi_i'] *= -1
+df['London'] *= -1
+new_titles_dict = {
+    'Niigata':'Niigata - PPPD symptoms',
+    'DHI':'DHI - Dizziness impact on life',
+    'EVA':'AVSD - Dizziness intensity',
+    'CSE':'CSE - Spatial navigation error',
+    'BDI':'BDI - Depressive symtpoms',
+    'STAI_Estado':'STAI - State Anxiety',
+    'STAI_Rasgo':'STAI - Trait Anxiety',
+    'MOCA':'MoCA (-1*)- Global cognition',
+    'WAIS_d':'DST (-1*)- digit span memory',
+    'WAIS_i':'DST(inverted) (-1*)- digit memory',
+    'TMT_A_s':'TMT A - visuospatial attention ',
+    'TMT_B_s':'TMT B - visuospatial executive function',
+    'Corsi_d':'CBTT (-1*)- visuospatial memory',
+    'Corsi_i':'CBTT(inverted) (-1*)- visuospatial memory',
+    'London':'ToL (-1*)- Visuospatial planning',
+    'Edad':'Age',
+    'N_Educacional':'Educational level'
+
+}
+df = df.rename(columns=new_titles_dict)
+
 corr = np.zeros((len(df.columns), len(df.columns)))
 pvals = np.zeros((len(df.columns), len(df.columns)))
 
@@ -1090,10 +1118,15 @@ pvals_matrix = pd.DataFrame(pvals, index=df.columns, columns=df.columns)
 mask = np.invert(np.triu(pvals_matrix<0.05))
 
 # Plotting
-plt.figure(figsize=(24, 20))
+plt.figure(figsize=(30, 26))
 sns.heatmap(corr_matrix, annot=True, center=0, fmt=".2f", cmap="coolwarm", mask=mask, linewidths=1, linecolor="lightgray", cbar_kws={"label": "Correlation coefficient"})
 Title = "Figure 6 - Spearman Correlation with Significance"
-plt.title("Spearman Correlation with Significance (p < 0.05)")
+plt.title("Figure 6 - Spearman Correlations with Significance (p < 0.05)", fontsize = 32, weight='bold')
+plt.xticks(rotation=45, ha="right", fontsize=26, weight='bold')  # Adjust rotation as needed; 'ha' stands for horizontal alignment
+plt.yticks(fontsize=26, weight='bold')  # Adjust rotation as needed; 'ha' stands for horizontal alignment
+
+plt.tight_layout()  # Ensure everything fits in the saved figure
+
 directory_path = Output_Dir + 'Paper1_Figures/'
 if not os.path.exists(directory_path):
     os.makedirs(directory_path)
