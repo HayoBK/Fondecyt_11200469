@@ -606,6 +606,27 @@ plt.clf()
 
 data = df_CSE[df_CSE['True_Block'].isin(Nav_List)]
 
+from scipy import stats
+from statsmodels.stats.multicomp import pairwise_tukeyhsd
+
+blocks = data['True_Block'].unique()
+
+for block in blocks:
+    block_data = data[data['True_Block'] == block]
+
+    # One-way ANOVA
+    groups = [block_data['CSE'][block_data['Grupo'] == g] for g in block_data['Grupo'].unique()]
+    f_val, p_val = stats.f_oneway(*groups)
+    print(f"\nANOVA results for {block}:")
+    print("F-value:", f_val)
+    print("P-value:", p_val)
+
+    # Tukey's post-hoc test
+    if p_val < 0.05:  # Check significance level; adjust if needed
+        posthoc = pairwise_tukeyhsd(block_data['CSE'], block_data['Grupo'])
+        print("Post-hoc results:")
+        print(posthoc)
+
 print('Segmento de script completo - Hayo')
 #%%
 #--------------------------------------------------------------------------------------------------------------------
@@ -617,12 +638,58 @@ This_List=[]
 This_List = Nav_List
 This_List.extend(['Training', 'VisibleTarget_1','VisibleTarget_2'])
 data = data[data['True_Block'].isin(This_List)]
-
 Title = 'Figure 2 - Spatial Navigation Error per Group at each Experimental Block'
 ax = sns.boxplot(data, x='True_Block', y='CSE',hue='Grupo', linewidth=6, hue_order=Mi_Orden)
-ax.set(ylim=(0, 300), title = Title)
+ax.set_ylabel("Cummulative search error (CSE) in pool diameters", weight='bold', fontsize=19)
+
+ax.set(ylim=(0, 300))
+ax.set_title(Title, weight='bold', fontsize=20)
+ax.set_xlabel("")
 new_labels = ["Block A\nTraining", "Block B\nTarget \nVisible", "Block C\nTarget\nHidden","Block D\nTarget\nHidden","Block E\nTarget\nHidden\nRandom \nstarting\npoint","Block F\nTarget \nVisible"]
 plt.xticks(ticks=range(6), labels=new_labels)
+
+handles, labels = ax.get_legend_handles_labels()
+new_labels = ["PPPD", "Vestibular", "Healthy control"]
+ax.legend(handles, new_labels, title="Group", loc='upper left',prop={'size': 18}, title_fontsize=20)
+
+y_max=275
+plt.plot([1.72, 1.72, 2.23, 2.23], [y_max, y_max + 5, y_max + 5, y_max], lw=3.5, color='black')
+plt.text(2, y_max - 2, "*", ha='center', va='bottom', color='black', weight='bold', fontsize=30)
+
+y_max=265
+plt.plot([1.72, 1.72, 2, 2], [y_max, y_max + 5, y_max + 5, y_max], lw=3.5, color='black')
+plt.text(1.875, y_max - 2, "*", ha='center', va='bottom', color='black', weight='bold', fontsize=30)
+
+y_max=275
+plt.plot([2.72, 2.72, 3.23, 3.23], [y_max, y_max + 5, y_max + 5, y_max], lw=3.5, color='black')
+plt.text(3, y_max - 2, "*", ha='center', va='bottom', color='black', weight='bold', fontsize=30)
+
+y_max=265
+plt.plot([2.72, 2.72, 3, 3], [y_max, y_max + 5, y_max + 5, y_max], lw=3.5, color='black')
+plt.text(2.875, y_max - 2, "*", ha='center', va='bottom', color='black', weight='bold', fontsize=30)
+
+y_max=285
+plt.plot([3.72, 3.72, 4.23, 4.23], [y_max, y_max + 5, y_max + 5, y_max], lw=3.5, color='black')
+plt.text(4, y_max - 2, "*", ha='center', va='bottom', color='black', weight='bold', fontsize=30)
+
+y_max=275
+plt.plot([3.72, 3.72, 4, 4], [y_max, y_max + 5, y_max + 5, y_max], lw=3.5, color='black')
+plt.text(3.875, y_max - 2, "*", ha='center', va='bottom', color='black', weight='bold', fontsize=30)
+
+def cohens_d(group1, group2):
+    pooled_std = np.sqrt((np.std(group1, ddof=1)**2 + np.std(group2, ddof=1)**2) / 2)
+    d = (np.mean(group1) - np.mean(group2)) / pooled_std
+    return d
+
+def bootstrap_difference(data1, data2, num_samples=10000):
+    diffs = []
+    for _ in range(num_samples):
+        sample1 = np.random.choice(data1, size=len(data1), replace=True)
+        sample2 = np.random.choice(data2, size=len(data2), replace=True)
+        diffs.append(cohens_d(sample1, sample2))
+    return diffs
+
+
 directory_path = Output_Dir + 'Paper1_Figures/'
 if not os.path.exists(directory_path):
     os.makedirs(directory_path)
@@ -630,6 +697,29 @@ plt.tight_layout()
 plt.savefig(directory_path + Title + '.png')
 plt.show()
 plt.clf()
+
+blocks = ['HiddenTarget_1', 'HiddenTarget_2', 'HiddenTarget_3']  # Adjust block names as per your data
+
+for block in blocks:
+    block_data = data[data['True_Block'] == block]
+    groups = [block_data['CSE'][block_data['Grupo'] == g].values for g in Mi_Orden]
+
+    # Calculate effect size and bootstrap difference for each pair of groups
+    for i in range(len(groups)):
+        for j in range(i + 1, len(groups)):
+            print(f"\nComparing {Mi_Orden[i]} vs {Mi_Orden[j]} in {block}:")
+
+            d = cohens_d(groups[i], groups[j])
+            print(f"Cohen's d: {d}")
+
+            diffs = bootstrap_difference(groups[i], groups[j])
+            plt.hist(diffs, bins=50, alpha=0.5, label=f"{Mi_Orden[i]} vs {Mi_Orden[j]}")
+
+    plt.title(f"Bootstrapped Differences in {block}")
+    plt.xlabel("Effect Size (Cohen's d)")
+    plt.ylabel("Frequency")
+    plt.legend()
+    plt.show()
 
 print('Segmento de script completo - Hayo')
 #%%
@@ -642,8 +732,25 @@ data = df_CSE[df_CSE['Modalidad'].isin(['No Inmersivo'])]
 #data = data[data['True_Block'].isin([B])]
 data = data[data['True_Trial'] != 3]
 Title = 'Figure 3 - Spatial Navigation learning through trials'
+line_styles_dict = {
+    Mi_Orden[0]: '-',      # Solid line for first group
+    Mi_Orden[1]: '--',     # Dashed line for second group
+    Mi_Orden[2]: '-.'      # Dash-dot line for third group
+}
 ax = sns.lineplot(data, x='True_Trial', y='CSE', linewidth = 4, hue='Grupo', hue_order=Mi_Orden)
-ax.set(ylim=(0, 150), title=Title)
+ax.set(ylim=(0, 150))
+
+ax.set_title(Title, weight='bold', fontsize=24)
+ax.set_ylabel("Cummulative search error (CSE) in pool diameters", weight='bold', fontsize=22)
+handles, labels = ax.get_legend_handles_labels()
+new_labels = ["PPPD", "Vestibular", "Healthy control"]
+#handles = handles[1:]
+for handle in handles:  # Skip the title
+    handle.set_linewidth(10)
+ax.legend(handles, new_labels, title="Group", loc='upper left',prop={'size': 20}, title_fontsize=22)
+ax.set_xlabel("Trial", weight='bold', fontsize=22)
+
+
 directory_path = Output_Dir + 'Paper1_Figures/'
 if not os.path.exists(directory_path):
     os.makedirs(directory_path)
@@ -667,7 +774,29 @@ df_melted = df.melt(id_vars="Grupo",
                     value_vars=['Niigata', 'DHI','EVA','BDI','STAI_Estado','STAI_Rasgo','MOCA','WAIS_d','WAIS_i','TMT_A_s','TMT_B_s','Corsi_d','Corsi_i','London'],
                     var_name="Variable",
                     value_name="value_column")
+df_melted.loc[df_melted['Variable'] == 'MOCA', 'value_column'] *= -1
+df_melted.loc[df_melted['Variable'] == 'WAIS_d', 'value_column'] *= -1
+df_melted.loc[df_melted['Variable'] == 'WAIS_i', 'value_column'] *= -1
+df_melted.loc[df_melted['Variable'] == 'Corsi_d', 'value_column'] *= -1
+df_melted.loc[df_melted['Variable'] == 'Corsi_i', 'value_column'] *= -1
+df_melted.loc[df_melted['Variable'] == 'London', 'value_column'] *= -1
 
+new_titles_dict = {
+    'Niigata':'Niigata - PPPD symptoms',
+    'DHI':'DHI - Dizziness impact on life',
+    'EVA':'AVSD - Dizziness intensity',
+    'BDI':'BDI - Depressive symtpoms',
+    'STAI_Estado':'STAI - State Anxiety',
+    'STAI_Rasgo':'STAI - Trait Anxiety',
+    'MOCA':'MoCA (-1*)- Global cognition',
+    'WAIS_d':'DST (-1*)- digit span memory',
+    'WAIS_i':'DST(inverted) (-1*)- digit memory',
+    'TMT_A_s':'TMT A - visuospatial attention ',
+    'TMT_B_s':'TMT B - visuospatial executive function',
+    'Corsi_d':'CBTT (-1*)- visuospatial memory',
+    'Corsi_i':'CBTT(inverted) (-1*)- visuospatial memory',
+    'London':'ToL (-1*)- Visuospatial planning'
+}
 g = sns.catplot(
     data=df_melted,
     x='Grupo',
@@ -679,12 +808,18 @@ g = sns.catplot(
     aspect=1.2,
     sharey = False,
     linewidth=4,
-    order= ['PPPD','Vestibular','Control']
+    order= ['PPPD','Vestibular','Control'],
+    legend= False
 )
 g.set_axis_labels("", "")
 custom_labels = {"MPPP":"PPPD", "Vestibular":"Vestibular","Voluntario Sano":"Control"}
 
 g.set_titles("{col_name}")
+for ax, title in zip(g.axes.flat, g.col_names):
+    new_title = new_titles_dict.get(title, title)  # Fetch new title or default to original
+    ax.set_title(new_title, fontsize=19, weight='bold')
+# .
+# .
 #ax.set(title=Title)
 directory_path = Output_Dir + 'Paper1_Figures/'
 if not os.path.exists(directory_path):
