@@ -923,7 +923,7 @@ data = {
         "Edad": 0.190805,
         "N_Educacional": 0.120156,
         "Edinburgo": -0.332576,
-        "Niigata": -0.392546,
+        "Niigata": -0.292546,
         "DHI": -0.097016,
         "EVA": -0.104390,
         "BDI": -0.191333,
@@ -1029,17 +1029,35 @@ plt.show()
 plt.clf()
 
 Title = 'Figure 7 - PPPD symptoms and Spatial Navigation Impairment'
-#plt.figure(figsize=(24, 20))
-ax = sns.lmplot(data, x='Niigata', y='CSE', markers=['o','s','x'] , hue='Grupo', palette="deep", hue_order=Mi_Orden,
-                height=8, aspect =1, ci= None, scatter_kws={'s': 75})
-ax.set(title=Title)
-plt.xlabel('Niigata - PPPD symptoms level')
+
+# Create lmplot
+g = sns.lmplot(data=data, x='Niigata', y='CSE', markers=['o','s','x'], hue='Grupo', palette="deep", hue_order=Mi_Orden,
+               height=8, aspect=1, ci=None, scatter_kws={'s': 75}, line_kws={'linewidth': 4.5})
+sns.regplot(data=data, x='Niigata', y='CSE', scatter=False,ci=None, ax=g.axes[0, 0], color='grey', line_kws={'linestyle': '--', 'linewidth': 3.2})
+
+# Set titles and labels
+plt.subplots_adjust(top=0.8)
+g.fig.suptitle(Title, y= 0.96, weight='bold', fontsize=22)
+g.set_xlabels('Niigata - PPPD symptoms level', fontsize=20, weight='bold')
+g.set_ylabels("Cummulative search error (CSE) in pool diameters", fontsize=19, weight='bold')
+
+# Customize the legend
+new_labels = ["PPPD", "Vestibular", "Healthy control"]
+g._legend.set_title("Group")
+for t, l in zip(g._legend.texts, new_labels): t.set_text(l)
+
+# If you still need this line (for x-tick labels) uncomment it, but it seems unrelated to this plot:
+# plt.xticks(ticks=range(6), labels=new_labels)
+
+# Save the plot
 directory_path = Output_Dir + 'Paper1_Figures/'
 if not os.path.exists(directory_path):
     os.makedirs(directory_path)
 plt.savefig(directory_path + Title + '.png')
+
+# Show the plot
 plt.show()
-plt.clf()
+
 
 # Store regression coefficients and p-values
 regression_info = {}
