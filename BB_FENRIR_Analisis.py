@@ -1088,6 +1088,7 @@ print('Segmento de script completo - Hayo')
 df_Small.to_excel(Output_Dir + 'Paper1_Figures/df_Small.xlsx')
 print('Segmento de script completo - Hayo')
 
+
 #%%
 #--------------------------------------------------------------------------------------------------------------------
 #   Figura 6? Matriz de Correlacion.
