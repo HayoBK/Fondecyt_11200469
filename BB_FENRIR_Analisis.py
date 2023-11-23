@@ -189,7 +189,31 @@ df_Small = df_Small.merge(CSE_average, on='Sujeto',how='left',suffixes=('', '_ff
 
 df_Small=  pd.read_excel((Output_Dir + 'Paper1_Figures/df_Loki.xlsx'), index_col=0)
 
-#CSE_average=
+#Corregir nombres de datos vestibulares
+new_column_names={
+    'vHIT Lat DER GAN':'RL_VOR_Gain',
+    'vHIT Lat IZQ GAN':'LL_VOR_Gain',
+    'vHIT Ant IZQ GAN':'LA_VOR_Gain',
+    'vHIT Post DER GAN':'RP_VOR_Gain',
+    'vHIT ANT DER GAN':'RA_VOR_Gain',
+    'vHIT Post Izq GAN':'LP_VOR_Gain',
+    'vHIT LAT DER':'RL_vHIT_Saccade',
+    'vHIT LAT IZQ':'LL_vHIT_Saccade',
+    'vHIT ANT IZQ':'LA_vHIT_Saccade',
+    'vHIT POST DER':'RP_vHIT_Saccade',
+    'vHIT ANT DER':'RA_vHIT_Saccade',
+    'vHIT POST IZQ':'LP_vHIT_Saccade',
+    'oVEMP DER':'R_oVEMP',
+    'oVEMP IZQ':'L_oVEMP',
+    'cVEMP DER':'R_cVEMP',
+    'cVEMP IZQ':'L_cVEMP'
+}
+
+df_Small.rename(columns=new_column_names, inplace=True)
+
+#Procesar datos vestibulares
+df_Small['VOR_6Gain'] = df_Small[['RL_VOR_Gain','LL_VOR_Gain','LA_VOR_Gain','RP_VOR_Gain','RA_VOR_Gain','LP_VOR_Gain']].mean(axis=1)
+df_Small['VEMP_4Gain'] = df_Small[['R_oVEMP','L_oVEMP','L_cVEMP','R_cVEMP']].mean(axis=1)
 print('Manejo inicial de datos listos - Segmento listo')
 #%%
 #--------------------------------------------------------------------------------------------------------------------
