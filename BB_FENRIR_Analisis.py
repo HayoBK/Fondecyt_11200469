@@ -213,7 +213,94 @@ df_Small.rename(columns=new_column_names, inplace=True)
 
 #Procesar datos vestibulares
 df_Small['VOR_6Gain'] = df_Small[['RL_VOR_Gain','LL_VOR_Gain','LA_VOR_Gain','RP_VOR_Gain','RA_VOR_Gain','LP_VOR_Gain']].mean(axis=1)
+df_Small['VOR_R3Gain'] = df_Small[['RL_VOR_Gain','RP_VOR_Gain','RA_VOR_Gain']].mean(axis=1)
+df_Small['VOR_L3Gain'] = df_Small[['LL_VOR_Gain','LA_VOR_Gain','LP_VOR_Gain']].mean(axis=1)
 df_Small['VEMP_4Gain'] = df_Small[['R_oVEMP','L_oVEMP','L_cVEMP','R_cVEMP']].mean(axis=1)
+df_Small['Best_VOR_Lateral'] = np.where(df_Small['RL_VOR_Gain'] > df_Small['LL_VOR_Gain'],df_Small['RL_VOR_Gain'], df_Small['LL_VOR_Gain'])
+df_Small['Worse_VOR_Lateral'] = np.where(df_Small['RL_VOR_Gain'] > df_Small['LL_VOR_Gain'],df_Small['LL_VOR_Gain'], df_Small['RL_VOR_Gain'])
+df_Small['Best_VOR_Anterior'] = np.where(df_Small['RA_VOR_Gain'] > df_Small['LA_VOR_Gain'],df_Small['RA_VOR_Gain'], df_Small['LA_VOR_Gain'])
+df_Small['Worse_VOR_Anterior'] = np.where(df_Small['RA_VOR_Gain'] > df_Small['LA_VOR_Gain'],df_Small['LA_VOR_Gain'], df_Small['RA_VOR_Gain'])
+df_Small['Best_VOR_Posterior'] = np.where(df_Small['RP_VOR_Gain'] > df_Small['LP_VOR_Gain'],df_Small['RP_VOR_Gain'], df_Small['LP_VOR_Gain'])
+df_Small['Worse_VOR_Posterior'] = np.where(df_Small['RP_VOR_Gain'] > df_Small['LP_VOR_Gain'],df_Small['LP_VOR_Gain'], df_Small['RP_VOR_Gain'])
+df_Small['Best_oVEMP'] = np.where(df_Small['R_oVEMP'] > df_Small['L_oVEMP'],df_Small['R_oVEMP'], df_Small['L_oVEMP'])
+df_Small['Worse_oVEMP'] = np.where(df_Small['R_oVEMP'] > df_Small['L_oVEMP'],df_Small['L_oVEMP'], df_Small['R_oVEMP'])
+df_Small['Best_cVEMP'] = np.where(df_Small['R_cVEMP'] > df_Small['L_cVEMP'],df_Small['R_cVEMP'], df_Small['L_cVEMP'])
+df_Small['Worse_cVEMP'] = np.where(df_Small['R_cVEMP'] > df_Small['L_cVEMP'],df_Small['L_cVEMP'], df_Small['R_cVEMP'])
+df_Small['Saccades6'] = df_Small.iloc[:, [33, 38]].sum(axis=1)
+
+#%%
+results = []
+List= list(range(27,43))
+column_List=List
+List= list(range(53,67))
+column_List= list(range(27,43)) + list(range(53,67))
+# Iterate over each vestibular function column
+extra=[67]
+sac = list(range(33, 39))
+sac = sac + extra
+filtered_df = df_Small[df_Small['Grupo'].isin(['Vestibular', 'MPPP'])]
+for column in df_Small.drop('Grupo', axis=1).columns:
+    print('--------------------')
+    print(column)
+    print(df_Small.columns.get_loc(column))
+
+    # Calculate mean and standard deviation for each group
+    if (df_Small.columns.get_loc(column) in sac):
+        Porcentaje_Sacadas_enGrupo = df_Small.groupby('Grupo')[column].mean() * 100
+        print('')
+        print(Porcentaje_Sacadas_enGrupo)
+
+    if pd.api.types.is_numeric_dtype(df_Small[column]) and (df_Small.columns.get_loc(column) in column_List) :
+        print('Es numérico, asi que demosle...')
+        print(' ')
+        group_stats = df_Small.groupby('Grupo')[column].agg(['mean', 'std'])
+        # Perform ANOVA
+        fvalue, pvalue = stats.f_oneway(df_Small[df_Small['Grupo'] == 'MPPP'][column],
+                                    df_Small[df_Small['Grupo'] == 'Vestibular'][column],
+                                    df_Small[df_Small['Grupo'] == 'Voluntario Sano'][column])
+
+        # If ANOVA is significant, perform post-hoc test
+        t_statistic, tp_value = stats.ttest_ind(
+            filtered_df[filtered_df['Grupo'] == 'Vestibular'][column],
+            filtered_df[filtered_df['Grupo'] == 'MPPP'][column],
+            equal_var=False  # Assumes unequal variance
+        )
+        if pvalue < 0.05:
+            mc = pairwise_tukeyhsd(df_Small[column], df_Small['Grupo'])
+            posthoc_result = mc.summary()
+        else:
+            posthoc_result = "No significant difference found"
+
+        # Append results
+        results.append({
+            'Function': column,
+            'Group Statistics': group_stats,
+            'ANOVA F-value': fvalue,
+            'ANOVA p-value': pvalue,
+            'Post-hoc Test Result': posthoc_result
+        })
+        print('Function:            ', column)
+        print('Group Statistics:    ', group_stats)
+        print('MPPP-Vestibular T    ',t_statistic)
+        print('MPPP-Vestibular T    ',tp_value)
+        print('ANOVA F-value:       ', fvalue)
+        print('ANOVA p-value:       ', pvalue)
+        print('Post-hoc Test Result:', posthoc_result)
+
+        ax = sns.boxplot(df_Small, x='Grupo', y=column, linewidth=6, order=Mi_Orden)
+        Title = column
+        directory_path = Output_Dir + 'Vestibulars/'
+        if not os.path.exists(directory_path):
+            os.makedirs(directory_path)
+        plt.savefig(directory_path + Title + '.png')
+        plt.clf()
+
+# Convert results to a DataFrame for better visualization
+results_df = pd.DataFrame(results)
+#print(results_df)
+
+print('Listo con calculos de función vestibular')
+
 print('Manejo inicial de datos listos - Segmento listo')
 #%%
 #--------------------------------------------------------------------------------------------------------------------
