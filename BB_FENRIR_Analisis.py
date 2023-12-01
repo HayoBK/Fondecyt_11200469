@@ -208,6 +208,21 @@ new_column_names={
     'cVEMP DER':'R_cVEMP',
     'cVEMP IZQ':'L_cVEMP'
 }
+def Vemp_Ajuste(df, col_idx1, col_idx2, threshold):
+    for index, row in df.iterrows():
+        while row[df.columns[col_idx1]] >= threshold or row[df.columns[col_idx2]] >= threshold:
+            row[df.columns[col_idx1]] /= 10
+            row[df.columns[col_idx2]] /= 10
+        df.at[index, df.columns[col_idx1]] = row[df.columns[col_idx1]]
+        df.at[index, df.columns[col_idx2]] = row[df.columns[col_idx2]]
+    return df
+
+df_Small = Vemp_Ajuste(df_Small, 39, 40, 0.5)
+df_Small = Vemp_Ajuste(df_Small, 41, 42, 0.5)
+df_Small[df_Small.columns[39]] *= 100
+df_Small[df_Small.columns[40]] *= 100
+df_Small[df_Small.columns[41]] *= 1000
+df_Small[df_Small.columns[42]] *= 1000
 
 df_Small.rename(columns=new_column_names, inplace=True)
 
@@ -227,6 +242,12 @@ df_Small['Worse_oVEMP'] = np.where(df_Small['R_oVEMP'] > df_Small['L_oVEMP'],df_
 df_Small['Best_cVEMP'] = np.where(df_Small['R_cVEMP'] > df_Small['L_cVEMP'],df_Small['R_cVEMP'], df_Small['L_cVEMP'])
 df_Small['Worse_cVEMP'] = np.where(df_Small['R_cVEMP'] > df_Small['L_cVEMP'],df_Small['L_cVEMP'], df_Small['R_cVEMP'])
 df_Small['Saccades6'] = df_Small.iloc[:, [33, 38]].sum(axis=1)
+df_Small['Best_Sac_Lateral'] = np.where(df_Small['RL_VOR_Gain'] > df_Small['LL_VOR_Gain'],df_Small['RL_vHIT_Saccade'], df_Small['LL_vHIT_Saccade'])
+df_Small['Worse_Sac_Lateral'] = np.where(df_Small['RL_VOR_Gain'] > df_Small['LL_VOR_Gain'],df_Small['LL_vHIT_Saccade'], df_Small['RL_vHIT_Saccade'])
+df_Small['Best_Sac_Anterior'] = np.where(df_Small['RA_VOR_Gain'] > df_Small['LA_VOR_Gain'],df_Small['RA_vHIT_Saccade'], df_Small['LA_vHIT_Saccade'])
+df_Small['Worse_Sac_Anterior'] = np.where(df_Small['RA_VOR_Gain'] > df_Small['LA_VOR_Gain'],df_Small['LA_vHIT_Saccade'], df_Small['RA_vHIT_Saccade'])
+df_Small['Best_Sac_Posterior'] = np.where(df_Small['RP_VOR_Gain'] > df_Small['LP_VOR_Gain'],df_Small['RP_vHIT_Saccade'], df_Small['LP_vHIT_Saccade'])
+df_Small['Worse_Sac_Posterior'] = np.where(df_Small['RP_VOR_Gain'] > df_Small['LP_VOR_Gain'],df_Small['LP_vHIT_Saccade'], df_Small['RP_vHIT_Saccade'])
 
 #%%
 results = []
@@ -235,10 +256,16 @@ column_List=List
 List= list(range(53,67))
 column_List= list(range(27,43)) + list(range(53,67))
 # Iterate over each vestibular function column
-extra=[67]
+extra=[67,68,69,70,71,72,73]
 sac = list(range(33, 39))
-sac = sac + extra
-filtered_df = df_Small[df_Small['Grupo'].isin(['Vestibular', 'MPPP'])]
+g= [1]
+sac = sac + extra +g
+filtered_df = df_Small[df_Small['Grupo'].isin(['Voluntario Sano', 'MPPP'])]
+vestlist = column_List + sac
+filtered_dfB = df_Small.iloc[:, vestlist]
+grouped = filtered_dfB.groupby('Grupo').agg(['mean','std'])
+grouped.to_excel((Output_Dir+'Vestibulares.xlsx'))
+print('--------Go-------------')
 for column in df_Small.drop('Grupo', axis=1).columns:
     print('--------------------')
     print(column)
@@ -261,8 +288,8 @@ for column in df_Small.drop('Grupo', axis=1).columns:
 
         # If ANOVA is significant, perform post-hoc test
         t_statistic, tp_value = stats.ttest_ind(
-            filtered_df[filtered_df['Grupo'] == 'Vestibular'][column],
             filtered_df[filtered_df['Grupo'] == 'MPPP'][column],
+            filtered_df[filtered_df['Grupo'] == 'Voluntario Sano'][column],
             equal_var=False  # Assumes unequal variance
         )
         if pvalue < 0.05:
@@ -281,8 +308,12 @@ for column in df_Small.drop('Grupo', axis=1).columns:
         })
         print('Function:            ', column)
         print('Group Statistics:    ', group_stats)
-        print('MPPP-Vestibular T    ',t_statistic)
-        print('MPPP-Vestibular T    ',tp_value)
+        print('MPPP-Sano T    ',t_statistic)
+        print('MPPP-sano T    ',tp_value)
+        if tp_value < 0.05:
+            print('----****-----')
+            print('    SIG      ')
+            print('----***------')
         print('ANOVA F-value:       ', fvalue)
         print('ANOVA p-value:       ', pvalue)
         print('Post-hoc Test Result:', posthoc_result)
