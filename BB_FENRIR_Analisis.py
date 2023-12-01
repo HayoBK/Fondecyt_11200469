@@ -249,6 +249,7 @@ df_Small['Worse_Sac_Anterior'] = np.where(df_Small['RA_VOR_Gain'] > df_Small['LA
 df_Small['Best_Sac_Posterior'] = np.where(df_Small['RP_VOR_Gain'] > df_Small['LP_VOR_Gain'],df_Small['RP_vHIT_Saccade'], df_Small['LP_vHIT_Saccade'])
 df_Small['Worse_Sac_Posterior'] = np.where(df_Small['RP_VOR_Gain'] > df_Small['LP_VOR_Gain'],df_Small['LP_vHIT_Saccade'], df_Small['RP_vHIT_Saccade'])
 
+
 #%%
 results = []
 List= list(range(27,43))
