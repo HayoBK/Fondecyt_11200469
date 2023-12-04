@@ -216,14 +216,14 @@ def Vemp_Ajuste(df, col_idx1, col_idx2, threshold):
         df.at[index, df.columns[col_idx1]] = row[df.columns[col_idx1]]
         df.at[index, df.columns[col_idx2]] = row[df.columns[col_idx2]]
     return df
-
+"""
 df_Small = Vemp_Ajuste(df_Small, 39, 40, 0.5)
 df_Small = Vemp_Ajuste(df_Small, 41, 42, 0.5)
 df_Small[df_Small.columns[39]] *= 100
 df_Small[df_Small.columns[40]] *= 100
 df_Small[df_Small.columns[41]] *= 1000
 df_Small[df_Small.columns[42]] *= 1000
-
+"""
 df_Small.rename(columns=new_column_names, inplace=True)
 
 #Procesar datos vestibulares
@@ -257,7 +257,8 @@ column_List=List
 List= list(range(53,67))
 column_List= list(range(27,43)) + list(range(53,67))
 # Iterate over each vestibular function column
-extra=[67,68,69,70,71,72,73]
+extra=[6,9,67,68,69,70,71,72,73]
+column_List = column_List + extra
 sac = list(range(33, 39))
 g= [1]
 sac = sac + extra +g
@@ -863,7 +864,40 @@ for block in blocks:
     plt.ylabel("Frequency")
     plt.legend()
     plt.show()
+blocks = ['HiddenTarget_1', 'HiddenTarget_2', 'HiddenTarget_3']  # Adjust block names as per your data
 
+for block in blocks:
+    block_data = data[data['True_Block'] == block]
+    groups = [block_data['CSE'][block_data['Grupo'] == g].values for g in Mi_Orden]
+
+    # Calculate Levene's test for homogeneity of variance
+    stat, p = stats.levene(*groups)
+
+    print(f"\nHomogeneity of Variance Test for {block}:")
+    print(f"Statistic: {stat}")
+    print(f"P-value: {p}")
+
+    if p > 0.05:
+        print(f"Result: Homogeneous variances (p > 0.05)")
+    else:
+        print(f"Result: Heterogeneous variances (p <= 0.05)")
+
+    # Calculate effect size and bootstrap difference for each pair of groups (as before)
+    for i in range(len(groups)):
+        for j in range(i + 1, len(groups)):
+            print(f"\nComparing {Mi_Orden[i]} vs {Mi_Orden[j]} in {block}:")
+
+            d = cohens_d(groups[i], groups[j])
+            print(f"Cohen's d: {d}")
+
+            diffs = bootstrap_difference(groups[i], groups[j])
+            plt.hist(diffs, bins=50, alpha=0.5, label=f"{Mi_Orden[i]} vs {Mi_Orden[j]}")
+
+    plt.title(f"Bootstrapped Differences in {block}")
+    plt.xlabel("Effect Size (Cohen's d)")
+    plt.ylabel("Frequency")
+    plt.legend()
+    plt.show()
 print('Segmento de script completo - Hayo')
 #%%
 #--------------------------------------------------------------------------------------------------------------------
