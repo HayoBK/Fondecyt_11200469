@@ -707,26 +707,30 @@ print(' ')
 data = df_CSE[df_CSE['True_Block'].isin(Nav_List)]
 data = data[data['Modalidad'].isin(['No Inmersivo'])]
 
-
-groups = [data['CSE'][data['Grupo'] == g] for g in data['Grupo'].unique()]
+data= df_Small
+groups = [data['No Inmersivo'][data['Grupo'] == g] for g in data['Grupo'].unique()]
 f_val, p_val = stats.f_oneway(*groups)
 
 print("ANOVA results:")
 print("F-value:", f_val)
 print("P-value:", p_val)
 
-posthoc = pairwise_tukeyhsd(data['CSE'], data['Grupo'], alpha=0.05)
+posthoc = pairwise_tukeyhsd(data['No Inmersivo'], data['Grupo'], alpha=0.05)
 print(posthoc)
 
 Title = 'Figure 1 - Spatial Navigation Error per Group'
 
-ax = sns.boxplot(data, x='Grupo', y='CSE', linewidth=6, order=Mi_Orden)
+#Summarized
+data=df_Small
+
+ax = sns.boxplot(data, x='Grupo', y='No Inmersivo', linewidth=6, order=Mi_Orden)
+sns.stripplot(data=data, x='Grupo', y='No Inmersivo', jitter=True, color='black', size=10, ax=ax, order=Mi_Orden)
 
 ax.set_ylabel("Cummulative search error (CSE) in pool diameters", weight='bold')
 ax.set_xlabel("Group", weight='bold')
 ax.set_xticklabels(["PPPD", "Vestibular", "Healthy control"])
 
-ax.set(ylim=(0, 350))
+ax.set(ylim=(0, 150))
 ax.set_title(Title, weight='bold')
 # Determine the y position for the line and annotation
 y_max = 270 + 10  # 10 units above the highest data point; adjust as needed
@@ -1055,77 +1059,103 @@ loadings = loadings.transpose()
 print(loadings)
 
 data = {
-    0: {
+    'Factor 1': {
         "CSE": -0.316401,
-        "Edad": -0.074150,
-        "N_Educacional": 0.157497,
-        "Edinburgo": -0.332090,
+
         "Niigata": -0.723562,
         "DHI": -0.931750,
         "EVA": -0.921200,
         "BDI": -0.411383,
         "STAI_Estado": -0.120432,
         "STAI_Rasgo": -0.445399,
-        "MOCA": 0.193202,
-        "WAIS_d": 0.213498,
-        "WAIS_i": 0.217129,
+        "MOCA": -0.193202,
+        "WAIS_d": -0.213498,
+        "WAIS_i": -0.217129,
         "TMT_A_s": -0.212810,
         "TMT_B_s": -0.076990,
-        "Corsi_d": 0.230282,
-        "Corsi_i": 0.250927,
-        "London": 0.114779,
+        "Corsi_d": -0.230282,
+        "Corsi_i": -0.250927,
+        "London": -0.114779,
+        "Edad": -0.074150,
+        "N_Educacional": 0.157497
     },
-    1: {
+    'Factor 2': {
         "CSE": 0.577380,
-        "Edad": 0.767359,
-        "N_Educacional": -0.374981,
-        "Edinburgo": 0.036441,
+
         "Niigata": 0.174412,
         "DHI": 0.160030,
         "EVA": 0.070375,
         "BDI": 0.004473,
         "STAI_Estado": 0.116069,
         "STAI_Rasgo": 0.105681,
-        "MOCA": -0.502769,
-        "WAIS_d": -0.085023,
-        "WAIS_i": 0.045009,
+        "MOCA": 0.502769,
+        "WAIS_d": 0.085023,
+        "WAIS_i": -0.045009,
         "TMT_A_s": 0.747984,
         "TMT_B_s": 0.616490,
-        "Corsi_d": -0.242118,
-        "Corsi_i": -0.440112,
-        "London": -0.299767,
+        "Corsi_d": 0.242118,
+        "Corsi_i": 0.440112,
+        "London": 0.299767,
+        "Edad": 0.767359,
+        "N_Educacional": -0.367497
     },
-    2: {
+    'Factor 3': {
         "CSE": -0.252049,
-        "Edad": 0.190805,
-        "N_Educacional": 0.120156,
-        "Edinburgo": -0.332576,
+
         "Niigata": -0.292546,
         "DHI": -0.097016,
         "EVA": -0.104390,
         "BDI": -0.191333,
         "STAI_Estado": 0.103416,
         "STAI_Rasgo": -0.121329,
-        "MOCA": 0.306277,
-        "WAIS_d": 0.453122,
-        "WAIS_i": 0.825399,
+        "MOCA": -0.306277,
+        "WAIS_d": -0.453122,
+        "WAIS_i": -0.825399,
         "TMT_A_s": -0.036014,
         "TMT_B_s": -0.444738,
-        "Corsi_d": 0.423343,
-        "Corsi_i": 0.386639,
-        "London": 0.548620,
+        "Corsi_d": -0.423343,
+        "Corsi_i": -0.386639,
+        "London": -0.548620,
+        "Edad": 0.190805,
+        "N_Educacional": 0.127497
+
     }
 }
 
+new_titles_dict = {
+    'Niigata':'Niigata - PPPD symptoms',
+    'DHI':'DHI - Dizziness impact on life',
+    'EVA':'AVSD - Dizziness intensity',
+    'CSE':'CSE - Spatial navigation error',
+    'BDI':'BDI - Depressive symtpoms',
+    'STAI_Estado':'STAI - State Anxiety',
+    'STAI_Rasgo':'STAI - Trait Anxiety',
+    'MOCA':'MoCA (-1*)- Global cognition',
+    'WAIS_d':'DST (-1*)- digit span memory',
+    'WAIS_i':'DST(inverted) (-1*)- digit memory',
+    'TMT_A_s':'TMT A - visuospatial attention ',
+    'TMT_B_s':'TMT B - visuospatial executive function',
+    'Corsi_d':'CBTT (-1*)- visuospatial memory',
+    'Corsi_i':'CBTT(inverted) (-1*)- visuospatial memory',
+    'London':'ToL (-1*)- Visuospatial planning',
+    'Edad':'Age',
+    'N_Educacional':'Educational level'
+
+}
+
 loadings = pd.DataFrame(data)
+loadings = loadings.rename(index=new_titles_dict)
 
 
 # Heatmap visualization
 plt.figure(figsize=(15, 12))
 sns.heatmap(loadings, annot=True, cmap="coolwarm", center=0, linewidths=.5, linecolor='black', fmt=".2f")
-plt.title('Factor Loadings Heatmap')
-plt.xlabel('Factors')
-Title = 'Figure 8 - Factor Loadings Heatmap'
+plt.title('Figure 7 - Factor Loadings Heatmap', fontsize=28, weight='bold')
+plt.xlabel('Factors', fontsize= 26, weight= 'bold')
+plt.xticks(fontsize=22, weight='bold')
+
+plt.tight_layout()
+Title = 'Figure 7 - Factor Loadings Heatmap'
 directory_path = Output_Dir + 'Paper1_Figures/'
 if not os.path.exists(directory_path):
     os.makedirs(directory_path)
@@ -1255,6 +1285,15 @@ for group, (slope, intercept, p_value) in regression_info.items():
     print(f"For {group} group:")
     print(f"y = {slope:.3f}x + {intercept:.3f}")
     print(f"p-value = {p_value:.5f}\n")
+
+# Fit a linear regression model for the entire data
+slope_all, intercept_all, r_value_all, p_value_all, std_err_all = stats.linregress(data['Niigata'], data['CSE'])
+
+# Print regression coefficients and p-values for the entire data
+print("For the entire dataset:")
+print(f"y = {slope_all:.3f}x + {intercept_all:.3f}")
+print(f"p-value = {p_value_all:.5f}\n")
+
 
 print('Segmento de script completo - Hayo')
 #%%
