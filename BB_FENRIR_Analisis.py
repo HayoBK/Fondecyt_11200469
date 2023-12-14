@@ -248,6 +248,9 @@ df_Small['Best_Sac_Anterior'] = np.where(df_Small['RA_VOR_Gain'] > df_Small['LA_
 df_Small['Worse_Sac_Anterior'] = np.where(df_Small['RA_VOR_Gain'] > df_Small['LA_VOR_Gain'],df_Small['LA_vHIT_Saccade'], df_Small['RA_vHIT_Saccade'])
 df_Small['Best_Sac_Posterior'] = np.where(df_Small['RP_VOR_Gain'] > df_Small['LP_VOR_Gain'],df_Small['RP_vHIT_Saccade'], df_Small['LP_vHIT_Saccade'])
 df_Small['Worse_Sac_Posterior'] = np.where(df_Small['RP_VOR_Gain'] > df_Small['LP_VOR_Gain'],df_Small['LP_vHIT_Saccade'], df_Small['RP_vHIT_Saccade'])
+print('--------------------------')
+print('PROCESAMIENTO BÁSICO LISTO')
+print('--------------------------')
 
 
 #%%
@@ -730,19 +733,24 @@ ax.set_ylabel("Cummulative search error (CSE) in pool diameters", weight='bold')
 ax.set_xlabel("Group", weight='bold')
 ax.set_xticklabels(["PPPD", "Vestibular", "Healthy control"])
 
-ax.set(ylim=(0, 150))
+ax.set(ylim=(0, 180))
 ax.set_title(Title, weight='bold')
 # Determine the y position for the line and annotation
-y_max = 270 + 10  # 10 units above the highest data point; adjust as needed
+y_max = 142 + 10  # 10 units above the highest data point; adjust as needed
 
 # Draw lines for PPPD vs Vestibular
-plt.plot([0, 0, 1, 1], [y_max, y_max + 5, y_max + 5, y_max], lw=4.5, color='black')
-plt.text(0.5, y_max - 2, "*", ha='center', va='bottom', color='black', weight='bold', fontsize=40)
+plt.plot([0, 0, 0.95, 0.95], [y_max, y_max + 5, y_max + 5, y_max], lw=4.5, color='black')
+plt.text(0.5, y_max - 0, "*", ha='center', va='bottom', color='black', weight='bold', fontsize=40)
 
+y_max -= 3
+plt.plot([1.05, 1.05, 2, 2], [y_max, y_max + 5, y_max + 5, y_max], lw=4.5, color='black')
+plt.text(1.5, y_max - 0, "*", ha='center', va='bottom', color='black', weight='bold', fontsize=40)
+
+y_max +=3
 # For PPPD vs Healthy control, we adjust the y-values to place the annotation a bit higher
-y_max += 20  # Adjusting for the next significant difference bar; tweak as necessary
+y_max += 8  # Adjusting for the next significant difference bar; tweak as necessary
 plt.plot([0, 0, 2, 2], [y_max, y_max + 5, y_max + 5, y_max], lw=4.5, color='black')
-plt.text(1, y_max - 2, "*", ha='center', va='bottom', color='black', weight='bold', fontsize=40)
+plt.text(1, y_max - 0, "*", ha='center', va='bottom', color='black', weight='bold', fontsize=40)
 
 
 directory_path = Output_Dir + 'Paper1_Figures/'
@@ -786,8 +794,14 @@ This_List=[]
 This_List = Nav_List
 This_List.extend(['Training', 'VisibleTarget_1','VisibleTarget_2'])
 data = data[data['True_Block'].isin(This_List)]
+data = data.groupby(['Sujeto', 'Grupo', 'Modalidad', 'True_Block'])['CSE'].mean()
+indices_to_drop =[0,239]
+data = data.drop(indices_to_drop)
+data.reset_index(drop=True, inplace=True)
+data = data.reset_index()
 Title = 'Figure 2 - Spatial Navigation Error per Group at each Experimental Block'
-ax = sns.boxplot(data, x='True_Block', y='CSE',hue='Grupo', linewidth=6, hue_order=Mi_Orden)
+true_block_order = ['Training', 'VisibleTarget_1', 'HiddenTarget_1', 'HiddenTarget_2', 'HiddenTarget_3', 'VisibleTarget_2']
+ax = sns.boxplot(data, x='True_Block', y='CSE',hue='Grupo', linewidth=6,order=true_block_order, hue_order=Mi_Orden)
 ax.set_ylabel("Cummulative search error (CSE) in pool diameters", weight='bold', fontsize=19)
 
 ax.set(ylim=(0, 300))
@@ -846,6 +860,7 @@ plt.savefig(directory_path + Title + '.png')
 plt.show()
 plt.clf()
 
+#%%
 blocks = ['HiddenTarget_1', 'HiddenTarget_2', 'HiddenTarget_3']  # Adjust block names as per your data
 
 for block in blocks:
