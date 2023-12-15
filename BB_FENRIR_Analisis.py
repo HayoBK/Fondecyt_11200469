@@ -19,6 +19,8 @@ from statsmodels.formula.api import mnlogit
 from sklearn.decomposition import FactorAnalysis
 from sklearn.preprocessing import StandardScaler
 from scipy.stats import spearmanr
+import scikit_posthocs as sp
+
 
 #--------------------------------------------------------------------------------------------------------------------
 #   PREPARAR DIRECTORIOS PARA MANEJO DE DATOS
@@ -739,12 +741,12 @@ ax.set_title(Title, weight='bold')
 y_max = 142 + 10  # 10 units above the highest data point; adjust as needed
 
 # Draw lines for PPPD vs Vestibular
-plt.plot([0, 0, 0.95, 0.95], [y_max, y_max + 5, y_max + 5, y_max], lw=4.5, color='black')
+plt.plot([0, 0, 1, 1], [y_max, y_max + 5, y_max + 5, y_max], lw=4.5, color='black')
 plt.text(0.5, y_max - 0, "*", ha='center', va='bottom', color='black', weight='bold', fontsize=40)
 
-y_max -= 3
-plt.plot([1.05, 1.05, 2, 2], [y_max, y_max + 5, y_max + 5, y_max], lw=4.5, color='black')
-plt.text(1.5, y_max - 0, "*", ha='center', va='bottom', color='black', weight='bold', fontsize=40)
+#y_max -= 3
+#plt.plot([1.05, 1.05, 2, 2], [y_max, y_max + 5, y_max + 5, y_max], lw=4.5, color='black')
+#plt.text(1.5, y_max - 0, "*", ha='center', va='bottom', color='black', weight='bold', fontsize=40)
 
 y_max +=3
 # For PPPD vs Healthy control, we adjust the y-values to place the annotation a bit higher
@@ -759,7 +761,43 @@ if not os.path.exists(directory_path):
 plt.savefig(directory_path + Title + '.png')
 plt.show()
 plt.clf()
+#%%
 
+# 1. Test for Homogeneity of Variances (Levene's Test)
+levene_stat, levene_pval = stats.levene(
+    data[data['Grupo'] == 'MPPP']['No Inmersivo'],
+    data[data['Grupo'] == 'Vestibular']['No Inmersivo'],
+    data[data['Grupo'] == 'Voluntario Sano']['No Inmersivo']
+)
+print(f"Levene's Test: W = {levene_stat:.3f}, p-value = {levene_pval:.3f}")
+
+# 2. ANOVA or Kruskal-Wallis Test
+if levene_pval > 0.05:  # Homogeneous variances
+    f_val, anova_pval = stats.f_oneway(
+        data[data['Grupo'] == 'MPPP']['No Inmersivo'],
+        data[data['Grupo'] == 'Vestibular']['No Inmersivo'],
+        data[data['Grupo'] == 'Voluntario Sano']['No Inmersivo']
+    )
+    print(f"ANOVA: F = {f_val:.3f}, p-value = {anova_pval:.3f}")
+else:  # Heterogeneous variances
+    kruskal_stat, kruskal_pval = stats.kruskal(
+        data[data['Grupo'] == 'MPPP']['No Inmersivo'],
+        data[data['Grupo'] == 'Vestibular']['No Inmersivo'],
+        data[data['Grupo'] == 'Voluntario Sano']['No Inmersivo']
+    )
+    print(f"Kruskal-Wallis Test: H = {kruskal_stat:.3f}, p-value = {kruskal_pval:.3f}")
+
+# 3. Post-Hoc Analysis
+# For ANOVA
+if levene_pval > 0.05:
+    tukey = pairwise_tukeyhsd(endog=data['No Inmersivo'], groups=data['Grupo'], alpha=0.05)
+    print(tukey)
+# For Kruskal-Wallis
+else:
+    dunn = sp.posthoc_dunn(data, val_col='No Inmersivo', group_col='Grupo', p_adjust='bonferroni')
+    print(dunn)
+
+#%%
 data = df_CSE[df_CSE['True_Block'].isin(Nav_List)]
 
 from scipy import stats
@@ -795,16 +833,17 @@ This_List = Nav_List
 This_List.extend(['Training', 'VisibleTarget_1','VisibleTarget_2'])
 data = data[data['True_Block'].isin(This_List)]
 data = data.groupby(['Sujeto', 'Grupo', 'Modalidad', 'True_Block'])['CSE'].mean()
+data = data.reset_index()
 indices_to_drop =[0,239]
 data = data.drop(indices_to_drop)
 data.reset_index(drop=True, inplace=True)
-data = data.reset_index()
+
 Title = 'Figure 2 - Spatial Navigation Error per Group at each Experimental Block'
 true_block_order = ['Training', 'VisibleTarget_1', 'HiddenTarget_1', 'HiddenTarget_2', 'HiddenTarget_3', 'VisibleTarget_2']
 ax = sns.boxplot(data, x='True_Block', y='CSE',hue='Grupo', linewidth=6,order=true_block_order, hue_order=Mi_Orden)
 ax.set_ylabel("Cummulative search error (CSE) in pool diameters", weight='bold', fontsize=19)
 
-ax.set(ylim=(0, 300))
+ax.set(ylim=(0, 200))
 ax.set_title(Title, weight='bold', fontsize=20)
 ax.set_xlabel("")
 new_labels = ["Block A\nTraining", "Block B\nTarget \nVisible", "Block C\nTarget\nHidden","Block D\nTarget\nHidden","Block E\nTarget\nHidden\nRandom \nstarting\npoint","Block F\nTarget \nVisible"]
@@ -815,28 +854,34 @@ new_labels = ["PPPD", "Vestibular", "Healthy control"]
 ax.legend(handles, new_labels, title="Group", loc='upper left',prop={'size': 18}, title_fontsize=20)
 
 y_max=275
+y_max-=90
 plt.plot([1.72, 1.72, 2.23, 2.23], [y_max, y_max + 5, y_max + 5, y_max], lw=3.5, color='black')
-plt.text(2, y_max - 2, "*", ha='center', va='bottom', color='black', weight='bold', fontsize=30)
+plt.text(2, y_max - 0, "*", ha='center', va='bottom', color='black', weight='bold', fontsize=30)
 
 y_max=265
+y_max-=90
 plt.plot([1.72, 1.72, 2, 2], [y_max, y_max + 5, y_max + 5, y_max], lw=3.5, color='black')
-plt.text(1.875, y_max - 2, "*", ha='center', va='bottom', color='black', weight='bold', fontsize=30)
+plt.text(1.875, y_max - 0, "*", ha='center', va='bottom', color='black', weight='bold', fontsize=30)
 
 y_max=275
+y_max-=90
 plt.plot([2.72, 2.72, 3.23, 3.23], [y_max, y_max + 5, y_max + 5, y_max], lw=3.5, color='black')
-plt.text(3, y_max - 2, "*", ha='center', va='bottom', color='black', weight='bold', fontsize=30)
+plt.text(3, y_max - 0, "*", ha='center', va='bottom', color='black', weight='bold', fontsize=30)
 
 y_max=265
+y_max-=90
 plt.plot([2.72, 2.72, 3, 3], [y_max, y_max + 5, y_max + 5, y_max], lw=3.5, color='black')
-plt.text(2.875, y_max - 2, "*", ha='center', va='bottom', color='black', weight='bold', fontsize=30)
-
-y_max=285
-plt.plot([3.72, 3.72, 4.23, 4.23], [y_max, y_max + 5, y_max + 5, y_max], lw=3.5, color='black')
-plt.text(4, y_max - 2, "*", ha='center', va='bottom', color='black', weight='bold', fontsize=30)
+plt.text(2.875, y_max - 0, "*", ha='center', va='bottom', color='black', weight='bold', fontsize=30)
 
 y_max=275
+y_max-=90
+plt.plot([3.72, 3.72, 4.23, 4.23], [y_max, y_max + 5, y_max + 5, y_max], lw=3.5, color='black')
+plt.text(4, y_max - 0, "*", ha='center', va='bottom', color='black', weight='bold', fontsize=30)
+
+y_max=265
+y_max-=90
 plt.plot([3.72, 3.72, 4, 4], [y_max, y_max + 5, y_max + 5, y_max], lw=3.5, color='black')
-plt.text(3.875, y_max - 2, "*", ha='center', va='bottom', color='black', weight='bold', fontsize=30)
+plt.text(3.875, y_max - 0, "*", ha='center', va='bottom', color='black', weight='bold', fontsize=30)
 
 def cohens_d(group1, group2):
     pooled_std = np.sqrt((np.std(group1, ddof=1)**2 + np.std(group2, ddof=1)**2) / 2)
@@ -859,6 +904,88 @@ plt.tight_layout()
 plt.savefig(directory_path + Title + '.png')
 plt.show()
 plt.clf()
+
+#%%
+true_block_order = ['Training', 'VisibleTarget_1', 'HiddenTarget_1', 'HiddenTarget_2', 'HiddenTarget_3', 'VisibleTarget_2']
+
+for block in true_block_order:
+    print(block)
+    block_data = data[data['True_Block'] == block]
+    levene_stat, levene_pval = stats.levene(
+        data[data['Grupo'] == 'MPPP']['CSE'],
+        data[data['Grupo'] == 'Vestibular']['CSE'],
+        data[data['Grupo'] == 'Voluntario Sano']['CSE']
+    )
+    print(f"Levene's Test: W = {levene_stat:.3f}, p-value = {levene_pval:.3f}")
+
+    if levene_pval > 0.05:
+        # ANOVA
+        f_val, p_val = stats.f_oneway(block_data[block_data['Grupo'] == 'MPPP']['CSE'],
+                                      block_data[block_data['Grupo'] == 'Vestibular']['CSE'],
+                                      block_data[block_data['Grupo'] == 'Voluntario Sano']['CSE'])
+        if p_val < 0.05:
+            # Tukey's HSD for post-hoc analysis
+            tukey = pairwise_tukeyhsd(endog=block_data['CSE'], groups=block_data['Grupo'], alpha=0.05)
+            print(f"Block: {block}, ANOVA: F = {f_val:.3f}, p-value = {p_val:.3f}")
+            print(tukey)
+    else:
+        # Kruskal-Wallis
+        kruskal_stat, kruskal_pval = stats.kruskal(block_data[block_data['Grupo'] == 'MPPP']['CSE'],
+                                                  block_data[block_data['Grupo'] == 'Vestibular']['CSE'],
+                                                  block_data[block_data['Grupo'] == 'Voluntario Sano']['CSE'])
+            # Dunn's test for post-hoc analysis
+        dunn = sp.posthoc_dunn(block_data, val_col='CSE', group_col='Grupo', p_adjust='bonferroni')
+        print(f"Block: {block}, Kruskal-Wallis: H = {kruskal_stat:.3f}, p-value = {kruskal_pval:.3f}")
+        print(dunn)
+
+
+def calculate_cohens_q(group1_for_d1, group2_for_d1, group1_for_d2, group2_for_d2):
+    """Calculate Cohen's d, Cohen's Q, and the associated p-value for two comparisons."""
+
+    def cohens_d(group1, group2):
+        """Compute Cohen's d."""
+        diff = group1.mean() - group2.mean()
+        n1, n2 = len(group1), len(group2)
+        pooled_std = np.sqrt(
+            ((n1 - 1) * np.std(group1, ddof=1) ** 2 + (n2 - 1) * np.std(group2, ddof=1) ** 2) / (n1 + n2 - 2))
+        return diff / pooled_std
+
+    def variance_cohens_d(d, n1, n2):
+        """Calculate the variance of Cohen's d."""
+        return (n1 + n2) / (n1 * n2) + (d ** 2) / (2 * (n1 + n2))
+
+    def cohens_q(d1, d2, var_d1, var_d2):
+        """Calculate Cohen's Q and its associated p-value."""
+        q_value = (d1 - d2) ** 2 / (var_d1 + var_d2)
+        p_value = 1 - stats.chi2.cdf(q_value, df=1)
+        return q_value, p_value
+
+    # Calculate Cohen's d for both comparisons
+    d1 = cohens_d(group1_for_d1, group2_for_d1)
+    d2 = cohens_d(group1_for_d2, group2_for_d2)
+
+    # Calculate variances for each d value
+    var_d1 = variance_cohens_d(d1, len(group1_for_d1), len(group2_for_d1))
+    var_d2 = variance_cohens_d(d2, len(group1_for_d2), len(group2_for_d2))
+
+    # Calculate Cohen's Q and associated p-value
+    q_value, p_value = cohens_q(d1, d2, var_d1, var_d2)
+
+    return d1, d2, q_value, p_value
+
+
+# Example usage
+# Replace with actual group data
+group1_for_d1 = data[(data['Grupo'] == 'MPPP') & (data['True_Block'] == 'HiddenTarget_2')]['CSE']
+group2_for_d1 = data[(data['Grupo'] == 'Voluntario Sano') & (data['True_Block'] == 'HiddenTarget_2')]['CSE']
+
+# For the second comparison (Cohen's d2)
+# We keep the same groups but change the block
+group1_for_d2 = data[(data['Grupo'] == 'MPPP') & (data['True_Block'] == 'HiddenTarget_3')]['CSE']
+group2_for_d2 = data[(data['Grupo'] == 'Voluntario Sano') & (data['True_Block'] == 'HiddenTarget_3')]['CSE']
+
+d1, d2, q_value, p_value = calculate_cohens_q(group1_for_d1, group2_for_d1, group1_for_d2, group2_for_d2)
+print(f"Cohen's d1: {d1}, Cohen's d2: {d2}, Cohen's Q: {q_value}, p-value: {p_value}")
 
 #%%
 blocks = ['HiddenTarget_1', 'HiddenTarget_2', 'HiddenTarget_3']  # Adjust block names as per your data
@@ -1031,6 +1158,12 @@ df = df.dropna(subset=variables)
 for var in variables:
     modelo = ols(f"{var} ~ Grupo", data=df).fit()
     anova = sm.stats.anova_lm(modelo, typ=2)
+    levene_stat, levene_pval = stats.levene(
+        df[df['Grupo'] == 'PPPD'][var],
+        df[df['Grupo'] == 'Vestibular'][var],
+        df[df['Grupo'] == 'Control'][var]
+    )
+    print(f"Levene's Test: W = {levene_stat:.3f}, p-value = {levene_pval:.3f}")
 
     print(f"ANOVA para {var}:")
     print(anova)
