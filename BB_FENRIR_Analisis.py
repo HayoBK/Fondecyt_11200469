@@ -273,6 +273,22 @@ filtered_dfB = df_Small.iloc[:, vestlist]
 grouped = filtered_dfB.groupby('Grupo').agg(['mean','std'])
 grouped.to_excel((Output_Dir+'Vestibulares.xlsx'))
 print('--------Go-------------')
+
+threshold = 0.8
+
+# Initialize an empty dictionary to store the results
+group_percentage_below_threshold = {}
+
+# Iterate over the columns that contain 'VOR' in their name
+for column in df_Small.drop('Grupo', axis=1).columns:
+    if 'VOR' in column:
+        # Calculate the percentage of subjects in each group with a value below the threshold
+        group_counts = df_Small.groupby('Grupo')[column].apply(lambda x: (x < threshold).mean() * 100)
+        group_percentage_below_threshold[column] = group_counts
+
+# Convert the results dictionary to a DataFrame for better visualization
+LowGainresults_df = pd.DataFrame(group_percentage_below_threshold)
+
 for column in df_Small.drop('Grupo', axis=1).columns:
     print('--------------------')
     print(column)
@@ -283,7 +299,6 @@ for column in df_Small.drop('Grupo', axis=1).columns:
         Porcentaje_Sacadas_enGrupo = df_Small.groupby('Grupo')[column].mean() * 100
         print('')
         print(Porcentaje_Sacadas_enGrupo)
-
     if pd.api.types.is_numeric_dtype(df_Small[column]) and (df_Small.columns.get_loc(column) in column_List) :
         print('Es numérico, asi que demosle...')
         print(' ')
