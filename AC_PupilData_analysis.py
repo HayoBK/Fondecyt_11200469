@@ -19,6 +19,21 @@ file = Py_Processing_Dir+'AC_PupilLabs_SyncData_Faundez.csv'
 # file = 'AC_PupilLabs_SyncData_Faundez.csv'
 
 df = pd.read_csv(file, index_col=0) #Aqui cargamos tu base de datos en la variable "df"
+file = Py_Processing_Dir+'AB_SimianMaze_Z3_NaviDataBreve_con_calculos.csv'
+df2 = pd.read_csv(file, index_col=0)
+#%%
+df2= df2[df2['Modalidad'] == 'No Inmersivo']
+
+df2.rename(columns={'True_Block': 'MWM_Block', 'True_Trial': 'MWM_Trial'}, inplace=True)
+
+# Perform the merge
+df_merged = pd.merge(df, df2[['Sujeto', 'MWM_Block', 'MWM_Trial', 'Duration(ms)', 'Path_length']],
+                     on=['Sujeto', 'MWM_Block', 'MWM_Trial'],
+                     how='left')
+#%%
+file=file = Py_Processing_Dir+'Data_para_Faundez_v2.csv'
+df_merged.to_csv(file, index=False)
+#%%
 print('Cargada la base de datos')
 
 # Ahora crearemos una base de datos más pequeña "show_df" donde seleccionaremos solo los datos que nos interesan sin
