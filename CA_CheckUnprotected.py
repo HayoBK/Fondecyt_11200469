@@ -6,10 +6,6 @@ from pathlib import Path # Una sola función dentro de la Bilioteca Path para en
 import socket
 # Obtiene el nombre del host de la máquina actual
 
-nombre_host = socket.gethostname()
-print(nombre_host)
-if nombre_host == 'DESKTOP-PQ9KP6K':
-
 home= str(Path.home())
 
 nombre_host = socket.gethostname()
@@ -18,6 +14,8 @@ print(home)
 if nombre_host == 'DESKTOP-PQ9KP6K':
     home="D:/Mumin_UCh_OneDrive"
 print(home)
+
+
 home=home+"/OneDrive/2-Casper/00-CurrentResearch/001-FONDECYT_11200469/002-LUCIEN/SUJETOS/"
 base_path = Path.home() / "OneDrive/2-Casper/00-CurrentResearch/001-FONDECYT_11200469/002-LUCIEN/SUJETOS"
 data = []
