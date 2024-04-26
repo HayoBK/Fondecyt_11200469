@@ -7,17 +7,17 @@ import socket
 # Obtiene el nombre del host de la máquina actual
 
 home= str(Path.home())
+home=home+"/OneDrive/2-Casper/00-CurrentResearch/001-FONDECYT_11200469/002-LUCIEN/SUJETOS/"
+
+base_path = Path.home() / "OneDrive/2-Casper/00-CurrentResearch/001-FONDECYT_11200469/002-LUCIEN/SUJETOS"
 
 nombre_host = socket.gethostname()
 print(nombre_host)
-print(home)
 if nombre_host == 'DESKTOP-PQ9KP6K':
     home="D:/Mumin_UCh_OneDrive"
-print(home)
+    home_path = Path("D:/Mumin_UCh_OneDrive")
+    base_path= home_path / "OneDrive/2-Casper/00-CurrentResearch/001-FONDECYT_11200469/002-LUCIEN/SUJETOS"
 
-
-home=home+"/OneDrive/2-Casper/00-CurrentResearch/001-FONDECYT_11200469/002-LUCIEN/SUJETOS/"
-base_path = Path.home() / "OneDrive/2-Casper/00-CurrentResearch/001-FONDECYT_11200469/002-LUCIEN/SUJETOS"
 data = []
 
 # Recorrer cada carpeta de sujeto (P01, P02, etc.)
