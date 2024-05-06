@@ -9,8 +9,19 @@ import numpy as np
 import seaborn as sns   #Estetica de gráficos
 import matplotlib.pyplot as plt    #Graficos
 from pathlib import Path
+import socket
+
 home= str(Path.home()) # Obtener el directorio raiz en cada computador distinto
 Py_Processing_Dir=home+"/OneDrive/2-Casper/00-CurrentResearch/001-FONDECYT_11200469/002-LUCIEN/Py_Processing/"
+
+nombre_host = socket.gethostname()
+print(nombre_host)
+if nombre_host == 'DESKTOP-PQ9KP6K':
+    home="D:/Mumin_UCh_OneDrive"
+    home_path = Path("D:/Mumin_UCh_OneDrive")
+    base_path= home_path / "OneDrive/2-Casper/00-CurrentResearch/001-FONDECYT_11200469/002-LUCIEN/SUJETOS"
+    Py_Processing_Dir = home + "/OneDrive/2-Casper/00-CurrentResearch/001-FONDECYT_11200469/002-LUCIEN/Py_Processing/"
+
 
 
 
@@ -24,7 +35,7 @@ p_df= p_df.reset_index(drop=True)
 
 
 
-home= str(Path.home()) # Obtener el directorio raiz en cada computador distinto
+#home= str(Path.home()) # Obtener el directorio raiz en cada computador distinto
 BaseDir=home+"/OneDrive/2-Casper/00-CurrentResearch/001-FONDECYT_11200469/002-LUCIEN/Outputs/MorrisWMz/"
 SavePlotDir = home+"/OneDrive/2-Casper/00-CurrentResearch/001-FONDECYT_11200469/002-LUCIEN/Outputs/FINO/"
 sns.set_palette('pastel')

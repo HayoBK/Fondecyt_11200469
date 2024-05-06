@@ -10,10 +10,21 @@ import pandas as pd     #Bilioteca para manejar Base de datos. Es el equivalente
 import seaborn as sns   #Biblioteca para generar graficos con linda Estetica de gráficos
 import matplotlib.pyplot as plt    #Biblioteca para generar Graficos en general
 from pathlib import Path # Una sola función dentro de la Bilioteca Path para encontrar archivos en el disco duro
+import socket
 
 # Aqui vienen una lineas de código solo para encontrar el archivo con la base de datos en el compu:
 home= str(Path.home())
 Py_Processing_Dir=home+"/OneDrive/2-Casper/00-CurrentResearch/001-FONDECYT_11200469/002-LUCIEN/Py_Processing/"
+
+nombre_host = socket.gethostname()
+print(nombre_host)
+if nombre_host == 'DESKTOP-PQ9KP6K':
+    home="D:/Mumin_UCh_OneDrive"
+    home_path = Path("D:/Mumin_UCh_OneDrive")
+    base_path= home_path / "OneDrive/2-Casper/00-CurrentResearch/001-FONDECYT_11200469/002-LUCIEN/SUJETOS"
+    Py_Processing_Dir = home + "/OneDrive/2-Casper/00-CurrentResearch/001-FONDECYT_11200469/002-LUCIEN/Py_Processing/"
+
+
 file = Py_Processing_Dir+'AC_PupilLabs_SyncData_Faundez.csv'
 # Si tu poner tu archivo .csv en el mismo directorio que tu archivo .py, no hay que hacer tanto jaleo y puede decir:
 # file = 'AC_PupilLabs_SyncData_Faundez.csv'
