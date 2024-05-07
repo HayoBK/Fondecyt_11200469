@@ -154,9 +154,9 @@ short_df = short_df[~short_df['Trial_Unique_ID'].isin(Banish_List)]
 m_df = m_df[~m_df['Trial_Unique_ID'].isin(Banish_List)]
 
 # Aqui sacamos a sujetos especificos que se salieron de parametros o no cumplieron criterios de inclusion.
-Banish_List =['P13']
-short_df = short_df[~short_df['Sujeto'].isin(Banish_List)]
-m_df = m_df[~m_df['Sujeto'].isin(Banish_List)]
+#Banish_List =['P13']
+#short_df = short_df[~short_df['Sujeto'].isin(Banish_List)]
+#m_df = m_df[~m_df['Sujeto'].isin(Banish_List)]
 
 safe_df = short_df # aqui estamos guardando la df para revisar cuales fueron los elementos eliminados por DropNa
 short_df = short_df.dropna()
