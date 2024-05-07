@@ -22,7 +22,7 @@ from statsmodels.formula.api import mnlogit
 from scipy.stats import mannwhitneyu
 from sklearn.decomposition import FactorAnalysis
 from sklearn.preprocessing import StandardScaler
-from scipy.stats import spearmanr
+from scipy.stats import pearsonr, spearmanr
 import scikit_posthocs as sp
 import socket
 
@@ -39,8 +39,12 @@ if nombre_host == 'DESKTOP-PQ9KP6K':
 
 #%% ----------- NOrmalización
 NaviCSE_df = pd.read_csv((Py_Processing_Dir+'AB_SimianMaze_Z3_NaviDataBreve_con_calculos.csv'), index_col=0)
+Baldur_df = pd.read_excel((Py_Processing_Dir+'df_Baldur.xlsx'), index_col=0)
 df = NaviCSE_df.copy()
+df = df.merge(Baldur_df[['Sujeto', 'Dx']], on='Sujeto', how='left')
 
+
+#df = df[df['Sujeto'] != 'P13']
 group_stats = df.groupby(['True_Block', 'Modalidad']).agg({
     'CSE': ['mean', 'std']
 }).reset_index()
@@ -118,7 +122,7 @@ df = Block_Mean_df
 df_filtrado = df[(df['VR_Positive'] == True) & (df['True_Block'].isin(bloques_interes))]
 
 # Configurar el estilo de los gráficos
-sns.set(style="whitegrid")
+sns.set(style="white")
 group_order = ['MPPP', 'Vestibular', 'Voluntario Sano']
 
 # Crear un boxplot para cada combinación de True_Block y Grupo
@@ -135,6 +139,76 @@ for i, block in enumerate(bloques_interes, 1):
 # Ajustar layout y mostrar el gráfico
 plt.tight_layout()
 plt.show()
+
+
+# Create a boxplot for each group combining all blocks
+plt.figure(figsize=(10, 6))  # Adjust size as needed
+ax = sns.boxplot(x='Grupo', y='Block_Mean_Norm_CSE', hue='Modalidad',
+                 data=df_filtrado, order=group_order)
+plt.title('Boxplot de CSE por Grupo y Modalidad Combinando Todos los Bloques')
+plt.xlabel('Grupo')
+plt.ylabel('Normalized CSE')
+plt.legend(title='Modalidad')
+
+# Optionally set y-axis limits
+# ax.set_ylim(0, 400)
+
+# Adjust layout and display the plot
+plt.tight_layout()
+plt.show()
+
+
+
+# Configurar el estilo de los gráficos
+# Configurar el estilo de los gráficos
+# Configurar el estilo de los gráficos
+sns.set(style="white")
+group_order = ['MPPP', 'Vestibular', 'Voluntario Sano']
+bloques_interes = ['HiddenTarget_1', 'HiddenTarget_2', 'HiddenTarget_3']
+
+# Crear un gráfico de puntos para cada combinación de True_Block y Grupo
+plt.figure(figsize=(14, 10))  # Ajusta el tamaño según tus necesidades
+for i, block in enumerate(bloques_interes, 1):
+    plt.subplot(2, 2, i)  # Ajusta la disposición de los subplots según el número de bloques
+    ax = sns.stripplot(x='Grupo', y='Block_Mean_Norm_CSE', hue='Modalidad',
+                       data=df_filtrado[df_filtrado['True_Block'] == block],
+                       order=group_order, dodge=True, jitter=0.25, marker='o', alpha=0.7)
+
+    # Diccionario para almacenar la posición de los sujetos
+    pos_dict = {}
+
+    # Guardar posiciones de los puntos para trazar líneas
+    for line in range(0, df_filtrado[df_filtrado['True_Block'] == block].shape[0]):
+        subject = df_filtrado[(df_filtrado['True_Block'] == block)].iloc[line]['Sujeto']
+        grupo = df_filtrado[(df_filtrado['True_Block'] == block)].iloc[line]['Grupo']
+        modalidad = df_filtrado[(df_filtrado['True_Block'] == block)].iloc[line]['Modalidad']
+        y = df_filtrado[(df_filtrado['True_Block'] == block)].iloc[line]['Block_Mean_Norm_CSE']
+        x = ax.get_xticks()[group_order.index(grupo)] + (-0.15 if modalidad == 'No Inmersivo' else 0.15)
+
+        if subject not in pos_dict:
+            pos_dict[subject] = {}
+        pos_dict[subject][modalidad] = (x, y)
+
+        # Anotar sujetos
+        color = 'blue' if modalidad == 'No Inmersivo' else 'red'
+        ax.text(x, y, subject, horizontalalignment='left', size='x-small', color=color, weight='semibold')
+
+    # Dibujar líneas entre modalidades para el mismo sujeto
+    for subject, positions in pos_dict.items():
+        if len(positions) == 2:  # Asegurarse de que el sujeto está en ambas modalidades
+            x_values, y_values = zip(*positions.values())
+            ax.plot(x_values, y_values, color='gray', linestyle='--', linewidth=1, marker='')
+
+    plt.title(f'Puntos de CSE por Grupo y Modalidad en {block}')
+    plt.xlabel('Grupo')
+    plt.ylabel('Normalized CSE')
+    plt.legend(title='Modalidad')
+
+# Ajustar layout y mostrar el gráfico
+plt.tight_layout()
+plt.show()
+
+
 print('Bloque 3 terminado')
 
 #%% ---------------------- Lo mismo que en Bloque 3, pero con estadísticas ---------------
@@ -146,86 +220,15 @@ df_filtrado = df[(df['VR_Positive'] == True) & (df['True_Block'].isin(bloques_in
 # Orden de los grupos para análisis
 orden_grupos = ['MPPP', 'Vestibular', 'Voluntario Sano']
 
-# Análisis entre grupos dentro de cada modalidad
-resultados_kruskal = {}
-for block in bloques_interes:
-    for modalidad in df_filtrado['Modalidad'].unique():
-        data = [df_filtrado[(df_filtrado['True_Block'] == block) &
-                            (df_filtrado['Modalidad'] == modalidad) &
-                            (df_filtrado['Grupo'] == grupo)]['Block_Mean_Norm_CSE'].dropna() for grupo in orden_grupos]
-        stat, p_value = stats.kruskal(*data)
-        resultados_kruskal[(block, modalidad)] = p_value
-
-# Análisis entre modalidades para cada grupo
-resultados_wilcoxon = {}
-for block in bloques_interes:
-    for grupo in orden_grupos:
+resultados_mann_whitney = {}
+for block in ['HiddenTarget_1', 'HiddenTarget_2', 'HiddenTarget_3']:
+    for grupo in ['MPPP', 'Vestibular', 'Voluntario Sano']:
         data_no_inmersivo = df_filtrado[(df_filtrado['True_Block'] == block) &
                                         (df_filtrado['Modalidad'] == 'No Inmersivo') &
                                         (df_filtrado['Grupo'] == grupo)]['Block_Mean_Norm_CSE'].dropna()
         data_realidad_virtual = df_filtrado[(df_filtrado['True_Block'] == block) &
                                             (df_filtrado['Modalidad'] == 'Realidad Virtual') &
                                             (df_filtrado['Grupo'] == grupo)]['Block_Mean_Norm_CSE'].dropna()
-        if len(data_no_inmersivo) == len(data_realidad_virtual) and len(data_no_inmersivo) > 0:  # Verificar igualdad de longitud y que no estén vacíos
-            stat, p_value = stats.wilcoxon(data_no_inmersivo, data_realidad_virtual)
-            resultados_wilcoxon[(block, grupo)] = p_value
-        else:
-            resultados_wilcoxon[(block, grupo)] = 'No se puede calcular, muestras de diferente tamaño o vacías'
-
-# Imprimir resultados
-print("Resultados Kruskal-Wallis (Comparación entre grupos dentro de cada modalidad):")
-for key, value in resultados_kruskal.items():
-    print(f"Block: {key[0]}, Modalidad: {key[1]}, p-value: {value}")
-
-print("\nResultados Wilcoxon (Comparación entre modalidades para cada grupo):")
-for key, value in resultados_wilcoxon.items():
-    print(f"Block: {key[0]}, Grupo: {key[1]}, p-value: {value}")
-#---------------------------------- Ojo con NORmv vs CSE NOrm ----------------
-# Análisis entre grupos dentro de cada modalidad
-resultados_kruskal = {}
-for block in bloques_interes:
-    for modalidad in df_filtrado['Modalidad'].unique():
-        data = [df_filtrado[(df_filtrado['True_Block'] == block) &
-                            (df_filtrado['Modalidad'] == modalidad) &
-                            (df_filtrado['Grupo'] == grupo)]['Norm_CSE'].dropna() for grupo in orden_grupos]
-        stat, p_value = stats.kruskal(*data)
-        resultados_kruskal[(block, modalidad)] = p_value
-
-# Análisis entre modalidades para cada grupo
-resultados_wilcoxon = {}
-for block in bloques_interes:
-    for grupo in orden_grupos:
-        data_no_inmersivo = df_filtrado[(df_filtrado['True_Block'] == block) &
-                                        (df_filtrado['Modalidad'] == 'No Inmersivo') &
-                                        (df_filtrado['Grupo'] == grupo)]['Norm_CSE'].dropna()
-        data_realidad_virtual = df_filtrado[(df_filtrado['True_Block'] == block) &
-                                            (df_filtrado['Modalidad'] == 'Realidad Virtual') &
-                                            (df_filtrado['Grupo'] == grupo)]['Norm_CSE'].dropna()
-        if len(data_no_inmersivo) == len(data_realidad_virtual) and len(
-                data_no_inmersivo) > 0:  # Verificar igualdad de longitud y que no estén vacíos
-            stat, p_value = stats.wilcoxon(data_no_inmersivo, data_realidad_virtual)
-            resultados_wilcoxon[(block, grupo)] = p_value
-        else:
-            resultados_wilcoxon[(block, grupo)] = 'No se puede calcular, muestras de diferente tamaño o vacías'
-
-# Imprimir resultados
-print("Resultados Kruskal-Wallis (Comparación entre grupos dentro de cada modalidad):")
-for key, value in resultados_kruskal.items():
-    print(f"Block: {key[0]}, Modalidad: {key[1]}, p-value: {value}")
-
-print("\nResultados Wilcoxon (Comparación entre modalidades para cada grupo):")
-for key, value in resultados_wilcoxon.items():
-    print(f"Block: {key[0]}, Grupo: {key[1]}, p-value: {value}")
-
-resultados_mann_whitney = {}
-for block in ['HiddenTarget_1', 'HiddenTarget_2', 'HiddenTarget_3']:
-    for grupo in ['MPPP', 'Vestibular', 'Voluntario Sano']:
-        data_no_inmersivo = df_filtrado[(df_filtrado['True_Block'] == block) &
-                                        (df_filtrado['Modalidad'] == 'No Inmersivo') &
-                                        (df_filtrado['Grupo'] == grupo)]['Norm_CSE'].dropna()
-        data_realidad_virtual = df_filtrado[(df_filtrado['True_Block'] == block) &
-                                            (df_filtrado['Modalidad'] == 'Realidad Virtual') &
-                                            (df_filtrado['Grupo'] == grupo)]['Norm_CSE'].dropna()
         if not data_no_inmersivo.empty and not data_realidad_virtual.empty:
             stat, p_value = mannwhitneyu(data_no_inmersivo, data_realidad_virtual, alternative='two-sided')
             resultados_mann_whitney[(block, grupo)] = p_value
@@ -236,6 +239,31 @@ for block in ['HiddenTarget_1', 'HiddenTarget_2', 'HiddenTarget_3']:
 print("Resultados Mann-Whitney U (Comparación entre modalidades para cada grupo):")
 for key, value in resultados_mann_whitney.items():
     print(f"Block: {key[0]}, Grupo: {key[1]}, p-value: {value}")
+
+print ('Finalmente, todos los datos juntos sin diferenciar por bloques')
+
+resultados_mann_whitney = {}
+groups = ['MPPP', 'Vestibular', 'Voluntario Sano']
+modalities = ['No Inmersivo', 'Realidad Virtual']
+
+# Collecting data across all blocks for each group and modality
+for grupo in groups:
+    data_no_inmersivo = df_filtrado[(df_filtrado['Modalidad'] == modalities[0]) &
+                                    (df_filtrado['Grupo'] == grupo)]['Block_Mean_Norm_CSE'].dropna()
+    data_realidad_virtual = df_filtrado[(df_filtrado['Modalidad'] == modalities[1]) &
+                                        (df_filtrado['Grupo'] == grupo)]['Block_Mean_Norm_CSE'].dropna()
+
+    # Check if both modalities have data before running the test
+    if not data_no_inmersivo.empty and not data_realidad_virtual.empty:
+        stat, p_value = mannwhitneyu(data_no_inmersivo, data_realidad_virtual, alternative='two-sided')
+        resultados_mann_whitney[grupo] = p_value
+    else:
+        resultados_mann_whitney[grupo] = 'Datos insuficientes'
+
+# Print results
+print("Resultados Mann-Whitney U (Comparación entre modalidades para cada grupo combinando todos los bloques):")
+for key, value in resultados_mann_whitney.items():
+    print(f"Grupo: {key}, p-value: {value}")
 
 #%% Estudio de Normalizaciòn
 
@@ -249,8 +277,100 @@ plt.show()
 
 # EDA después de la normalización
 plt.figure(figsize=(12, 6))
-sns.histplot(df[df['Modalidad'] == 'No Inmersivo']['Norm_CSE'], color='blue', label='No Inmersivo', kde=True)
-sns.histplot(df[df['Modalidad'] == 'Realidad Virtual']['Norm_CSE'], color='red', label='Realidad Virtual', kde=True)
+sns.histplot(df[df['Modalidad'] == 'No Inmersivo']['Block_Mean_Norm_CSE'], color='blue', label='No Inmersivo', kde=True)
+sns.histplot(df[df['Modalidad'] == 'Realidad Virtual']['Block_Mean_Norm_CSE'], color='red', label='Realidad Virtual', kde=True)
 plt.legend()
 plt.title('Distribución de CSE después de la normalización')
 plt.show()
+
+#%% Analisis del DELTA entre modalidades
+
+pivot_df = Block_Mean_df.pivot_table(index=['Sujeto', 'True_Block'], columns='Modalidad', values='Block_Mean_Norm_CSE', aggfunc='first')
+
+# Calcular el Delta como la diferencia entre las modalidades
+pivot_df['Delta'] = pivot_df['Realidad Virtual'] - pivot_df['No Inmersivo']
+pivot_df.reset_index(inplace=True)
+
+# Fusionar Delta de vuelta a Block_Mean_df
+Block_Mean_df = Block_Mean_df.merge(pivot_df[['Sujeto', 'True_Block', 'Delta']], on=['Sujeto', 'True_Block'], how='left')
+
+bloques_interes = ['HiddenTarget_1', 'HiddenTarget_2', 'HiddenTarget_3']
+sns.set(style="whitegrid")  # Establecer el estilo del gráfico
+
+for block in bloques_interes:
+    # Filtrar datos por True Block
+    df_block = Block_Mean_df[Block_Mean_df['True_Block'] == block]
+
+    # Crear figura
+    plt.figure(figsize=(10, 6))
+    ax = sns.stripplot(x='Grupo', y='Delta', hue='Grupo', data=df_block, jitter=True, marker='o', alpha=0.7, size=8, order=group_order)
+
+    # Añadir etiquetas de sujeto a cada punto
+    subA = 0
+    for line in range(df_block.shape[0]):
+        sujeto = df_block.iloc[line]['Sujeto']
+        delta = df_block.iloc[line]['Delta']
+        grupo = df_block.iloc[line]['Grupo']
+        x = ax.get_xticks()[list(df_block['Grupo'].unique()).index(grupo)]
+        subA=subA+0.005
+        ax.text(x+subA, delta, sujeto, horizontalalignment='center', size='x-small', color='black', weight='semibold',
+                rotation=0)
+
+    # Configuraciones adicionales del gráfico
+    plt.title(f'Delta CSE por Grupo en {block}')
+    plt.xlabel('Grupo')
+    plt.ylabel('Delta')
+    plt.xticks(rotation=45)  # Rotar las etiquetas del eje X para mejor legibilidad
+    plt.grid(True)  # Añadir rejilla para facilitar la lectura
+    plt.tight_layout()  # Ajustar el layout para evitar solapamientos
+
+    # Mostrar gráfico
+    plt.show()
+
+#%% ---------------- Veamos Migraña Vestibular
+df=Block_Mean_df
+df['Dx_MPPP'] = (df['Grupo'] == 'MPPP').astype(int)
+
+# Crear Dx_MV basado en la columna Dx si contiene 'MV'
+df['Dx_MV'] = df['Dx'].str.contains('MV', na=False).astype(int)
+
+
+def calculate_correlations(df, cols):
+    correlations = {}
+    for col in cols:
+        # Calcular la correlación de Spearman y obtener tanto el coeficiente como el p-value
+        sr, p_value_sr = spearmanr(df[col], df['Dx_MPPP'])
+        correlations[col + '_Dx_MPPP'] = (sr, p_value_sr)
+
+        sr, p_value_sr = spearmanr(df[col], df['Dx_MV'])
+        correlations[col + '_Dx_MV'] = (sr, p_value_sr)
+    return correlations
+
+
+# Calcular correlaciones para cada True_Block y para todo el conjunto
+bloques_interes = ['HiddenTarget_1', 'HiddenTarget_2', 'HiddenTarget_3'] + ['All']
+results = {}
+for block in bloques_interes:
+    if block == 'All':
+        block_df = df
+    else:
+        block_df = df[df['True_Block'] == block]
+    results[block] = calculate_correlations(block_df, ['Block_Mean_Norm_CSE', 'Delta'])
+
+# Mostrar resultados
+for block, res in results.items():
+    print(f"Correlations for {block}: {res}")
+
+
+    def plot_correlations(df, x_vars):
+        for x_var in x_vars:
+            for y_var in ['Dx_MPPP', 'Dx_MV']:
+                plt.figure(figsize=(10, 6))
+                g = sns.catplot(x=y_var, y=x_var, hue='Grupo',kind="swarm", data=df)
+                g.fig.suptitle(f'Correlation between {x_var} and {y_var}')
+                plt.tight_layout()
+                plt.show()
+
+
+    # Mostrar gráficos para todo el conjunto
+    plot_correlations(df, ['Block_Mean_Norm_CSE', 'Delta'])
