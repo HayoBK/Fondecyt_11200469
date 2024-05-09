@@ -12,6 +12,7 @@ import numpy as np
 import seaborn as sns   #Estetica de gráficos
 import matplotlib.pyplot as plt    #Graficos
 from pathlib import Path
+from itertools import product
 import os
 #import tqdm
 import scipy.stats as stats
@@ -43,7 +44,7 @@ NaviCSE_df = pd.read_csv((Py_Processing_Dir+'AB_SimianMaze_Z3_NaviDataBreve_con_
 Baldur_df = pd.read_excel((Py_Processing_Dir+'df_Baldur.xlsx'), index_col=0)
 df = NaviCSE_df.copy()
 df = df.merge(Baldur_df[['Sujeto', 'Dx']], on='Sujeto', how='left')
-
+Complete_df = df.copy()
 
 df = df[df['Sujeto'] != 'P13']
 #df = df[df['Sujeto'] != 'P07']
@@ -535,28 +536,92 @@ plt.show()
 grupos = df_first_entry['Grupo'].unique()
 bloques = df_first_entry['True_Block'].unique()
 
-# Crear una figura para cada combinación de grupo y bloque
-for grupo in grupos:
-    for bloque in bloques:
-        # Filtrar los datos por grupo y bloque
-        data_group_block = df_first_entry[(df_first_entry['Grupo'] == grupo) & (df_first_entry['True_Block'] == bloque)]
 
-        # Verificar si hay datos para plotear
-        if data_group_block.empty:
-            continue
+#%%
 
-        # Crear la figura y el eje
-        plt.figure(figsize=(12, 6))
-        ax = sns.barplot(x='Sujeto', y='Trial_Count', hue='Modalidad', data=data_group_block)
+df = Complete_df.copy()
+df['Dx_MPPP'] = (df['Grupo'] == 'MPPP').astype(int)
 
-        # Configurar título y etiquetas
-        ax.set_title(f'Trial Count por Sujeto en el Grupo {grupo}, Bloque {bloque}')
-        ax.set_xlabel('Sujeto')
-        ax.set_ylabel('Trial Count')
-        ax.legend(title='Modalidad')
+# Crear Dx_MV basado en la columna Dx si contiene 'MV'
+df['Dx_MV'] = df['Dx'].str.contains('MV', na=False).astype(int)
 
-        # Mejorar la visualización de las etiquetas del eje X
-        plt.xticks(rotation=45)
 
-        # Mostrar el gráfico
-        plt.show()
+conditions = [
+    (df['Dx_MPPP'] == 1) & (df['Dx_MV'] == 1),
+    (df['Dx_MPPP'] == 1) & (df['Dx_MV'] == 0),
+    (df['Dx_MPPP'] == 0) & (df['Dx_MV'] == 1),
+    (df['Dx_MPPP'] == 0) & (df['Dx_MV'] == 0)
+]
+
+# Nombres de las categorías
+categories = ['Both Dx_MPPP and Dx_MV', 'Only Dx_MPPP', 'Only Dx_MV', 'Neither']
+
+# Crear una nueva columna 'Category'
+df['Category'] = pd.np.select(conditions, categories)
+
+
+# Filtrar solo los bloques de interés
+bloques_interes = ['HiddenTarget_1', 'HiddenTarget_2', 'HiddenTarget_3']
+df_filtrado = df[df['True_Block'].isin(bloques_interes)]
+
+
+
+
+
+# Crear listas únicas de Sujeto, Modalidad, y True_Block
+sujetos = df['Sujeto'].unique()
+modalidades = df['Modalidad'].unique()
+true_blocks = ['HiddenTarget_1', 'HiddenTarget_2', 'HiddenTarget_3']  # Especificar bloques de interés
+
+# Crear todas las combinaciones posibles utilizando product
+combinaciones = pd.DataFrame(list(product(sujetos, modalidades, true_blocks)), columns=['Sujeto', 'Modalidad', 'True_Block'])
+
+# Asegurar que 'conteo_trials' contiene las combinaciones relevantes
+conteo_trials = df.groupby(['Sujeto', 'Modalidad', 'True_Block'])['True_Trial'].nunique().reset_index(name='Trial_Count')
+
+resultado_completo = combinaciones.merge(conteo_trials, on=['Sujeto', 'Modalidad', 'True_Block'], how='left')
+
+# Rellenar los valores faltantes con 0 para indicar que no se completaron ensayos
+resultado_completo['Trial_Count'] = resultado_completo['Trial_Count'].fillna(0)
+
+aux_df = df[['Sujeto', 'Grupo', 'Category']].drop_duplicates()
+resultado_completo = resultado_completo.merge(aux_df, on='Sujeto', how='left')
+
+
+# Calcular promedios de ensayos completados por Grupo, Modalidad y True_Block
+resultado = resultado_completo.groupby(['Grupo', 'Modalidad', 'True_Block'])['Trial_Count'].mean().reset_index()
+
+# Renombrar columnas para claridad en los promedios
+resultado.rename(columns={'Trial_Count': 'Average_Completed_Trials'}, inplace=True)
+
+print(resultado)
+
+
+true_blocks = resultado['True_Block'].unique()
+resultado['Grupo'] = resultado['Grupo'].astype(str)
+
+# Crear una figura para cada True_Block
+for block in true_blocks:
+    plt.figure(figsize=(5, 4))
+    sns.barplot(x='Grupo', y='Average_Completed_Trials', hue='Modalidad', data=resultado[resultado['True_Block'] == block])
+    plt.title(f'Average Completed Trials by Group and Modality in {block}')
+    plt.xlabel('Group')
+    plt.ylabel('Average Completed Trials')
+    plt.legend(title='Modality')
+    plt.show()
+
+resultado = resultado_completo.groupby(['Category', 'Modalidad', 'True_Block'])['Trial_Count'].mean().reset_index()
+
+# Renombrar columnas para claridad en los promedios
+resultado.rename(columns={'Trial_Count': 'Average_Completed_Trials'}, inplace=True)
+resultado['Category'] = resultado['Category'].astype(str)
+
+for block in true_blocks:
+    plt.figure(figsize=(5, 4))
+    sns.barplot(x='Category', y='Average_Completed_Trials', hue='Modalidad', data=resultado[resultado['True_Block'] == block])
+    plt.title(f'Average Completed Trials by Group and Modality in {block}')
+    plt.xlabel('Group')
+    plt.ylabel('Average Completed Trials')
+    plt.legend(title='Modality')
+    plt.show()
+
