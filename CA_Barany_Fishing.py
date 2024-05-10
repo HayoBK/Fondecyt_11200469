@@ -4,6 +4,9 @@
 #   Por fin jugaremos con TODOS los DATOS
 #   GAME is ON
 #
+#  Más que Fishing, este Script se convirtió en analisis
+#  de CSE entre modalidades.
+
 #-----------------------------------------------------
 
 
@@ -28,6 +31,7 @@ from scipy.stats import kruskal
 #import scikit_posthocs as sp
 import socket
 
+# Segmento para trabajar tambien en el PC de la Uchile
 home= str(Path.home()) # Obtener el directorio raiz en cada computador distinto
 Py_Processing_Dir=home+"/OneDrive/2-Casper/00-CurrentResearch/001-FONDECYT_11200469/002-LUCIEN/Py_Processing/"
 
@@ -39,7 +43,9 @@ if nombre_host == 'DESKTOP-PQ9KP6K':
     base_path= home_path / "OneDrive/2-Casper/00-CurrentResearch/001-FONDECYT_11200469/002-LUCIEN/SUJETOS"
     Py_Processing_Dir = home + "/OneDrive/2-Casper/00-CurrentResearch/001-FONDECYT_11200469/002-LUCIEN/Py_Processing/"
 
-#%% ----------- NOrmalización
+#%% ----------- NOrmalización de datos, asumiendo entonces que los distintas modadlidad RV y NI no son directamente
+#               comparables
+
 NaviCSE_df = pd.read_csv((Py_Processing_Dir+'AB_SimianMaze_Z3_NaviDataBreve_con_calculos.csv'), index_col=0)
 Baldur_df = pd.read_excel((Py_Processing_Dir+'df_Baldur.xlsx'), index_col=0)
 df = NaviCSE_df.copy()
@@ -162,9 +168,6 @@ plt.tight_layout()
 plt.show()
 
 
-
-# Configurar el estilo de los gráficos
-# Configurar el estilo de los gráficos
 # Configurar el estilo de los gráficos
 sns.set(style="white")
 group_order = ['MPPP', 'Vestibular', 'Voluntario Sano']
@@ -306,25 +309,8 @@ print("Resultados Mann-Whitney U (Comparación entre modalidades para cada grupo
 for key, value in resultados_mann_whitney.items():
     print(f"Grupo: {key}, p-value: {value}")
 
-#%% Estudio de Normalizaciòn
 
-# EDA antes de la normalización
-plt.figure(figsize=(12, 6))
-sns.histplot(df[df['Modalidad'] == 'No Inmersivo']['CSE'], color='blue', label='No Inmersivo', kde=True)
-sns.histplot(df[df['Modalidad'] == 'Realidad Virtual']['CSE'], color='red', label='Realidad Virtual', kde=True)
-plt.legend()
-plt.title('Distribución de CSE antes de la normalización')
-plt.show()
-
-# EDA después de la normalización
-plt.figure(figsize=(12, 6))
-sns.histplot(df[df['Modalidad'] == 'No Inmersivo']['Block_Mean_Norm_CSE'], color='blue', label='No Inmersivo', kde=True)
-sns.histplot(df[df['Modalidad'] == 'Realidad Virtual']['Block_Mean_Norm_CSE'], color='red', label='Realidad Virtual', kde=True)
-plt.legend()
-plt.title('Distribución de CSE después de la normalización')
-plt.show()
-
-#%% Analisis del DELTA entre modalidades
+#%% Analisis del DELTA entre modalidades (entre RV y NI)
 
 pivot_df = Block_Mean_df.pivot_table(index=['Sujeto', 'True_Block'], columns='Modalidad', values='Block_Mean_Norm_CSE', aggfunc='first')
 
@@ -397,6 +383,9 @@ plt.tight_layout()  # Ajustar el layout para evitar solapamientos
 plt.show()
 
 #%% ---------------- Veamos Migraña Vestibular
+# --------- Todo este bloque salió medio desprolijo pero finalmente muestra que MV, no incide mucho en CSE
+#---------- y tampoco en dElta RV-NI. DE hecho no hay un delta significativo luego de la normalizada
+
 df=Block_Mean_df
 df['Dx_MPPP'] = (df['Grupo'] == 'MPPP').astype(int)
 
@@ -537,7 +526,9 @@ grupos = df_first_entry['Grupo'].unique()
 bloques = df_first_entry['True_Block'].unique()
 
 
-#%%
+#%% ------ Aqui vamos a ver básicamente el VR-Motion Sickness al ver la tolerancia a RV.
+#--------- Migraña influye pero MPPP influye más en no tolerar RV.
+#--------- Pero por las evaluaciones anteriores, quienes si hacen RV, no incide en rendimiento.
 
 df = Complete_df.copy()
 df['Dx_MPPP'] = (df['Grupo'] == 'MPPP').astype(int)
@@ -563,9 +554,6 @@ df['Category'] = pd.np.select(conditions, categories)
 # Filtrar solo los bloques de interés
 bloques_interes = ['HiddenTarget_1', 'HiddenTarget_2', 'HiddenTarget_3']
 df_filtrado = df[df['True_Block'].isin(bloques_interes)]
-
-
-
 
 
 # Crear listas únicas de Sujeto, Modalidad, y True_Block

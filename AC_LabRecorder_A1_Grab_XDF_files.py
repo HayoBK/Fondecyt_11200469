@@ -31,6 +31,8 @@ BaseDir=home+"/OneDrive/2-Casper/00-CurrentResearch/001-FONDECYT_11200469/002-LU
 Navi_df = pd.read_csv((Py_Processing_Dir+'AB_SimianMaze_Z3_NaviDataBreve_con_calculos.csv'), index_col=0)
 Navi_df = Navi_df.loc[Navi_df['Modalidad']=='No Inmersivo']
 print ('si?')
+
+#Este pedacito de codigo permite añadir OverWatch Trial como código a la DF de Simian.
 def MWM_to_OW_trials (df):
     OW_t = 100
     New_column = []
