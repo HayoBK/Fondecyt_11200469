@@ -3,7 +3,9 @@
 #
 # Veamos si podemos extra
 #
-#
+# Datos de Overwatch-VR
+# LSL_Stream2 = StreamInfo('Overwatch-VR','Datos VR', 6 , 0, 'float32','overwatch-Titan2')
+# Canales = 7 : vx,vy,vz,vroll,vjaw,vpitch
 #
 # -------------------------------------------------
 
@@ -63,19 +65,15 @@ df = MWM_to_OW_trials(df)
 
 #%% --------------Adquiramos los datos de Lab Recorder ------------------------------------
 
-subject_folders = [f for f in os.listdir(Subject_Dir) if
-                   os.path.isdir(os.path.join(Subject_Dir, f)) and f.startswith('P')]
 
-# Diccionario para almacenar los datos de cada sujeto
+# Diccionario para almacenar los datos de cada sujeto y modalidad
 subjects_data = {}
 
 def explore_xdf_file(xdf_path):
-    """Load and explore the structure of an XDF file."""
+    """Función para explorar y obtener información básica de un archivo XDF."""
     data, header = pyxdf.load_xdf(xdf_path)
-
-    print("Header Information:")
-    print(header)
-
+    print(f"Processing file: {xdf_path}")
+    print("Header Information:", header)
     print("\nStream Information:")
     for stream in data:
         print(f"Stream ID: {stream['info']['stream_id']} - {stream['info']['name'][0]}")
@@ -87,34 +85,197 @@ def explore_xdf_file(xdf_path):
         print("First few data points:", stream['time_series'][:5])
         print("Corresponding timestamps:", stream['time_stamps'][:5], "\n")
 
+def classify_and_store_xdf_files():
+    subject_folders = [f for f in os.listdir(Subject_Dir) if os.path.isdir(os.path.join(Subject_Dir, f)) and f.startswith('P')]
 
+    for subject_folder in subject_folders:
+        dir_path = os.path.join(Subject_Dir, subject_folder)
+        # Buscar recursivamente todos los archivos .xdf
+        xdf_files = glob2.glob(os.path.join(dir_path, "**/*.xdf"), recursive=True)
 
-for subject_folder in subject_folders:
-    # Construye el directorio para el sujeto actual
-    dir_path = os.path.join(Subject_Dir, subject_folder, "LSL_LAB")
-    # Patrón para buscar archivos .xdf
-    pattern = os.path.join(dir_path, "**/*NI*.xdf")
-    # Encuentra todos los archivos que coincidan con el patrón
-    xdf_files = glob2.glob(pattern, recursive=True)
+        subjects_data[subject_folder] = {'Realidad Virtual': [], 'No Inmersivo': []}
 
-    for xdf_file in xdf_files:
-        print(f"Processing file: {xdf_file} for subject: {subject_folder}")
-        if subject_folder == 'P06':
-            explore_xdf_file(xdf_file)
-
-    if xdf_files:
-        # Inicializa una lista para guardar los datos del sujeto
-        subjects_data[subject_folder] = []
         for xdf_file in xdf_files:
-            # Carga los datos del archivo .xdf
-            data, header = pyxdf.load_xdf(xdf_file)
-            # Guarda los datos y el nombre del archivo en la lista del sujeto
-            subjects_data[subject_folder].append((xdf_file, data, header))
-            # Imprime el nombre del archivo para verificar
-            print(f"Archivo cargado para {subject_folder}: {xdf_file}")
-    else:
-        print(f"No se encontraron archivos .xdf para el sujeto {subject_folder}")
+            if 'Realidad Virtual' in xdf_file or 'RV' in xdf_file or 'Realidad' in xdf_file or 'VR' in xdf_file:
+                modality = 'Realidad Virtual'
+            elif 'No Inmersivo' in xdf_file or 'NI' in xdf_file:
+                modality = 'No Inmersivo'
+            else:
+                modality = 'No Inmersivo'  # Por defecto, si no se encuentra ninguna clave
+
+            subjects_data[subject_folder][modality].append(xdf_file)
+            #explore_xdf_file(xdf_file)
+            print("Adquirido ", subject_folder, modality)
 
 
+def report_xdf_files():
+    # Ordenar los sujetos alfabéticamente
+    sorted_subjects = sorted(subjects_data.keys())
+
+    for subject in sorted_subjects:
+        # Imprimir primero "No Inmersivo" y luego "Realidad Virtual"
+        print(f"Sujeto {subject}, Modalidad No Inmersivo: {len(subjects_data[subject]['No Inmersivo'])} archivos")
+        if subjects_data[subject]['No Inmersivo']:
+            for file_path in subjects_data[subject]['No Inmersivo']:
+                print(f"  - {os.path.basename(file_path)}")  # Imprime solo el nombre del archivo
+
+        print(
+            f"Sujeto {subject}, Modalidad Realidad Virtual: {len(subjects_data[subject]['Realidad Virtual'])} archivos")
+        if subjects_data[subject]['Realidad Virtual']:
+            for file_path in subjects_data[subject]['Realidad Virtual']:
+                print(f"  - {os.path.basename(file_path)}")  # Imprime solo el nombre del archivo
+
+
+# Ejecutar las funciones
+classify_and_store_xdf_files()
+report_xdf_files()
+#explore_xdf_file(subjects_data['P06']['Realidad Virtual'][0])
+
+#%%
+def Extract(lst,place):
+    return [item[place] for item in lst]
+def ClearMarkers(MarkersA_df):
+
+    TimePoint = []
+    TimeStamp2 = []
+    Trial = []
+    LastTrial = 0
+    LastTrial_Length = 0
+    t1=0
+    t2=0
+    OnGoing = False
+    started = False
+    confirmedSTOP = False
+    Ts = 0
+    print('-----------------------')
+    print('Inicio primera revisión')
+    print('-----------------------')
+
+    for row in MarkersA_df.itertuples():
+        TP = 'NONE' # Para alimentar la lista de TimePoints
+        Tr = 1000 # Para alimentar la lista de trials. Marcando un error
+        Ts = row.OverWatch_time_stamp
+        if (row.OverWatch_MarkerA.isdigit()) and (int(row.OverWatch_MarkerA) < 34) :
+            started = True
+            TP = 'START'
+            Tr = int(row.OverWatch_MarkerA)
+            OnGoing = True
+            confirmedSTOP = False
+
+            if Tr == LastTrial:
+                print('Borrados ', TimeStamp2[-2], TimeStamp2[-1])
+                TimeStamp2 = TimeStamp2[:len(TimeStamp2) - 2]
+
+                TimePoint = TimePoint[:len(TimePoint) - 2]
+                Trial = Trial[:len(Trial) - 2]
+            LastTrial = Tr
+
+            t1=Ts
+        if (row.OverWatch_MarkerA == 'Falso Stop') and (started==True):
+            if (OnGoing == False) and (len(Trial)>0):
+                OnGoing = True
+                del TimeStamp2[-1]
+                del TimePoint[-1]
+                del Trial[-1]
+
+        if (row.OverWatch_MarkerA == 'Stop') and (started == True):
+            if OnGoing:
+                TP = 'STOP'
+                Tr = LastTrial
+                OnGoing = False
+                t2=Ts
+                LastTrial_Length=t2-t1
+            else:
+                # Esta es la situación donde se supone que NO hay un Trial activo, pero
+                # Se encuentra una señal de stop... implica que hubo un trial
+                # no correctamente inicializado
+                if (LastTrial < 32):
+                    if (Ts-LastTrial_Length) > t2:
+                        TimeStamp2.append(Ts-LastTrial_Length)
+                    else:
+                        Lapse90=(Ts-t2)*0.9
+                        TimeStamp2.append(Ts-Lapse90)
+                    confirmedSTOP = False
+                    TimePoint.append('START')
+                    LastTrial+=1
+                    Trial.append(LastTrial)
+                    TP = 'STOP'
+                    Tr = LastTrial
+                    OnGoing = False
+                    t2 = Ts
+                    LastTrial_Length = t2 - t1
+
+
+        if (row.OverWatch_MarkerA == 'Stop confirmado') and (started == True):
+            if OnGoing: # Es caso de que no haya registro de un Stop previo
+                TP = 'STOP'
+                Tr = LastTrial
+                OnGoing = False
+                confirmedSTOP = True
+
+        print(Ts,TP,Tr)
+        if TP != 'NONE':
+            TimeStamp2.append(Ts)
+            TimePoint.append(TP)
+            Trial.append(Tr)
+
+    output = pd.DataFrame(list(zip(TimeStamp2, TimePoint, Trial)),
+                          columns =['OverWatch_time_stamp', 'OverWatch_MainMarker', 'OverWatch_Trial'])
+    output = output.loc[output['OverWatch_MainMarker'] != 'NONE']
+    return output
+def extraerData_xdf_file(xdf_path):
+    data, header = pyxdf.load_xdf(xdf_path)
+    vr_data_df = pd.DataFrame()
+    markers_df = pd.DataFrame()
+
+    for d in data:
+        if d['info']['name'][0] == 'Overwatch-Markers':
+            time_stamp = d['time_stamps']
+            MarkersAlfa = Extract(d['time_series'], 0)  # Stream OverWatch Markers, Canal 0: Marker Primario
+            MarkersBeta = Extract(d['time_series'], 1)  # Stream pupilCapture, Canal 1: Marker Secundario
+            Markers_df = pd.DataFrame(list(zip(time_stamp, MarkersAlfa, MarkersBeta)),
+                                      columns=['OverWatch_time_stamp', 'OverWatch_MarkerA', 'OverWatch_MarkerB'])
+            MarkersA_df = Markers_df.loc[Markers_df['OverWatch_MarkerA'] != 'NONE']
+    # -------------------------------------------------------------
+    # Vamos a iniciar el análisis de los Markers de OverWatch para
+    # quedar con una lista confiable de marcadores
+              # Pasar MarkersA_df aquí
+
+            OverWatch_ClearedMarkers_df = ClearMarkers(MarkersA_df)  # Aqui construimos la base de datos con los marcadores con todas las
+    # ... correcciones interpretativas identificadas hasta el momento.
+            df = OverWatch_ClearedMarkers_df
+            df = df.reset_index(drop=True)
+            markers_df=df
+        elif d['info']['name'][0] == 'Overwatch-VR':
+            vr_data_df = pd.DataFrame(d['time_series'], columns=["vX","vY","vZ","vRoll","vJaw","vPitch"])
+            vr_data_df['TimeStamp'] = d['time_stamps']
+
+    return markers_df, vr_data_df
+def process_markers(markers_df):
+    markers_df = markers_df[markers_df['OverWatch_MainMarker'].apply(lambda x: x.isdigit() or x in ['START', 'STOP'])]
+    markers_df['OverWatch_Trial'] = markers_df['OverWatch_MainMarker'].apply(lambda x: int(x) if x.isdigit() else x)
+    return markers_df
+
+def assign_trials_to_vr_data(vr_data_df, markers_df):
+    # Asumiendo que 'Start' y 'Stop' están en los datos de 'Trial'
+    trial_starts = markers_df[markers_df['OverWatch_Trial'] == 'START']['TimeStamp'].values
+    trial_ends = markers_df[markers_df['OverWatch_Trial'] == 'STOP']['TimeStamp'].values
+    trial_labels = range(1, len(trial_starts) + 1)
+
+    intervals = pd.IntervalIndex.from_arrays(trial_starts, trial_ends, closed='both')
+    vr_data_df['OverWatch_Trial'] = pd.cut(vr_data_df['TimeStamp'], intervals, labels=trial_labels)
+    return vr_data_df
+def process_all_xdf_files(subjects_data):
+    for subject, modalities in subjects_data.items():
+        for modality, files in modalities.items():
+            for file_path in files:
+                markers_df, vr_data_df = extraerData_xdf_file(file_path)
+                processed_markers_df = process_markers(markers_df)
+                vr_data_with_trials = assign_trials_to_vr_data(vr_data_df, processed_markers_df)
+                print(f"Processed VR data for {subject} in {modality}")
+                # Aquí puedes guardar o hacer un análisis adicional con vr_data_with_trials
+
+# Ejecutar el proceso completo
+process_all_xdf_files(subjects_data)
 
 
