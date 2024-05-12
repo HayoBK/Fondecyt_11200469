@@ -258,24 +258,34 @@ def process_markers(markers_df):
 
 def assign_trials_to_vr_data(vr_data_df, markers_df):
     # Asumiendo que 'Start' y 'Stop' están en los datos de 'Trial'
-    trial_starts = markers_df[markers_df['OverWatch_Trial'] == 'START']['TimeStamp'].values
-    trial_ends = markers_df[markers_df['OverWatch_Trial'] == 'STOP']['TimeStamp'].values
-    trial_labels = range(1, len(trial_starts) + 1)
+    start_df = markers_df[markers_df['OverWatch_MainMarker'] == 'START']
+    stop_df = markers_df[markers_df['OverWatch_MainMarker'] == 'STOP']
+    trial_intervals = []
+    trial_numbers = []
+    for start, stop in zip(start_df.itertuples(), stop_df.itertuples()):
+        interval = pd.Interval(left=start.OverWatch_time_stamp, right=stop.OverWatch_time_stamp, closed='both')
+        trial_intervals.append(interval)
+        trial_numbers.append(
+            start.OverWatch_Trial)  # Asumimos que el número del trial está correctamente en la fila de 'START'
 
-    intervals = pd.IntervalIndex.from_arrays(trial_starts, trial_ends, closed='both')
-    vr_data_df['OverWatch_Trial'] = pd.cut(vr_data_df['TimeStamp'], intervals, labels=trial_labels)
+    # Asociar cada punto de datos en vr_data_df con el intervalo correcto
+    vr_data_df['True_OW_Trial'] = None  # Inicializar la columna para los números de trials
+    for i, row in vr_data_df.iterrows():
+        for interval, number in zip(trial_intervals, trial_numbers):
+            if row['TimeStamp'] in interval:
+                vr_data_df.at[i, 'True_OW_Trial'] = number
+                break
     return vr_data_df
-def process_all_xdf_files(subjects_data):
-    for subject, modalities in subjects_data.items():
-        for modality, files in modalities.items():
-            for file_path in files:
-                markers_df, vr_data_df = extraerData_xdf_file(file_path)
-                processed_markers_df = process_markers(markers_df)
-                vr_data_with_trials = assign_trials_to_vr_data(vr_data_df, processed_markers_df)
-                print(f"Processed VR data for {subject} in {modality}")
-                # Aquí puedes guardar o hacer un análisis adicional con vr_data_with_trials
 
-# Ejecutar el proceso completo
-process_all_xdf_files(subjects_data)
+# Ejecutar el proceso CENTRAL
+sorted_subjects_data = sorted(subjects_data, key=lambda x: x[0])
+#sorted_subjects = sorted(subjects_data.keys())
+for subject in subjects_data:
+    for modality in subjects_data[subject]:
+        for xdf_file in subjects_data[subject][modality]:
+            print('Procesando: ',subject,modality,xdf_file)
+            markers_df, vr_data_df = extraerData_xdf_file(xdf_file)
+            processed_markers_df = process_markers(markers_df)
+            vr_data_with_trials = assign_trials_to_vr_data(vr_data_df, markers_df)
 
-
+            print('debug')
