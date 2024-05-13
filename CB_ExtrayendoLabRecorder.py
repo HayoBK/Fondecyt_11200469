@@ -7,6 +7,8 @@
 # LSL_Stream2 = StreamInfo('Overwatch-VR','Datos VR', 6 , 0, 'float32','overwatch-Titan2')
 # Canales = 7 : vx,vy,vz,vroll,vjaw,vpitch
 #
+#  Al 13 de Mayo logramos extraer efectivamente LSL data, DOMINANDOLO. Bien.... en esta versiòn del archivo
+#   solo obtenemos eso si datos sobre Head Kinematics.
 # -------------------------------------------------
 
 import pandas as pd
@@ -147,9 +149,9 @@ def ClearMarkers(MarkersA_df):
     started = False
     confirmedSTOP = False
     Ts = 0
-    print('-----------------------')
-    print('Inicio primera revisión')
-    print('-----------------------')
+    #print('-----------------------')
+    #print('Inicio primera revisión')
+    #print('-----------------------')
 
     for row in MarkersA_df.itertuples():
         TP = 'NONE' # Para alimentar la lista de TimePoints
@@ -163,7 +165,7 @@ def ClearMarkers(MarkersA_df):
             confirmedSTOP = False
 
             if Tr == LastTrial:
-                print('Borrados ', TimeStamp2[-2], TimeStamp2[-1])
+                #print('Borrados ', TimeStamp2[-2], TimeStamp2[-1])
                 TimeStamp2 = TimeStamp2[:len(TimeStamp2) - 2]
 
                 TimePoint = TimePoint[:len(TimePoint) - 2]
@@ -213,7 +215,7 @@ def ClearMarkers(MarkersA_df):
                 OnGoing = False
                 confirmedSTOP = True
 
-        print(Ts,TP,Tr)
+        #print(Ts,TP,Tr)
         if TP != 'NONE':
             TimeStamp2.append(Ts)
             TimePoint.append(TP)
@@ -277,15 +279,99 @@ def assign_trials_to_vr_data(vr_data_df, markers_df):
                 break
     return vr_data_df
 
+def summarize_trial_data(vr_data_with_trials):
+    # Agrupar los datos por 'True_OW_Trial'
+    grouped = vr_data_with_trials.groupby('True_OW_Trial')
+
+    # Calcular la desviación estándar y promedio para cada variable de interés
+    summary_df = grouped.agg({
+        'vX': ['mean', 'std'],
+        'vY': ['mean', 'std'],
+        'vZ': ['mean', 'std'],
+        'vRoll': ['mean', 'std'],
+        'vJaw': ['mean', 'std'],
+        'vPitch': ['mean', 'std']
+    })
+
+    # Opcional: Aplanar el MultiIndex en las columnas resultantes
+    summary_df.columns = ['_'.join(col).strip() for col in summary_df.columns.values]
+    summary_df.reset_index(inplace=True)
+
+    return summary_df
+
+# Aplicar la función a tus datos
+
+Codex_df = pd.read_excel((Py_Processing_Dir+'AA_CODEX.xlsx'))
+OW_Codex_df = pd.read_excel((Py_Processing_Dir+'AB_OverWatch_Codex.xlsx'))
+
+processed_files = []
+error_files = []
 # Ejecutar el proceso CENTRAL
 sorted_subjects_data = sorted(subjects_data, key=lambda x: x[0])
 #sorted_subjects = sorted(subjects_data.keys())
-for subject in subjects_data:
-    for modality in subjects_data[subject]:
-        for xdf_file in subjects_data[subject][modality]:
-            print('Procesando: ',subject,modality,xdf_file)
-            markers_df, vr_data_df = extraerData_xdf_file(xdf_file)
-            processed_markers_df = process_markers(markers_df)
-            vr_data_with_trials = assign_trials_to_vr_data(vr_data_df, markers_df)
+all_summarized_data = []
 
-            print('debug')
+total_files = sum(len(files) for modalities in subjects_data.values() for files in modalities.values())
+processed_count = 0
+
+for subject in subjects_data:
+    print('Iniciando análisis Sujeto: ',subject)
+    for modality in subjects_data[subject]:
+        print('Iniciando analisis Sujeto: ', subject,' en Modalidad: ',modality)
+        for xdf_file in subjects_data[subject][modality]:
+            try:
+                print('Procesando: ',subject,modality,xdf_file)
+                markers_df, vr_data_df = extraerData_xdf_file(xdf_file)
+                processed_markers_df = process_markers(markers_df)
+                vr_data_with_trials = assign_trials_to_vr_data(vr_data_df, markers_df)
+                summarized_vr_data= summarize_trial_data(vr_data_with_trials)
+                summarized_vr_data['Subject'] = subject
+                summarized_vr_data['Modality'] = modality
+                all_summarized_data.append(summarized_vr_data)
+                processed_files.append({'File': xdf_file, 'Subject': subject, 'Modality': modality, 'Status': 'Success'})
+
+                processed_count += 1
+                progress = (processed_count / total_files) * 100
+                print(' ')
+                print(f" ---------- Progreso: {progress:.2f}% completado. --------------")
+                print(' ')
+
+            except KeyError as e:
+                print(f"Error procesando archivo {xdf_file}: {e}")
+                error_files.append({'File': xdf_file, 'Subject': subject, 'Modality': modality, 'Status': 'Error', 'Error': str(e)})
+
+            except Exception as e:
+                error_files.append({'File': xdf_file, 'Subject': subject, 'Modality': modality, 'Status': 'Error', 'Error': str(e)})
+
+                print(f"Error inesperado procesando archivo {xdf_file}: {e}")
+    print('Concluimos análisis sujeto ',subject)
+print("Proceso concluido por completo")
+
+
+final_summarized_df = pd.concat(all_summarized_data, ignore_index=True)
+final_summarized_df = pd.merge(
+    final_summarized_df,
+    Codex_df,
+    left_on='Subject',
+    right_on='CODIGO',
+    how='left'
+)
+final_summarized_df.drop(columns='CODIGO', inplace=True)
+
+final_summarized_df = pd.merge(
+    final_summarized_df,
+    OW_Codex_df,
+    left_on='True_OW_Trial',
+    right_on='OverWatch_T',
+    how='left'
+)
+final_summarized_df.drop(columns='OverWatch_T', inplace=True)
+final_summarized_df.to_csv(Py_Processing_Dir+'CB_HeadKinematics.csv')
+
+df_processed = pd.DataFrame(processed_files)
+df_errors = pd.DataFrame(error_files)
+
+df_tracking = pd.concat([df_processed, df_errors], ignore_index=True)
+df_tracking.to_csv(Py_Processing_Dir+'CB_HeadKinematics_Success_Error.csv')
+
+print(df_tracking)
