@@ -31,6 +31,7 @@ filtered_df = df[
     (df['MWM_Bloque'].isin(['HiddenTarget_1', 'HiddenTarget_2', 'HiddenTarget_3']))
 ]
 
+
 # Agrupar por 'Subject' y calcular el promedio de las desviaciones estándar de las variables de interés
 summary_df = filtered_df.groupby('Subject').agg({
     'vX_std': 'mean',
