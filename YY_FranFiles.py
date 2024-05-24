@@ -235,4 +235,61 @@ for index, row in significativos_df.iterrows():
 # Imprimir confirmación
 print("Análisis de diferencias individuales y correlaciones exportados a archivos Excel.")
 
+df = df.apply(pd.to_numeric, errors='coerce')
+
+df_clean = df.dropna(subset=df.columns[49:59])
+
+# Seleccionar las competencias de la madre (variables 49 a 53) y del padre (variables 54 a 58) después de limpiar los datos
+competencias_madre = df_clean.iloc[:, 49:54]
+competencias_padre = df_clean.iloc[:, 54:59]
+
+# Calcular los valores promedio de cada competencia para proporcionar una descripción más completa
+promedios_madre = competencias_madre.mean()
+promedios_padre = competencias_padre.mean()
+
+# Realizar el test de Wilcoxon para cada par de variables
+wilcoxon_results = {}
+for madre, padre in zip(competencias_madre.columns, competencias_padre.columns):
+    wilcoxon_result = stats.wilcoxon(df_clean[madre], df_clean[padre], zero_method='wilcox')
+    wilcoxon_results[(madre, padre)] = wilcoxon_result
+
+# Mostrar los resultados del test de Wilcoxon
+for par, result in wilcoxon_results.items():
+    print(f"Comparación entre {par[0]} (Madre) y {par[1]} (Padre): p-value = {result.pvalue}")
+
+# Generar el gráfico de boxplot para la comparación visual
+plt.figure(figsize=(12, 12))
+sns.boxplot(data=pd.concat([competencias_madre, competencias_padre], axis=1))
+plt.xticks(rotation=45)
+plt.title('Comparación de Competencias entre Madre y Padre')
+plt.xlabel('Competencias')
+plt.ylabel('Valor')
+plt.xticks(ticks=range(10), labels=competencias_madre.columns.tolist() + competencias_padre.columns.tolist(), rotation=45)
+plt.savefig(Fran_Dir + 'boxplot_comparacion_madre_padre.png')
+plt.show()
+
+# Imprimir los valores promedio de cada competencia
+print("\nValores promedio de las competencias de la madre:")
+print(promedios_madre)
+print("\nValores promedio de las competencias del padre:")
+print(promedios_padre)
+
+ttest_results = {}
+for madre, padre in zip(competencias_madre.columns, competencias_padre.columns):
+    ttest_result = stats.ttest_rel(df_clean[madre], df_clean[padre])
+    ttest_results[(madre, padre)] = ttest_result
+
+# Mostrar los resultados del test t de Student
+for par, result in ttest_results.items():
+    print(f"Comparación entre {par[0]} (Madre) y {par[1]} (Padre): p-value = {result.pvalue}")
+
+# Generar el gráfico de boxplot para la comparación visual
+
+
+# Imprimir los valores promedio de cada competencia
+print("\nValores promedio de las competencias de la madre:")
+print(promedios_madre)
+print("\nValores promedio de las competencias del padre:")
+print(promedios_padre)
+
 print(' Todo listo bajo el sol')
