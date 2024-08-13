@@ -39,6 +39,8 @@ if nombre_host == 'MSI':
 
 NaviCSE_df = pd.read_csv((Py_Processing_Dir+'AB_SimianMaze_Z3_NaviDataBreve_con_calculos.csv'), index_col=0)
 NaviPOS_df = pd.read_csv((Py_Processing_Dir+'AB_SimianMaze_Z2_NaviData_con_posicion.csv'), low_memory=False, index_col=0)
+# Aqui Barany Codex le falta actualización... antes era Fenrir Codex... Para la publiación
+# Y uso de dato neurocognitivos, debemos trabajar con OMEGA CODEX
 Codex_df = pd.read_excel((Py_Processing_Dir+'BARANY_CODEX.xlsx'), index_col=0)
 Codex_df = Codex_df.reset_index()
 Codex_df.rename(columns={'CODIGO': 'Sujeto'}, inplace=True)
