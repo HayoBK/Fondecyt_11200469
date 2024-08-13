@@ -43,6 +43,12 @@ if nombre_host == 'DESKTOP-PQ9KP6K':
     base_path= home_path / "OneDrive/2-Casper/00-CurrentResearch/001-FONDECYT_11200469/002-LUCIEN/SUJETOS"
     Py_Processing_Dir = home + "/OneDrive/2-Casper/00-CurrentResearch/001-FONDECYT_11200469/002-LUCIEN/Py_Processing/"
 
+if nombre_host == 'MSI':
+    home="D:/Titan-OneDrive"
+    home_path = Path("D:/Titan-OneDrive")
+    base_path= home_path / "OneDrive/2-Casper/00-CurrentResearch/001-FONDECYT_11200469/002-LUCIEN/SUJETOS"
+    Py_Processing_Dir = home + "/OneDrive/2-Casper/00-CurrentResearch/001-FONDECYT_11200469/002-LUCIEN/Py_Processing/"
+
 #%% ----------- NOrmalización de datos, asumiendo entonces que los distintas modadlidad RV y NI no son directamente
 #               comparables
 
