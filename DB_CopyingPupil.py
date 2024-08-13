@@ -48,4 +48,4 @@ for i in range(1, 54):
                 shutil.copy2(s, d)
     print(folder_name,' --> Listo')
 
-print("Contenido copiado exitosamente.")
+print("Contenido copiado exitosamente. ")
