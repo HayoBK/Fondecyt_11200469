@@ -14,6 +14,7 @@ import matplotlib.pyplot as plt    #Graficos
 from pathlib import Path
 import socket
 
+
 # ------------------------------------------------------------
 #Identificar primero en que computador estamos trabajando
 #-------------------------------------------------------------
@@ -32,6 +33,8 @@ if nombre_host == 'MSI':
     home_path = Path("D:/Titan-OneDrive")
     base_path= home_path / "OneDrive/2-Casper/00-CurrentResearch/001-FONDECYT_11200469/002-LUCIEN/SUJETOS"
     Py_Processing_Dir = home + "/OneDrive/2-Casper/00-CurrentResearch/001-FONDECYT_11200469/002-LUCIEN/Py_Processing/"
+
+Output_Dir = home + "/OneDrive/2-Casper/00-CurrentResearch/001-FONDECYT_11200469/002-LUCIEN/Outputs/Barany2024/"
 
 # ------------------------------------------------------------
 # Cargando bases de datos de Navegación MWM
@@ -84,49 +87,58 @@ NaviCSE_df = df
 # Vamos a Por grafico 1 Barany : Rendimiento CSE; incluyendo Migraña vestibular
 #---------------------------------------------------------------------------------
 
-df = NaviCSE_df
-df= df[df['True_Block'].isin(['HiddenTarget_1', 'HiddenTarget_2', 'HiddenTarget_3'])]
-df= df[df['True_Block'].isin(['HiddenTarget_1'])]
+Bloques_de_Interes = []
+Bloques_de_Interes.append(['HT_1',['HiddenTarget_1']])
+Bloques_de_Interes.append(['HT_2',['HiddenTarget_2']])
+Bloques_de_Interes.append(['HT_3',['HiddenTarget_3']])
+Bloques_de_Interes.append(['All_HT',['HiddenTarget_1', 'HiddenTarget_2', 'HiddenTarget_3']])
+for Bl in Bloques_de_Interes:
+    df = NaviCSE_df
+    df= df[df['True_Block'].isin(Bl[1])]
+    #df= df[df['True_Block'].isin(['HiddenTarget_1'])]
 
 
-df_expandido = pd.DataFrame(columns=df.columns)
-filas_duplicadas = []
+    df_expandido = pd.DataFrame(columns=df.columns)
+    filas_duplicadas = []
 
-# Función para añadir categorías
-def añadir_categorias(fila):
-    categorias = []
-    if fila['Grupo'] == 'MPPP':
-        categorias.append('PPPD')
-    if isinstance(fila['Dx'], str) and 'MV' in fila['Dx']:      # Tengo que borrar estas dos lineas si quiero
-        categorias.append('Vestibular Migraine')                # Eliminar Migraña vestibular
-    if fila['Grupo'] == 'Vestibular':
-        categorias.append('Vestibular (non PPPD)')
-    if fila['Grupo'] == 'Voluntario Sano':
-        categorias.append('Healthy Volunteer')
-    return categorias
+    # Función para añadir categorías
+    def añadir_categorias(fila):
+        categorias = []
+        if fila['Grupo'] == 'MPPP':
+            categorias.append('PPPD')
+        if isinstance(fila['Dx'], str) and 'MV' in fila['Dx']:      # Tengo que borrar estas dos lineas si quiero
+            categorias.append('Vestibular Migraine')                # Eliminar Migraña vestibular
+        if fila['Grupo'] == 'Vestibular':
+            categorias.append('Vestibular (non PPPD)')
+        if fila['Grupo'] == 'Voluntario Sano':
+            categorias.append('Healthy Volunteer')
+        return categorias
 
-# Expandir el DataFrame duplicando las filas según las categorías
-for _, fila in df.iterrows():
-    categorias = añadir_categorias(fila)
-    for categoria in categorias:
-        nueva_fila = fila.copy()
-        nueva_fila['Categoria'] = categoria
-        filas_duplicadas.append(nueva_fila)
+    # Expandir el DataFrame duplicando las filas según las categorías
+    for _, fila in df.iterrows():
+        categorias = añadir_categorias(fila)
+        for categoria in categorias:
+            nueva_fila = fila.copy()
+            nueva_fila['Categoria'] = categoria
+            filas_duplicadas.append(nueva_fila)
 
-df_expandido = pd.DataFrame(filas_duplicadas)
-categorias_ordenadas = ['PPPD', 'Vestibular Migraine', 'Vestibular (non PPPD)', 'Healthy Volunteer']
-#categorias_ordenadas = ['PPPD', 'Vestibular (non PPPD)', 'Healthy Volunteer'] #Tengo que poner esta linea si quiero eliminar migraña vestibular
+    df_expandido = pd.DataFrame(filas_duplicadas)
+    categorias_ordenadas = ['PPPD', 'Vestibular Migraine', 'Vestibular (non PPPD)', 'Healthy Volunteer']
+    #categorias_ordenadas = ['PPPD', 'Vestibular (non PPPD)', 'Healthy Volunteer'] #Tengo que poner esta linea si quiero eliminar migraña vestibular
 
-# Crear el boxplot
-plt.figure(figsize=(12, 8))
-sns.boxplot(y='Norm_CSE', x='Categoria', hue='Modalidad', data=df_expandido, order=categorias_ordenadas, palette='Set2')
-plt.ylabel('Normalized Cummulative Search Error (CSE)')
-plt.xlabel('Group / Diagnosis')
-plt.title('Spatial Navigation Impairment')
-plt.legend(title='Modalidad', loc='upper right')
-plt.grid(True, linestyle='--', alpha=0.7)
-plt.ylim(-3, 4)
-plt.show()
+    # Crear el boxplot
+    plt.figure(figsize=(12, 8))
+    sns.boxplot(y='Norm_CSE', x='Categoria', hue='Modalidad', data=df_expandido, order=categorias_ordenadas, palette='Set2')
+    plt.ylabel('Normalized Cummulative Search Error (CSE)')
+    plt.xlabel('Group / Diagnosis')
+    Title = '01-Spatial Navigation Impairment '+ Bl[0]
+    plt.title(Title)
+    plt.legend(title='Modalidad', loc='upper right')
+    plt.grid(True, linestyle='--', alpha=0.7)
+    plt.ylim(-3, 4)
+    plt.savefig(Output_Dir + Title + '.png')
+    plt.clf()
+    #plt.show()
 
 
 
