@@ -165,7 +165,7 @@ def ClearMarkers(df):
     return output
 
 #Vamos a buscar todos los archivos de datos del Pupil Labs de Felipe
-searchfiles = home + "/OneDrive/2-Casper/00-CurrentResearch/001-FONDECYT_11200469/004 - Alimento para LUCIEN/Pupil_labs_Faundez/*.csv"
+searchfiles = home + "/OneDrive/2-Casper/00-CurrentResearch/001-FONDECYT_11200469/004 - Alimento para LUCIEN/Pupil_labs_RV/*.csv"
 Pupil_files = glob2.glob(searchfiles) #obtiene una LISTA de todos los archivos que calcen con "searchfiles"
 Pupil_files = sorted(Pupil_files) # los ordena alfabeticamente
 PxxList =[]
@@ -173,6 +173,7 @@ Df_List = []
 XDF_Success_List=[]
 XDF_Failure_List=[]
 Whole_Success_List=[]
+
 for Pupil_f in Pupil_files:
     head, tail = os.path.split(Pupil_f) #Esto es para obtener solo el nombre del archivo y perder su directorio
     CodigoPxx = str(tail[0:3])
@@ -188,9 +189,9 @@ for Pupil_f in Pupil_files:
     Dir = BaseDir + CodigoPxx
     pattern = Dir + "/LSL_LAB/**/*NI*.xdf"
     patrones = [
-        "/LSL_LAB/**/*NI*.xdf",  # Patrón existente
-        "/LSL_LAB/**/*No Inmer*.xdf",  # Ejemplo de un nuevo patrón
-        "/LSL_LAB/**/*Blufagondi*.xdf"  # Otro patrón adicional
+        "/LSL_LAB/**/*RV*.xdf",  # Patrón existente
+        "/LSL_LAB/**/*Virt*.xdf",  # Ejemplo de un nuevo patrón
+        "/LSL_LAB/**/*Real*.xdf"  # Otro patrón adicional
     ]
     XDF_files=[]
     for p in patrones:
@@ -244,8 +245,9 @@ for Pupil_f in Pupil_files:
         if CodigoPxx == 'P13':
             df = df.loc[(df['OverWatch_time_stamp']<8000)]
         print('Si todo sale bien este numero debiese ser 66 -->', len(df.index))
-        j=round( ((len(df.index))/66),1)
+        j = round(((len(df.index)) / 66), 1)
         Whole_Success_List.append([CodigoPxx,j])
+
         if not df.empty:
             dfC = df
             # Contar eventos por cada Trial
@@ -256,6 +258,7 @@ for Pupil_f in Pupil_files:
             df = dfC[dfC['OverWatch_Trial'].isin(valid_trials)]
             # Mostrar el DataFrame limpio
             print(df)
+
         inicios = df[df['OverWatch_MainMarker'] == 'START']['OverWatch_time_stamp'].reset_index(drop=True)
         OW_Trials = df[df['OverWatch_MainMarker'] == 'START']['OverWatch_Trial'].reset_index(drop=True)
         finales = df[df['OverWatch_MainMarker'] == 'STOP']['OverWatch_time_stamp'].reset_index(drop=True)
@@ -265,6 +268,8 @@ for Pupil_f in Pupil_files:
         trial_labels = list(range(1,34))
         trial_labels = trials['OW_trials'].tolist() #Ojo aqui que quede bien...
         trial_labels = np.array(trial_labels)
+        #trials = trials.dropna(subset=['Start', 'End'])
+
         bins = pd.IntervalIndex.from_tuples(list(zip(trials['Start'], trials['End'])), closed = 'left')
         try_df = t_df
         try_df['OW_Trial'] = pd.cut(t_df['gaze_timestamp'],bins).map(dict(zip(bins,trial_labels)))
@@ -297,7 +302,7 @@ for Pupil_f in Pupil_files:
         move = try_df.pop('Grupo')
         try_df.insert(1, 'Grupo', move)
         try_df.rename(columns={'gaze_timestamp' : 'timestamp'}, inplace=True)
-        a = try_df.pop('world_timestamp')
+        #a = try_df.pop('world_timestamp')
 
         ForCodex3 = Navi_df.loc[Navi_df['Sujeto']==CodigoPxx]
         ForCodex3 = ForCodex3.set_index('OW_trial')
@@ -324,7 +329,7 @@ final_df.loc[(final_df.Main_Block == 'HiddenTarget_3'),'Main_Block']='Target_is_
 final_df = final_df.loc[final_df['Sujeto']!='P13']
 final_df = final_df.loc[final_df['Sujeto']!='P06']
 
-final_df.to_csv(Py_Processing_Dir+'DA_EyeTracker_Synced_NI_2D.csv')
+final_df.to_csv(Py_Processing_Dir+'DA_EyeTracker_Synced_RV_3D.csv')
 #%%
 
 print(" Archivos XDF adquiridos con éxito: ")
