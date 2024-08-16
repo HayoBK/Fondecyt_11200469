@@ -6,6 +6,7 @@
 #   PUPIL LABS INFO
 #-----------------------------------------------------
 
+
 #%%
 import pandas as pd     #Base de datos
 import numpy as np
@@ -13,12 +14,14 @@ import seaborn as sns   #Estetica de gráficos
 import matplotlib.pyplot as plt    #Graficos
 from pathlib import Path
 import socket
+from tqdm import tqdm
+import time
 
 
 # ------------------------------------------------------------
 #Identificar primero en que computador estamos trabajando
 #-------------------------------------------------------------
-
+print('H-Iniciando segmento... ')
 nombre_host = socket.gethostname()
 print(nombre_host)
 
@@ -36,51 +39,56 @@ if nombre_host == 'MSI':
 
 Output_Dir = home + "/OneDrive/2-Casper/00-CurrentResearch/001-FONDECYT_11200469/002-LUCIEN/Outputs/Barany2024/"
 
-file = Py_Processing_Dir+'DA_EyeTracker_Synced_NI_2D.csv'
-df_2D = pd.read_csv(file, index_col=0)
-
-Codex_df = pd.read_excel((Py_Processing_Dir+'BARANY_CODEX.xlsx'), index_col=0)
-Codex_df = Codex_df.reset_index()
-Codex_df.rename(columns={'CODIGO': 'Sujeto'}, inplace=True)
-df_2D = df_2D.merge(Codex_df[['Sujeto', 'Dg']], on='Sujeto', how='left')
-df_2D.rename(columns={'Dg': 'Dx'}, inplace=True)
-
-filas_duplicadas = []
-def añadir_categorias(fila):
-    categorias = []
-    if fila['Grupo'] == 'MPPP':
-        categorias.append('PPPD')
-    if isinstance(fila['Dx'], str) and 'MV' in fila['Dx']:  # Tengo que borrar estas dos lineas si quiero
-        categorias.append('Vestibular Migraine')  # Eliminar Migraña vestibular
-    if fila['Grupo'] == 'Vestibular':
-        categorias.append('Vestibular (non PPPD)')
-    if fila['Grupo'] == 'Voluntario Sano':
-        categorias.append('Healthy Volunteer')
-    return categorias
+file = Py_Processing_Dir+'DA_EyeTracker_Synced_NI_2D_withVM.csv'
+df_whole = pd.read_csv(file, index_col=0)
 
 
-# Expandir el DataFrame duplicando las filas según las categorías
-for _, fila in df_2D.iterrows():
-    categorias = añadir_categorias(fila)
-    for categoria in categorias:
-        nueva_fila = fila.copy()
-        nueva_fila['Categoria'] = categoria
-        filas_duplicadas.append(nueva_fila)
-
-df_2D = pd.DataFrame(filas_duplicadas)
 categorias_ordenadas = ['PPPD', 'Vestibular Migraine', 'Vestibular (non PPPD)', 'Healthy Volunteer']
-print("Segmento Listo")
-#%%
-
 
 Bloques_de_Interes = []
 Bloques_de_Interes.append(['HT_1',['HiddenTarget_1']])
 Bloques_de_Interes.append(['HT_2',['HiddenTarget_2']])
 Bloques_de_Interes.append(['HT_3',['HiddenTarget_3']])
 Bloques_de_Interes.append(['All_HT',['HiddenTarget_1', 'HiddenTarget_2', 'HiddenTarget_3']])
+
 for Bl in Bloques_de_Interes:
-    df= df_2D[df_2D['True_Block'].isin(Bl[1])]
+    print('Iniciando Procesamiento de ',Bl[0])
+    inicio_bloque = time.time()
 
+    df= df_whole[df_whole['True_Block'].isin(Bl[1])]
+    fig, axes = plt.subplots(2, 2, figsize=(10, 10))
 
-#%%
-print('God in his heaven, all is right on Earth')
+    # Recorremos las categorías desde la lista predefinida
+    for ax, categoria in zip(axes.flatten(), categorias_ordenadas):
+        # Filtramos el DataFrame por la categoría actual
+        data = df[df['Categoria'] == categoria]
+
+        # Generamos el mapa de calor
+        sns.kdeplot(
+            x=data['x_norm'], y=data['y_norm'],
+            fill=True, cmap='coolwarm',
+            ax=ax, levels=20, thresh=0
+        )
+
+        # Ajustamos los límites del eje
+        ax.set_xlim(0, 1)
+        ax.set_ylim(0, 1)
+
+        # Añadimos líneas de guía
+        for val in [0.25, 0.75]:
+            ax.axvline(val, color='gray', linestyle='--', lw=1)
+            ax.axhline(val, color='gray', linestyle='--', lw=1)
+        ax.axvline(0.5, color='gray', linestyle='--', lw=2)
+        ax.axhline(0.5, color='gray', linestyle='--', lw=2)
+
+        # Añadimos el título de cada subplot
+        ax.set_title(f'Categoria: {categoria}')
+
+    # Ajustamos los espacios entre subplots
+    plt.tight_layout()
+    Title= "Gaze Distribution on Screen " + Bl[0]
+    plt.savefig(Output_Dir + '02a - Gaze2D/'+ Title + '.png')
+    plt.clf()
+    #plt.show()
+    duracion = time.time() - inicio_bloque
+    print(f'Terminando Procesamiento de {Bl[0]} en {duracion:.2f} segundos')

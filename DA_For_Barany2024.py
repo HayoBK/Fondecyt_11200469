@@ -136,7 +136,7 @@ for Bl in Bloques_de_Interes:
     plt.legend(title='Modalidad', loc='upper right')
     plt.grid(True, linestyle='--', alpha=0.7)
     plt.ylim(-3, 4)
-    plt.savefig(Output_Dir + Title + '.png')
+    plt.savefig(Output_Dir + '01 - Morris/'+ Title + '.png')
     plt.clf()
     #plt.show()
 
