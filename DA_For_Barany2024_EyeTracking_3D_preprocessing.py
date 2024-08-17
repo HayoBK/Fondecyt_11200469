@@ -37,7 +37,7 @@ if nombre_host == 'MSI':
 
 Output_Dir = home + "/OneDrive/2-Casper/00-CurrentResearch/001-FONDECYT_11200469/002-LUCIEN/Outputs/Barany2024/"
 
-file = Py_Processing_Dir+'DA_EyeTracker_Synced_NI_2D.csv'
+file = Py_Processing_Dir+'DA_EyeTracker_Synced_RV_3D.csv'
 df_2D = pd.read_csv(file, index_col=0)
 
 Bloques=['HiddenTarget_1', 'HiddenTarget_2', 'HiddenTarget_3']
@@ -73,7 +73,7 @@ for _, fila in tqdm(df_2D.iterrows(), total=len(df_2D), desc="Procesando filas")
 
 df_2D = pd.DataFrame(filas_duplicadas)
 
-file = Py_Processing_Dir+'DA_EyeTracker_Synced_NI_2D_withVM.csv'
+file = Py_Processing_Dir+'DA_EyeTracker_Synced_RV_3D_withVM.csv'
 df_2D.to_csv(file)
 print("H-Segmento Listo")
 
