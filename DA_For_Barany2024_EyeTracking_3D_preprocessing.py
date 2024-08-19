@@ -37,6 +37,14 @@ if nombre_host == 'MSI':
 
 Output_Dir = home + "/OneDrive/2-Casper/00-CurrentResearch/001-FONDECYT_11200469/002-LUCIEN/Outputs/Barany2024/"
 
+
+if nombre_host == 'DESKTOP-PQ9KP6K':  #Remake por situaci´ón de emergencia de internet
+    home="D:/Mumin_UCh_OneDrive"
+    home_path = Path("D:/Mumin_UCh_OneDrive")
+    base_path= home_path / "OneDrive/2-Casper/00-CurrentResearch/001-FONDECYT_11200469/002-LUCIEN/SUJETOS"
+    Py_Processing_Dir = home + "/OneDrive/2-Casper/00-CurrentResearch/001-FONDECYT_11200469/002-LUCIEN/PyPro_traveling/Py_Processing/"
+    Output_Dir = home + "/OneDrive/2-Casper/00-CurrentResearch/001-FONDECYT_11200469/002-LUCIEN/PyPro_traveling/Outputs/Barany2024/"
+
 file = Py_Processing_Dir+'DA_EyeTracker_Synced_RV_3D.csv'
 df_2D = pd.read_csv(file, index_col=0)
 
@@ -48,6 +56,72 @@ Codex_df = Codex_df.reset_index()
 Codex_df.rename(columns={'CODIGO': 'Sujeto'}, inplace=True)
 df_2D = df_2D.merge(Codex_df[['Sujeto', 'Dg']], on='Sujeto', how='left')
 df_2D.rename(columns={'Dg': 'Dx'}, inplace=True)
+
+
+#------------------------------------------------------------------------------------------------------------------------------------------------------
+#
+#------------------------------------------------------------------------------------------------------------------------------------------------------
+
+#Vamos a añadir Scanned Path de Pedro.-----------------------------------------------------------------------------------------------------
+df_2D['delta_x'] = df_2D['x_norm'].diff()
+df_2D['delta_y'] = df_2D['y_norm'].diff()
+
+# Calcula la distancia euclidiana
+df_2D['distancia'] = np.sqrt(df_2D['delta_x']**2 + df_2D['delta_y']**2)
+
+# Opcionalmente, puedes eliminar las columnas temporales 'delta_x' y 'delta_y'
+df_2D = df_2D.drop(columns=['delta_x', 'delta_y'])
+
+# Para la primera fila, donde no hay fila previa, puedes reemplazar NaN con 0 o algún otro valor si lo prefieres
+df_2D['distancia'].fillna(0, inplace=True)
+
+#------------------------------------------------------------------------------------------------------------------------------------------------------
+#
+#------------------------------------------------------------------------------------------------------------------------------------------------------
+
+# Vamos a Generar duraciones para cada OW_Trial, para asegurar un peso equivalente entre cada OW_a traves de sujetos.......-----------------------------------
+#df_whole['timestamp'] = pd.to_datetime(df_whole['timestamp'])
+
+# Agrupamos por '4X-Code' y 'OW_Trial' y calculamos la duración de cada trial
+duraciones = df_2D.groupby(['Sujeto', 'OW_Trial'])['timestamp'].agg(Inicio='min', Fin='max')
+duraciones['Duracion'] = duraciones['Fin'] - duraciones['Inicio']
+
+# Unimos la información de duración de vuelta al DataFrame original
+df_2D = df_2D.merge(duraciones['Duracion'], on=['Sujeto', 'OW_Trial'], how='left')
+
+#------------------------------------------------------------------------------------------------------------------------------------------------------
+#
+#------------------------------------------------------------------------------------------------------------------------------------------------------
+
+#Ahora haremos distancias sumadas, y luego lo haremos por unidad de tiempo para normalizar por trials de distinta duracion...--------------------------------
+
+# Asegúrate de que ya has calculado las distancias y las duraciones como hemos discutido anteriormente
+
+# Paso 1: Sumar las distancias por grupo (4X-Code, OW_Trial)
+distancia_sumada = df_2D.groupby(['Sujeto', 'OW_Trial'])['distancia'].sum().reset_index()
+
+# Renombramos la columna para mayor claridad
+distancia_sumada.rename(columns={'distancia': 'distancia_sumada'}, inplace=True)
+
+# Unimos la columna de distancia sumada al DataFrame original
+df_2D = df_2D.merge(distancia_sumada, on=['Sujeto', 'OW_Trial'], how='left')
+
+# Paso 2: Calcular la "distancia por unidad de tiempo"
+df_2D['Scanned Path / time'] = df_2D['distancia_sumada'] / df_2D['Duracion']
+
+#------------------------------------------------------------------------------------------------------------------------------------------------------
+# Falto reducir por MWM_Block
+#------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+promedios = df_2D.groupby(['Sujeto', 'MWM_Block'])['Scanned Path / time'].mean().reset_index()
+
+# Renombramos la columna para mayor claridad
+promedios.rename(columns={'Scanned Path / time': 'Scanned_Path_per_time_per_Block'}, inplace=True)
+
+# Ahora puedes unir estos promedios al DataFrame original o trabajar solo con el DataFrame de promedios
+df_2D = df_2D.merge(promedios, on=['Sujeto', 'MWM_Block'], how='left')
 
 filas_duplicadas = []
 def añadir_categorias(fila):

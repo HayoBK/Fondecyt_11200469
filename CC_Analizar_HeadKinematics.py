@@ -35,6 +35,7 @@ filtered_df = final_summarized_df[
 ]
 
 
+
 # Agrupar por 'Subject' y calcular el promedio de las desviaciones estándar de las variables de interés
 summary_df = filtered_df.groupby(['Subject', 'MWM_Bloque']).agg({
     'vX_std': 'mean',
