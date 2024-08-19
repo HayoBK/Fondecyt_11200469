@@ -18,6 +18,7 @@ import socket
 from tqdm import tqdm
 import time
 
+
 from DA_For_Barany2024 import categorias
 
 # ------------------------------------------------------------
