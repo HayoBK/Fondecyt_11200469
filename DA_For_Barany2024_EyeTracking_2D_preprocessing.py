@@ -90,6 +90,7 @@ df_2D = df_2D.merge(duraciones['Duracion'], on=['Sujeto', 'OW_Trial'], how='left
 #------------------------------------------------------------------------------------------------------------------------------------------------------
 #
 #------------------------------------------------------------------------------------------------------------------------------------------------------
+df_2D_filtrado = df_2D.groupby(['Sujeto', 'OW_Trial']).apply(lambda x: x.iloc[1:]).reset_index(drop=True)
 df_2D = df_2D[df_2D['on_surf']==True]
 #Ahora haremos distancias sumadas, y luego lo haremos por unidad de tiempo para normalizar por trials de distinta duracion...--------------------------------
 

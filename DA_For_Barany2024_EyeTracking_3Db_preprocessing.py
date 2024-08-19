@@ -37,7 +37,6 @@ if nombre_host == 'MSI':
 
 Output_Dir = home + "/OneDrive/2-Casper/00-CurrentResearch/001-FONDECYT_11200469/002-LUCIEN/Outputs/Barany2024/"
 
-
 if nombre_host == 'DESKTOP-PQ9KP6K':  #Remake por situaci´ón de emergencia de internet
     home="D:/Mumin_UCh_OneDrive"
     home_path = Path("D:/Mumin_UCh_OneDrive")
@@ -56,7 +55,6 @@ Codex_df = Codex_df.reset_index()
 Codex_df.rename(columns={'CODIGO': 'Sujeto'}, inplace=True)
 df_2D = df_2D.merge(Codex_df[['Sujeto', 'Dg']], on='Sujeto', how='left')
 df_2D.rename(columns={'Dg': 'Dx'}, inplace=True)
-
 
 #------------------------------------------------------------------------------------------------------------------------------------------------------
 #
@@ -92,7 +90,7 @@ df_2D = df_2D.merge(duraciones['Duracion'], on=['Sujeto', 'OW_Trial'], how='left
 #------------------------------------------------------------------------------------------------------------------------------------------------------
 #
 #------------------------------------------------------------------------------------------------------------------------------------------------------
-
+df_2D_filtrado = df_2D.groupby(['Sujeto', 'OW_Trial']).apply(lambda x: x.iloc[1:]).reset_index(drop=True)
 #Ahora haremos distancias sumadas, y luego lo haremos por unidad de tiempo para normalizar por trials de distinta duracion...--------------------------------
 
 # Asegúrate de que ya has calculado las distancias y las duraciones como hemos discutido anteriormente
@@ -122,6 +120,7 @@ promedios.rename(columns={'Scanned Path / time': 'Scanned_Path_per_time_per_Bloc
 
 # Ahora puedes unir estos promedios al DataFrame original o trabajar solo con el DataFrame de promedios
 df_2D = df_2D.merge(promedios, on=['Sujeto', 'MWM_Block'], how='left')
+
 
 filas_duplicadas = []
 def añadir_categorias(fila):

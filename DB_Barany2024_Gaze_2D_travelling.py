@@ -130,7 +130,6 @@ if Esto_si:
 
 
 Bloques_de_Interes = []
-Bloques_de_Interes.append(['Todo',[]])
 Bloques_de_Interes.append(['HT_1',['HiddenTarget_1']])
 Bloques_de_Interes.append(['HT_2',['HiddenTarget_2']])
 Bloques_de_Interes.append(['HT_3',['HiddenTarget_3']])
@@ -150,13 +149,17 @@ columnas_para_unicas = ['4X-Code', 'OW_Trial']
 df_read = df_whole.drop_duplicates(subset=columnas_para_unicas, keep='first').reset_index(drop=True)
 
 df_reducido['4X-Code'] = df_reducido['4X-Code'].str[:6]
+
+custom_palette = sns.color_palette(["#ADD8E6", "#DDA0DD", "#FFA07A", "#98FB98"])  # Light blue, light purple, light orange, light green
+
+
 for Bl in Bloques_de_Interes:
     if Bl[1]:
         data=df_reducido[df_reducido['MWM_Block'].isin(Bl[1])]
     else:
         data=df_reducido
     print(f"Generando Grafico para {Bl[0]}")
-    ax = sns.boxplot(data, x='Categoria', y='Scanned_Path_per_time_per_Block', linewidth=6, order=categorias_ordenadas, hue='Categoria', legend=False)
+    ax = sns.boxplot(data, x='Categoria', y='Scanned_Path_per_time_per_Block', linewidth=6, order=categorias_ordenadas, hue='Categoria', legend=False, palette=custom_palette)
     sns.stripplot(data=data, x='Categoria', y='Scanned_Path_per_time_per_Block', jitter=True, color='black', size=10, ax=ax, order=categorias_ordenadas)
     offsets = ax.collections[-1].get_offsets()
     for i, (x, y) in enumerate(offsets):
@@ -167,7 +170,7 @@ for Bl in Bloques_de_Interes:
     ax.set_xticks(range(len(categorias_ordenadas)))
     ax.set_xticklabels(categorias_ordenadas)
 
-    ax.set(ylim=(0, 1000))
+    ax.set(ylim=(0, 100))
     #ax.set_title(Title, weight='bold')
     # Determine the y position for the line and annotation
     file_name = f"{Output_Dir}New_{Bl[0]}_Gaze_Scanned_Path.png"
@@ -175,9 +178,20 @@ for Bl in Bloques_de_Interes:
     plt.clf()
     print(f"--Completo Grafico para {Bl[0]}")
 
-df_whole = df_whole[df_whole['distancia'] >= 0.01]
+#%%
+#---------------------------------------------------------------------------------------------------
+df_whole = df_whole[df_whole['distancia'] >= 0.05]  # AQUI Seleccionamos cuales puntos nos quedamos!
+#---------------------------------------------------------------------------------------------------
+
 sujetos_unicos = df_whole['4X-Code'].unique()
 print(sujetos_unicos)
+
+Bloques_de_Interes = []
+Bloques_de_Interes.append(['HT_1',['HiddenTarget_1']])
+Bloques_de_Interes.append(['HT_2',['HiddenTarget_2']])
+Bloques_de_Interes.append(['HT_3',['HiddenTarget_3']])
+Bloques_de_Interes.append(['All_HT',['HiddenTarget_1', 'HiddenTarget_2', 'HiddenTarget_3']])
+
 
 for Bl in Bloques_de_Interes:
 
@@ -186,49 +200,52 @@ for Bl in Bloques_de_Interes:
     for categoria in categorias_ordenadas:
         print('Iniciando Procesamiento de ', Bl[0], categoria)
 
-        for S in sujetos_unicos:
-            data = df[df['Categoria'] == categoria]
-            data=data[data['4X-Code']==S]
-            data = data[['x_norm', 'y_norm']]
-            #print(data.shape[0])
-            if data.shape[0] > 1000:  # Downsample if necessary
-                data = data.sample(1000, random_state=42)
-            #print(data.shape[0])
-            #print('sub-df generada')
-            if data.shape[0] > 0:
-                # Recorremos las categorías desde la lista predefinida
-                print(f'Generando gráfico para la categoría: {categoria} en {Bl[0]}')
-                sns.kdeplot(data=data, x='x_norm', y='y_norm', cmap='coolwarm', n_levels=100, thresh=0, fill=True,
-                            cbar=True)
-                plt.xlim(0, 1)
-                plt.ylim(0, 1)
+        GoNoGo = False
+        if GoNoGo:
+            for S in sujetos_unicos:
+                data = df[df['Categoria'] == categoria]
+                data=data[data['4X-Code']==S]
+                data = data[['x_norm', 'y_norm']]
+                #print(data.shape[0])
+                if data.shape[0] > 1000:  # Downsample if necessary
+                    data = data.sample(1000, random_state=42)
+                #print(data.shape[0])
+                #print('sub-df generada')
+                if data.shape[0] > 0:
+                    # Recorremos las categorías desde la lista predefinida
+                    print(f'Generando gráfico para la categoría: {categoria} en {Bl[0]}')
+                    sns.kdeplot(data=data, x='x_norm', y='y_norm', cmap='coolwarm', n_levels=100, thresh=0, fill=True,
+                                cbar=True)
+                    plt.xlim(0, 1)
+                    plt.ylim(0, 1)
 
-                # Añadimos líneas de guía
-                for val in [0.25, 0.75]:
-                    plt.axvline(val, color='gray', linestyle='--', lw=1)
-                    plt.axhline(val, color='gray', linestyle='--', lw=1)
-                plt.axvline(0.5, color='gray', linestyle='--', lw=2)
-                plt.axhline(0.5, color='gray', linestyle='--', lw=2)
+                    # Añadimos líneas de guía
+                    for val in [0.25, 0.75]:
+                        plt.axvline(val, color='gray', linestyle='--', lw=1)
+                        plt.axhline(val, color='gray', linestyle='--', lw=1)
+                    plt.axvline(0.5, color='gray', linestyle='--', lw=2)
+                    plt.axhline(0.5, color='gray', linestyle='--', lw=2)
 
-                # Añadimos el título
-                plt.title(f'Gaze Distribution for {categoria} in {Bl[0]}')
+                    # Añadimos el título
+                    plt.title(f'Gaze Distribution for {categoria} in {Bl[0]}')
 
-                # Guardamos el gráfico
-                file_name = f"{Output_Dir}2Dper4X-Code/{categoria} {S} {Bl[0]}_Gaze_Distribution.png"
-                plt.savefig(file_name)
-                plt.clf()
+                    # Guardamos el gráfico
+                    file_name = f"{Output_Dir}2Dper4X-Code/{categoria} {S} {Bl[0]}_Gaze_Distribution.png"
+                    plt.savefig(file_name)
+                    plt.clf()
 
         inicio_bloque = time.time()
         data = df[df['Categoria']==categoria]
         data=data[['x_norm', 'y_norm']]
         #print(data.shape[0])
-        if data.shape[0] > 1000:  # Downsample if necessary
-            data = data.sample(1000, random_state=42)
+        #if data.shape[0] > 1000:  # Downsample if necessary
+        #    data = data.sample(1000, random_state=42)
         #print(data.shape[0])
         #print('sub-df generada')
     # Recorremos las categorías desde la lista predefinida
         print(f'Generando gráfico MAYOR para la categoría: {categoria} en {Bl[0]}')
-        sns.kdeplot(data=data, x='x_norm', y='y_norm', cmap='coolwarm', n_levels=100, thresh=0, fill=True, cbar=True)
+        sns.kdeplot(data=data, x='x_norm', y='y_norm', cmap='coolwarm', n_levels=300, thresh=0, fill=True, cbar=True)
+
         plt.xlim(0, 1)
         plt.ylim(0, 1)
 
@@ -240,9 +257,11 @@ for Bl in Bloques_de_Interes:
         plt.axhline(0.5, color='gray', linestyle='--', lw=2)
 
 # Añadimos el título
-        plt.title(f'Gaze Distribution for {categoria} in {Bl[0]}')
+        plt.title(f'{categoria} - Gaze Distribution over the Screen', fontsize=18, weight='bold', color='darkblue', pad=20)
+        plt.xlabel('Normalized X Position', fontsize=14, weight='bold', color='darkred', labelpad=15)
+        plt.ylabel('Normalized Y Position', fontsize=14, weight='bold', color='darkred', labelpad=15)
 
-# Guardamos el gráfico
+        # Guardamos el gráfico
         file_name = f"{Output_Dir}2DperCat/{Bl[0]}_Gaze_Distribution_{categoria}_.png"
         plt.savefig(file_name)
         plt.clf()
