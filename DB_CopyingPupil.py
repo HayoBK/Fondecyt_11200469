@@ -26,7 +26,7 @@ destino = home + "/OneDrive/2-Casper/00-CurrentResearch/001-FONDECYT_11200469/00
 base_dir = base_path
 
 # Directorio destino en E:
-dest_base_dir = 'E:/Pupils/'
+dest_base_dir = 'E:/LSL/'
 
 # Iterar sobre las carpetas de P01 a P53
 for i in range(1, 54):
@@ -34,13 +34,13 @@ for i in range(1, 54):
     folder_name = f'P{i:02}'
 
     # Crear las rutas completas
-    source_path = os.path.join(base_dir, folder_name, 'PUPIL_LAB')
+    source_path = os.path.join(base_dir, folder_name, 'LSL_LAB')
     dest_path = os.path.join(dest_base_dir, folder_name)
 
     # Asegúrate de que el destino existe
     os.makedirs(dest_path, exist_ok=True)
 
-    # Copiar el contenido de PUPIL_LAB al destino
+    # Copiar el contenido de LSL_LAB al destino
     if os.path.exists(source_path):
         for item in os.listdir(source_path):
             s = os.path.join(source_path, item)
@@ -49,7 +49,7 @@ for i in range(1, 54):
                 shutil.copytree(s, d, dirs_exist_ok=True)
             else:
                 shutil.copy2(s, d)
-    print(folder_name,' --> Listo')
+    print(f'{folder_name} --> Listo')
 
 #%%
 base_dir = base_path
