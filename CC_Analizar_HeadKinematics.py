@@ -4,6 +4,8 @@
 #   Vamos a revisar los headKinematics.
 #
 #-------------------------------------------
+#%%
+
 import pandas as pd
 
 import os
@@ -13,21 +15,42 @@ import matplotlib.pyplot as plt    #Graficos
 import numpy as np
 from pathlib import Path
 import socket
-import scipy.stats as stats
-import scikit_posthocs as sp
+#import scipy.stats as stats
+#import scikit_posthocs as sp
 
-home= str(Path.home()) # Obtener el directorio raiz en cada computador distinto
-Py_Processing_Dir=home+"/OneDrive/2-Casper/00-CurrentResearch/001-FONDECYT_11200469/002-LUCIEN/Py_Processing/"
-
+print('H-Identifiquemos compu... ')
 nombre_host = socket.gethostname()
 print(nombre_host)
+
+
 if nombre_host == 'DESKTOP-PQ9KP6K':
     home="D:/Mumin_UCh_OneDrive"
     home_path = Path("D:/Mumin_UCh_OneDrive")
     base_path= home_path / "OneDrive/2-Casper/00-CurrentResearch/001-FONDECYT_11200469/002-LUCIEN/SUJETOS"
     Py_Processing_Dir = home + "/OneDrive/2-Casper/00-CurrentResearch/001-FONDECYT_11200469/002-LUCIEN/Py_Processing/"
 
+if nombre_host == 'MSI':
+    home="D:/Titan-OneDrive"
+    home_path = Path("D:/Titan-OneDrive")
+    base_path= home_path / "OneDrive/2-Casper/00-CurrentResearch/001-FONDECYT_11200469/002-LUCIEN/SUJETOS"
+    Py_Processing_Dir = home + "/OneDrive/2-Casper/00-CurrentResearch/001-FONDECYT_11200469/002-LUCIEN/Py_Processing/"
+    Output_Dir = home + "/OneDrive/2-Casper/00-CurrentResearch/001-FONDECYT_11200469/002-LUCIEN/Outputs/Barany2024/"
+    # Directorios version 2024 Agosto 22
+    Py_Processing_Dir = home + "/OneDrive/2-Casper/00-CurrentResearch/001-FONDECYT_11200469/002-LUCIEN/PyPro_traveling_2/Py_Processing/"
+    Output_Dir = home + "/OneDrive/2-Casper/00-CurrentResearch/001-FONDECYT_11200469/002-LUCIEN/PyPro_traveling_2/Outputs/Barany2024/"
+
+if nombre_host == 'DESKTOP-PQ9KP6K':  #Remake por situaci´ón de emergencia de internet
+    home="D:/Mumin_UCh_OneDrive"
+    home_path = Path("D:/Mumin_UCh_OneDrive")
+    base_path= home_path / "OneDrive/2-Casper/00-CurrentResearch/001-FONDECYT_11200469/002-LUCIEN/SUJETOS"
+    Py_Processing_Dir = home + "/OneDrive/2-Casper/00-CurrentResearch/001-FONDECYT_11200469/002-LUCIEN/PyPro_traveling/Py_Processing/"
+    Output_Dir = home + "/OneDrive/2-Casper/00-CurrentResearch/001-FONDECYT_11200469/002-LUCIEN/PyPro_traveling/Outputs/Barany2024/"
+
+print('Compu identificado.')
+
 final_summarized_df = pd.read_csv(Py_Processing_Dir+'CB_HeadKinematics.csv')
+
+#%%
 
 filtered_df = final_summarized_df[
     (final_summarized_df['Modality'] == 'Realidad Virtual') &

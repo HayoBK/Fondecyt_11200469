@@ -53,11 +53,11 @@ if nombre_host == 'DESKTOP-PQ9KP6K':  #Remake por situaci´ón de emergencia de 
 
 print('Compu identificado.')
 
-file = Py_Processing_Dir+'DA_EyeTracker_Synced_NI_2D_withVM.csv'
+file = Py_Processing_Dir+'DA_EyeTracker_Synced_RV_3D_withVM.csv'
 df_whole = pd.read_csv(file, index_col=0, low_memory=False)
 df_whole = df_whole.copy()
 df_whole = df_whole[~df_whole['Sujeto'].isin(['P05','P14','P16'])]
-
+#%%
 df_whole['4X-Code']=df_whole['Sujeto']+df_whole['Categoria'] # Añadimos un codigo de Sujeto unico nuevo para evitar sujetos repetidos por la asignación de la
                                                                 # Categoria MV
 Esto_si = False
@@ -67,8 +67,8 @@ if Esto_si:
     #------------------------------------------------------------------------------------------------------------------------------------------------------
 
     #Vamos a añadir Scanned Path de Pedro.-----------------------------------------------------------------------------------------------------
-    df_whole['delta_x'] = df_whole['x_norm'].diff()
-    df_whole['delta_y'] = df_whole['y_norm'].diff()
+    df_whole['delta_x'] = df_whole['norm_pos_x'].diff()
+    df_whole['delta_y'] = df_whole['norm_pos_y'].diff()
 
     # Calcula la distancia euclidiana
     df_whole['distancia'] = np.sqrt(df_whole['delta_x']**2 + df_whole['delta_y']**2)
@@ -162,11 +162,19 @@ for Bl in Bloques_de_Interes:
         data=df_reducido[df_reducido['MWM_Block'].isin(Bl[1])]
     else:
         data=df_reducido
-    file = Py_Processing_Dir + 'DA_Gaze_2D_reducido_'+Bl[0]+'.csv'
+    file = Py_Processing_Dir + 'DA_Gaze_RV_reducido_'+Bl[0]+'.csv'
     data.to_csv(file)
     print(f"Generando Grafico para {Bl[0]}")
     fig, ax = plt.subplots(figsize=(10, 8))
     custom_palette = sns.color_palette(["#ADD8E6", "#DDA0DD", "#FFA07A", "#98FB98"])
+    color_mapping = {
+        'PPPD': "#FFA07A",
+        'Vestibular Migraine': "#DDA0DD",
+        'Vestibular (non PPPD)': "#ADD8E6",
+        'Healthy Volunteer': "#98FB98"
+    }
+    custom_palette = [color_mapping[cat] for cat in categorias_ordenadas]
+
     ax = sns.boxplot(data, x='Categoria', y='Scanned_Path_per_time_per_Block', linewidth=6, order=categorias_ordenadas, hue='Categoria', legend=False, palette=custom_palette)
     sns.stripplot(data=data, x='Categoria', y='Scanned_Path_per_time_per_Block', jitter=True, color='black', size=10, ax=ax, order=categorias_ordenadas)
     offsets = ax.collections[-1].get_offsets()
@@ -178,10 +186,10 @@ for Bl in Bloques_de_Interes:
     ax.set_xticks(range(len(categorias_ordenadas)))
     ax.set_xticklabels(categorias_ordenadas)
     #ax.get_legend().remove()
-    ax.set(ylim=(0, 50))
+    ax.set(ylim=(0, 350))
     #ax.set_title(Title, weight='bold')
     # Determine the y position for the line and annotation
-    file_name = f"{Output_Dir}AllNew_{Bl[0]}_Gaze_Scanned_Path.png"
+    file_name = f"{Output_Dir}RV_AllNew_{Bl[0]}_Gaze_Scanned_Path.png"
     plt.savefig(file_name)
     plt.clf()
     print(f"--Completo Grafico para {Bl[0]}")
@@ -194,10 +202,10 @@ sujetos_unicos = df_whole['4X-Code'].unique()
 print(sujetos_unicos)
 
 Bloques_de_Interes = []
-Bloques_de_Interes.append(['HT_1',['HiddenTarget_1']])
-Bloques_de_Interes.append(['HT_2',['HiddenTarget_2']])
+#Bloques_de_Interes.append(['HT_1',['HiddenTarget_1']])
+#Bloques_de_Interes.append(['HT_2',['HiddenTarget_2']])
 Bloques_de_Interes.append(['HT_3',['HiddenTarget_3']])
-Bloques_de_Interes.append(['All_HT',['HiddenTarget_1', 'HiddenTarget_2', 'HiddenTarget_3']])
+#Bloques_de_Interes.append(['All_HT',['HiddenTarget_1', 'HiddenTarget_2', 'HiddenTarget_3']])
 
 
 for Bl in Bloques_de_Interes:
@@ -214,8 +222,8 @@ for Bl in Bloques_de_Interes:
                 data=data[data['4X-Code']==S]
                 data = data[['x_norm', 'y_norm']]
                 #print(data.shape[0])
-                if data.shape[0] > 1000:  # Downsample if necessary
-                    data = data.sample(1000, random_state=42)
+                if data.shape[0] > 10000:  # Downsample if necessary
+                    data = data.sample(10000, random_state=42)
                 #print(data.shape[0])
                 #print('sub-df generada')
                 if data.shape[0] > 0:
@@ -243,10 +251,10 @@ for Bl in Bloques_de_Interes:
 
         inicio_bloque = time.time()
         data = df[df['Categoria']==categoria]
-        data=data[['x_norm', 'y_norm']]
+        data=data[['norm_pos_x', 'norm_pos_y']]
         #print(data.shape[0])
-        #if data.shape[0] > 1000:  # Downsample if necessary
-        #    data = data.sample(1000, random_state=42)
+        if data.shape[0] > 700:  # Downsample if necessary
+            data = data.sample(700, random_state=42)
         #print(data.shape[0])
         #print('sub-df generada')
     # Recorremos las categorías desde la lista predefinida
@@ -257,8 +265,8 @@ for Bl in Bloques_de_Interes:
         # Crear el jointplot sin la barra de color
         g = sns.jointplot(
             data=data,
-            x='x_norm',
-            y='y_norm',
+            x='norm_pos_x',
+            y='norm_pos_y',
             kind='kde',
             fill=True,
             cmap='viridis',
@@ -272,8 +280,8 @@ for Bl in Bloques_de_Interes:
         #plt.colorbar(g.ax_joint.collections[0], ax=g.ax_joint, location="right", pad=0.02)
 
         # Ajustar límites de los ejes
-        g.ax_joint.set_xlim(0, 1)
-        g.ax_joint.set_ylim(0, 1)
+        g.ax_joint.set_xlim(-2, 3)
+        g.ax_joint.set_ylim(-2, 3)
 
         # Añadir líneas de guía en el gráfico central
         for val in [0.25, 0.75]:
@@ -295,7 +303,7 @@ for Bl in Bloques_de_Interes:
         plt.tight_layout()
 
         # Guardar el gráfico
-        file_name = f"{Output_Dir}No-Inmersivo - Mapas de Calor/{Bl[0]}_Gaze_Distribution_{categoria}_.png"
+        file_name = f"{Output_Dir}RV - Mapas de Calor/Final_{Bl[0]}_RV_Gaze_Distribution_{categoria}_.png"
         plt.savefig(file_name, bbox_inches='tight')  # bbox_inches='tight' asegura que los textos no se corten
         plt.clf()
         duracion = time.time() - inicio_bloque

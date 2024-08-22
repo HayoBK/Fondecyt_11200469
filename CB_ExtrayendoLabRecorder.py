@@ -21,19 +21,36 @@ import numpy as np
 from pathlib import Path
 import socket
 
-home= str(Path.home()) # Obtener el directorio raiz en cada computador distinto
-Py_Processing_Dir=home+"/OneDrive/2-Casper/00-CurrentResearch/001-FONDECYT_11200469/002-LUCIEN/Py_Processing/"
-
+print('H-Identifiquemos compu... ')
 nombre_host = socket.gethostname()
 print(nombre_host)
+
 if nombre_host == 'DESKTOP-PQ9KP6K':
     home="D:/Mumin_UCh_OneDrive"
     home_path = Path("D:/Mumin_UCh_OneDrive")
     base_path= home_path / "OneDrive/2-Casper/00-CurrentResearch/001-FONDECYT_11200469/002-LUCIEN/SUJETOS"
     Py_Processing_Dir = home + "/OneDrive/2-Casper/00-CurrentResearch/001-FONDECYT_11200469/002-LUCIEN/Py_Processing/"
 
-Subject_Dir = home + "/OneDrive/2-Casper/00-CurrentResearch/001-FONDECYT_11200469/002-LUCIEN/SUJETOS"
-#%%
+if nombre_host == 'MSI':
+    home="D:/Titan-OneDrive"
+    home_path = Path("D:/Titan-OneDrive")
+    base_path= home_path / "OneDrive/2-Casper/00-CurrentResearch/001-FONDECYT_11200469/002-LUCIEN/SUJETOS"
+    Py_Processing_Dir = home + "/OneDrive/2-Casper/00-CurrentResearch/001-FONDECYT_11200469/002-LUCIEN/Py_Processing/"
+    Output_Dir = home + "/OneDrive/2-Casper/00-CurrentResearch/001-FONDECYT_11200469/002-LUCIEN/Outputs/Barany2024/"
+    # Directorios version 2024 Agosto 22
+    Py_Processing_Dir = home + "/OneDrive/2-Casper/00-CurrentResearch/001-FONDECYT_11200469/002-LUCIEN/PyPro_traveling_2/Py_Processing/"
+    Output_Dir = home + "/OneDrive/2-Casper/00-CurrentResearch/001-FONDECYT_11200469/002-LUCIEN/PyPro_traveling_2/Outputs/Barany2024/"
+    Subject_Dir = home + "/OneDrive/2-Casper/00-CurrentResearch/001-FONDECYT_11200469/002-LUCIEN/SUJETOS"
+
+if nombre_host == 'DESKTOP-PQ9KP6K':  #Remake por situaci´ón de emergencia de internet
+    home="D:/Mumin_UCh_OneDrive"
+    home_path = Path("D:/Mumin_UCh_OneDrive")
+    base_path= home_path / "OneDrive/2-Casper/00-CurrentResearch/001-FONDECYT_11200469/002-LUCIEN/SUJETOS"
+    Py_Processing_Dir = home + "/OneDrive/2-Casper/00-CurrentResearch/001-FONDECYT_11200469/002-LUCIEN/PyPro_traveling/Py_Processing/"
+    Output_Dir = home + "/OneDrive/2-Casper/00-CurrentResearch/001-FONDECYT_11200469/002-LUCIEN/PyPro_traveling/Outputs/Barany2024/"
+
+print('Compu identificado.')
+
 
 #Traer Los Datos de Navegacion... no se si serán tan importantes en realidad. para este.
 NaviCSE_df = pd.read_csv((Py_Processing_Dir+'AB_SimianMaze_Z3_NaviDataBreve_con_calculos.csv'), index_col=0)
@@ -65,7 +82,7 @@ def MWM_to_OW_trials (df):
 df = MWM_to_OW_trials(df)
 
 
-#%% --------------Adquiramos los datos de Lab Recorder ------------------------------------
+# --------------Adquiramos los datos de Lab Recorder ------------------------------------
 
 
 # Diccionario para almacenar los datos de cada sujeto y modalidad
@@ -133,7 +150,7 @@ classify_and_store_xdf_files()
 report_xdf_files()
 #explore_xdf_file(subjects_data['P06']['Realidad Virtual'][0])
 
-#%%
+
 def Extract(lst,place):
     return [item[place] for item in lst]
 def ClearMarkers(MarkersA_df):
@@ -310,7 +327,7 @@ error_files = []
 sorted_subjects_data = sorted(subjects_data, key=lambda x: x[0])
 #sorted_subjects = sorted(subjects_data.keys())
 all_summarized_data = []
-
+all_raw_data =[]
 total_files = sum(len(files) for modalities in subjects_data.values() for files in modalities.values())
 processed_count = 0
 
@@ -324,6 +341,11 @@ for subject in subjects_data:
                 markers_df, vr_data_df = extraerData_xdf_file(xdf_file)
                 processed_markers_df = process_markers(markers_df)
                 vr_data_with_trials = assign_trials_to_vr_data(vr_data_df, markers_df)
+
+                vr_data_with_trials['Sujeto']= subject
+                vr_data_with_trials['Modalidad']=modality
+                all_raw_data.append(vr_data_with_trials)
+
                 summarized_vr_data= summarize_trial_data(vr_data_with_trials)
                 summarized_vr_data['Subject'] = subject
                 summarized_vr_data['Modality'] = modality
@@ -346,6 +368,16 @@ for subject in subjects_data:
                 print(f"Error inesperado procesando archivo {xdf_file}: {e}")
     print('Concluimos análisis sujeto ',subject)
 print("Proceso concluido por completo")
+
+all_raw_data = pd.concat(all_raw_data,ignore_index=True)
+print(' Afuera el manquehue despejado y este ultimo corcho listo')
+#%%
+
+file = Py_Processing_Dir + 'HeadKinematic_Raw_v2.csv'
+all_raw_data.to_csv(file)
+print(' Listoco veamos cuanto pesa...')
+
+#%%
 
 
 final_summarized_df = pd.concat(all_summarized_data, ignore_index=True)
