@@ -39,8 +39,10 @@ if nombre_host == 'MSI':
     home_path = Path("D:/Titan-OneDrive")
     base_path= home_path / "OneDrive/2-Casper/00-CurrentResearch/001-FONDECYT_11200469/002-LUCIEN/SUJETOS"
     Py_Processing_Dir = home + "/OneDrive/2-Casper/00-CurrentResearch/001-FONDECYT_11200469/002-LUCIEN/Py_Processing/"
-
-Output_Dir = home + "/OneDrive/2-Casper/00-CurrentResearch/001-FONDECYT_11200469/002-LUCIEN/Outputs/Barany2024/"
+    Output_Dir = home + "/OneDrive/2-Casper/00-CurrentResearch/001-FONDECYT_11200469/002-LUCIEN/Outputs/Barany2024/"
+    # Directorios version 2024 Agosto 22
+    Py_Processing_Dir = home + "/OneDrive/2-Casper/00-CurrentResearch/001-FONDECYT_11200469/002-LUCIEN/PyPro_traveling_2/Py_Processing/"
+    Output_Dir = home + "/OneDrive/2-Casper/00-CurrentResearch/001-FONDECYT_11200469/002-LUCIEN/PyPro_traveling_2/Outputs/Barany2024/"
 
 if nombre_host == 'DESKTOP-PQ9KP6K':  #Remake por situaci´ón de emergencia de internet
     home="D:/Mumin_UCh_OneDrive"
@@ -180,7 +182,6 @@ for Bl in Bloques_de_Interes:
     plt.clf()
     print(f"--Completo Grafico para {Bl[0]}")
 
-#%%
 #---------------------------------------------------------------------------------------------------
 df_whole = df_whole[df_whole['distancia'] >= 0.05]  # AQUI Seleccionamos cuales puntos nos quedamos!
 #---------------------------------------------------------------------------------------------------
@@ -246,26 +247,50 @@ for Bl in Bloques_de_Interes:
         #print('sub-df generada')
     # Recorremos las categorías desde la lista predefinida
         print(f'Generando gráfico MAYOR para la categoría: {categoria} en {Bl[0]}')
-        sns.kdeplot(data=data, x='x_norm', y='y_norm', cmap='coolwarm', n_levels=300, thresh=0, fill=True, cbar=True)
+        #sns.kdeplot(data=data, x='x_norm', y='y_norm', cmap='coolwarm', n_levels=300, thresh=0, fill=True, cbar=True)
+        plt.figure(figsize=(10, 8))
 
-        plt.xlim(0, 1)
-        plt.ylim(0, 1)
+        # Crear el jointplot sin la barra de color
+        g = sns.jointplot(
+            data=data,
+            x='x_norm',
+            y='y_norm',
+            kind='kde',
+            fill=True,
+            cmap='viridis',
+            thresh=0,
+            levels=25,
+            marginal_kws={'shade': True}
+        )
 
-# Añadimos líneas de guía
+        # Añadir la barra de color manualmente
+        plt.colorbar(g.ax_joint.collections[0], ax=g.ax_joint, location="right", pad=0.02)
+
+        # Ajustar límites de los ejes
+        g.ax_joint.set_xlim(0, 1)
+        g.ax_joint.set_ylim(0, 1)
+
+        # Añadir líneas de guía en el gráfico central
         for val in [0.25, 0.75]:
-            plt.axvline(val, color='gray', linestyle='--', lw=1)
-            plt.axhline(val, color='gray', linestyle='--', lw=1)
-        plt.axvline(0.5, color='gray', linestyle='--', lw=2)
-        plt.axhline(0.5, color='gray', linestyle='--', lw=2)
+            g.ax_joint.axvline(val, color='gray', linestyle='--', lw=1)
+            g.ax_joint.axhline(val, color='gray', linestyle='--', lw=1)
+        g.ax_joint.axvline(0.5, color='gray', linestyle='--', lw=2)
+        g.ax_joint.axhline(0.5, color='gray', linestyle='--', lw=2)
 
-# Añadimos el título
-        plt.title(f'{categoria} - Gaze Distribution over the Screen', fontsize=18, weight='bold', color='darkblue', pad=20)
-        plt.xlabel('Normalized X Position', fontsize=14, weight='bold', color='darkred', labelpad=15)
-        plt.ylabel('Normalized Y Position', fontsize=14, weight='bold', color='darkred', labelpad=15)
+        # Añadir el título y ajustar su posición
+        g.fig.suptitle(f'{categoria} - Gaze Distribution over the Screen',
+                       fontsize=18, weight='bold', color='darkblue', y=1.03)
 
-        # Guardamos el gráfico
-        file_name = f"{Output_Dir}2DperCat/{Bl[0]}_Gaze_Distribution_{categoria}_.png"
-        plt.savefig(file_name)
+        # Añadir etiquetas a los ejes y ajustar el padding
+        g.set_axis_labels('Normalized X Position', 'Normalized Y Position',
+                          fontsize=14, weight='bold', color='darkred', labelpad=15)
+
+        # Mejorar el layout para que todo se ajuste correctamente
+        plt.tight_layout()
+
+        # Guardar el gráfico
+        file_name = f"{Output_Dir}No-Inmersivo - Mapas de Calor/{Bl[0]}_Gaze_Distribution_{categoria}_.png"
+        plt.savefig(file_name, bbox_inches='tight')  # bbox_inches='tight' asegura que los textos no se corten
         plt.clf()
         duracion = time.time() - inicio_bloque
         print(f'Terminando Procesamiento de {categoria} {Bl[0]} en {duracion:.2f} segundos')
