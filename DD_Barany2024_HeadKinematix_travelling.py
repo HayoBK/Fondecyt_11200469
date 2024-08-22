@@ -109,7 +109,23 @@ df['vYaw_normalizada'] = df['vYaw_sumada'] / df['Duracion']
 df['vPitch_normalizada'] = df['vPitch_sumada'] / df['Duracion']
 df['AngMagnitud_normalizada'] = df['AngMagnitud_sumada'] / df['Duracion']
 
-file = Py_Processing_Dir + 'HeadKinematic_Processing_Stage2.csv'
+codex = pd.read_excel((Py_Processing_Dir+'AB_OverWatch_Codex.xlsx'),index_col=0) # Aqui estoy cargando como DataFrame la lista de códigos que voy a usar, osea, los datos del diccionario. Es super
+# imporatante el index_col=0 porque determina que la primera columna es el indice del diccionario, el valor que usaremos para guiar los reemplazos.
+Codex_Dict = codex.to_dict('series') # Aqui transformo esa Dataframe en una serie, que podré usar como diccionario
+df['MWM_Block'] = df['True_OW_Trial'] # Aqui empieza la magia, creo una nueva columna llamada MWM_Bloque, que es una simple copia de la columna OverWatch_Trial.
+# De
+# momento
+# son identicas
+df['MWM_Block'].replace(Codex_Dict['MWM_Bloque'], inplace=True) # Y aqui ocurre la magia: estoy reemplazando cada valor de la columna recien creada,
+# ocupando el diccionario que
+# armamos como guia para hacer el reemplazo
+df['MWM_Trial'] = df['True_OW_Trial']
+df['MWM_Trial'].replace(Codex_Dict['MWM_Trial'], inplace=True)
+
+Bloques=['HiddenTarget_1', 'HiddenTarget_2', 'HiddenTarget_3']
+df= df[df['MWM_Block'].isin(Bloques)]
+
+file = Py_Processing_Dir + 'HeadKinematic_Processing_Stage3.csv'
 df.to_csv(file)
 
 print('Go on')
