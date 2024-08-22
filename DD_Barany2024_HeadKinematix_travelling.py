@@ -122,6 +122,11 @@ df['MWM_Block'].replace(Codex_Dict['MWM_Bloque'], inplace=True) # Y aqui ocurre 
 df['MWM_Trial'] = df['True_OW_Trial']
 df['MWM_Trial'].replace(Codex_Dict['MWM_Trial'], inplace=True)
 
+codex2 = pd.read_excel((Py_Processing_Dir+'AA_CODEX.xlsx'), index_col=0)
+Codex_Dict2 = codex2.to_dict('series')
+df['Grupo'] = df['Sujeto']
+df['Grupo'].replace(Codex_Dict2['Grupo'], inplace=True)
+
 Bloques=['HiddenTarget_1', 'HiddenTarget_2', 'HiddenTarget_3']
 df= df[df['MWM_Block'].isin(Bloques)]
 
@@ -132,6 +137,63 @@ print('Go on')
 
 #%%
 
+promediosvRoll = df.groupby(['Sujeto', 'MWM_Block'])['vRoll_normalizada'].mean().reset_index()
+promediosvYaw = df.groupby(['Sujeto', 'MWM_Block'])['vYaw_normalizada'].mean().reset_index()
+promediosvPitch = df.groupby(['Sujeto', 'MWM_Block'])['vPitch_normalizada'].mean().reset_index()
+promediosAngMagnitud = df.groupby(['Sujeto', 'MWM_Block'])['AngMagnitud_normalizada'].mean().reset_index()
+
+# Renombramos la columna para mayor claridad
+promediosvRoll.rename(columns={'vRoll_normalizada': 'vRoll_normalizada_por_Bloque'}, inplace=True)
+promediosvYaw.rename(columns={'vYaw_normalizada': 'vYaw_normalizada_por_Bloque'}, inplace=True)
+promediosvPitch.rename(columns={'vPitch_normalizada': 'vPitch_normalizada_por_Bloque'}, inplace=True)
+promediosAngMagnitud.rename(columns={'AngMagnitud_normalizada': 'AngMagnitud_normalizada_por_Bloque'}, inplace=True)
+
+# Ahora puedes unir estos promedios al DataFrame original o trabajar solo con el DataFrame de promedios
+df_ = df.merge(promediosvRoll, on=['Sujeto', 'MWM_Block'], how='left')
+df_ = df.merge(promediosvYaw, on=['Sujeto', 'MWM_Block'], how='left')
+df_ = df.merge(promediosvPitch, on=['Sujeto', 'MWM_Block'], how='left')
+df_ = df.merge(promediosAngMagnitud, on=['Sujeto', 'MWM_Block'], how='left')
+
+
+filas_duplicadas = []
+def añadir_categorias(fila):
+    categorias = []
+    if fila['Grupo'] == 'MPPP':
+        categorias.append('PPPD')
+    if isinstance(fila['Dx'], str) and 'MV' in fila['Dx']:  # Tengo que borrar estas dos lineas si quiero
+        categorias.append('Vestibular Migraine')  # Eliminar Migraña vestibular
+    if fila['Grupo'] == 'Vestibular':
+        categorias.append('Vestibular (non PPPD)')
+    if fila['Grupo'] == 'Voluntario Sano':
+        categorias.append('Healthy Volunteer')
+    return categorias
+
+
+# Expandir el DataFrame duplicando las filas según las categorías
+for _, fila in tqdm(df.iterrows(), total=len(df), desc="Procesando filas"):
+    categorias = añadir_categorias(fila)
+    for categoria in categorias:
+        nueva_fila = fila.copy()
+        nueva_fila['Categoria'] = categoria
+        filas_duplicadas.append(nueva_fila)
+
+df = pd.DataFrame(filas_duplicadas)
+
+file = Py_Processing_Dir + 'HeadKinematic_Processing_Stage4.csv'
+df.to_csv(file)
+
+
+
+df['4X-Code']=df['Sujeto']+df['Categoria']
+columnas_para_unicas = ['4X-Code', 'MWM_Block']
+
+# Eliminar filas duplicadas basadas en estas columnas
+df_reducido = df.drop_duplicates(subset=columnas_para_unicas, keep='first').reset_index(drop=True)
+
+file = Py_Processing_Dir + 'HeadKinematic_Processing_Stage5.csv'
+df_reducido.to_csv(file)
+
+print('Se fini...')
 #------------------------------------------------------------------------------------------------------------------------------------------------------
 # Falto reducir por MWM_Block
 #------------------------------------------------------------------------------------------------------------------------------------------------------
