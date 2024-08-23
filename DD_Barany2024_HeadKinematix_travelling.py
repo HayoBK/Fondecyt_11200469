@@ -19,8 +19,6 @@ from tqdm import tqdm
 import time
 
 
-from DA_For_Barany2024 import categorias
-
 # ------------------------------------------------------------
 #Identificar primero en que computador estamos trabajando
 #-------------------------------------------------------------
@@ -50,6 +48,11 @@ if nombre_host == 'DESKTOP-PQ9KP6K':  #Remake por situaci´ón de emergencia de 
     base_path= home_path / "OneDrive/2-Casper/00-CurrentResearch/001-FONDECYT_11200469/002-LUCIEN/SUJETOS"
     Py_Processing_Dir = home + "/OneDrive/2-Casper/00-CurrentResearch/001-FONDECYT_11200469/002-LUCIEN/PyPro_traveling/Py_Processing/"
     Output_Dir = home + "/OneDrive/2-Casper/00-CurrentResearch/001-FONDECYT_11200469/002-LUCIEN/PyPro_traveling/Outputs/Barany2024/"
+
+if nombre_host == 'Hayos-MacBook-Pro.local':
+    home = str(Path.home())
+    Py_Processing_Dir = home + "/Py_Adventure/PyPro_traveling_3/Py_Processing/"
+    Output_Dir = home + "/Py_Adventure/PyPro_traveling_3/Outputs/Barany2024_Air/"
 
 print('Compu identificado.')
 #----------------------------------------------------------------------------------------------------------
@@ -149,10 +152,10 @@ promediosvPitch.rename(columns={'vPitch_normalizada': 'vPitch_normalizada_por_Bl
 promediosAngMagnitud.rename(columns={'AngMagnitud_normalizada': 'AngMagnitud_normalizada_por_Bloque'}, inplace=True)
 
 # Ahora puedes unir estos promedios al DataFrame original o trabajar solo con el DataFrame de promedios
-df_ = df.merge(promediosvRoll, on=['Sujeto', 'MWM_Block'], how='left')
-df_ = df.merge(promediosvYaw, on=['Sujeto', 'MWM_Block'], how='left')
-df_ = df.merge(promediosvPitch, on=['Sujeto', 'MWM_Block'], how='left')
-df_ = df.merge(promediosAngMagnitud, on=['Sujeto', 'MWM_Block'], how='left')
+df = df.merge(promediosvRoll, on=['Sujeto', 'MWM_Block'], how='left')
+df = df.merge(promediosvYaw, on=['Sujeto', 'MWM_Block'], how='left')
+df = df.merge(promediosvPitch, on=['Sujeto', 'MWM_Block'], how='left')
+df = df.merge(promediosAngMagnitud, on=['Sujeto', 'MWM_Block'], how='left')
 
 
 filas_duplicadas = []
