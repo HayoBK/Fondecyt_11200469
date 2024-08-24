@@ -89,7 +89,9 @@ df_expandido = pd.DataFrame(filas_duplicadas)
 
 # Filtrar los sujetos que son "Vestibular Migraine"
 vestibular_migraine_df = df_expandido[df_expandido['Categoria'] == 'Vestibular Migraine']
-
+hv_df = df_expandido[df_expandido['Categoria'] == 'Healthy Volunteer']
+total_hv = hv_df['Sujeto'].nunique()
+print(f" La cantidad de sujetos sanos son: {total_hv}")
 # Contar el total de sujetos en "Vestibular Migraine"
 total_vestibular_migraine = vestibular_migraine_df['Sujeto'].nunique()
 

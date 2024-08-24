@@ -218,10 +218,11 @@ file_name = f"{Output_Dir}CSE/Normalized_CSE_2DyRV.png"
 plt.savefig(file_name)
 plt.clf()
 print(f"--Completo Grafico de Resumen")
+
 # Data filtering
 data = df
 
-# Custom palette with lighter and darker colors
+# Custom palette with correct order of colors
 custom_palette = [
     "#ADD8E6", "#92BCD1",  # Light Blue, Darker Blue
     "#DDA0DD", "#BB8ABD",  # Light Purple, Darker Purple
@@ -229,33 +230,50 @@ custom_palette = [
     "#98FB98", "#82D782"   # Light Green, Darker Green
 ]
 
+# Define manual mappings for color_idx and hatches
+color_mapping = {
+    0: 6,#0,  # Light Blue for first patch (PPPD, No Inmersivo)
+    1: 0,  # Darker Blue for second patch (PPPD, Realidad Virtual)
+    2: 1,  # Light Purple for third patch (Vestibular Migraine, No Inmersivo)
+    3: 1,  # Darker Purple for fourth patch (Vestibular Migraine, Realidad Virtual)
+    4: 2,  # Light Salmon for fifth patch (Vestibular non PPPD, No Inmersivo)
+    5: 3,  # Darker Salmon for sixth patch (Vestibular non PPPD, Realidad Virtual)
+    6: 4,  # Light Green for seventh patch (Healthy Volunteer, No Inmersivo)
+    7: 5,  # Darker Green for eighth patch (Healthy Volunteer, Realidad Virtual)
+    8: 6,  # Light Blue for ninth patch (PPPD, No Inmersivo - Repeated)
+    9: 7   # Darker Blue for tenth patch (PPPD, Realidad Virtual - Repeated)
+}
+
+hatch_mapping = {
+    0: '',   # No hatch for first patch (No Inmersivo)
+    1: '', # Hatch for second patch (Realidad Virtual)
+    2: '',   # No hatch for third patch (No Inmersivo)
+    3: '//', # Hatch for fourth patch (Realidad Virtual)
+    4: '',   # No hatch for fifth patch (No Inmersivo)
+    5: '//', # Hatch for sixth patch (Realidad Virtual)
+    6: '',   # No hatch for seventh patch (No Inmersivo)
+    7: '//', # Hatch for eighth patch (Realidad Virtual)
+    8: '',   # No hatch for ninth patch (No Inmersivo - Repeated)
+    9: '//'  # Hatch for tenth patch (Realidad Virtual - Repeated)
+}
+
 # Plot the boxplot with hue
 fig, ax = plt.subplots(figsize=(10, 8))
-sns.boxplot(data=data, x='Categoria', y='Norm_CSE', hue='Modalidad', linewidth=6, order=categorias_ordenadas, palette=custom_palette, ax=ax)
+sns.boxplot(data=data, x='Categoria', y='Norm_CSE', hue='Modalidad', linewidth=6, order=categorias_ordenadas, ax=ax)
 
-# Manually apply the original colors and hatches
-hatches = ['/', '\\']  # Patterns for different hue categories
-num_hues = len(data['Modalidad'].unique())  # Number of hue levels
-num_categories = len(categorias_ordenadas)  # Number of categories
-total_boxes = num_categories * num_hues
-
-# Verify that the palette matches the number of boxes
-assert total_boxes == len(custom_palette), "Mismatch between the number of boxes and custom palette colors."
-
+# Apply colors and hatches manually
 for i, patch in enumerate(ax.patches):
-    # Calculate the correct index for colors and hatches
-    color_idx = i % total_boxes  # Cycling through the custom palette
-    hatch_idx = i % num_hues  # Alternate hatches
+    color_idx = color_mapping[i]  # Fetch from the manual color mapping
+    hatch_idx = i % 2             # Alternating hatches based on manual mapping
 
-    # Apply color and hatch
+    # Apply the color and hatch
     patch.set_facecolor(custom_palette[color_idx])
-    patch.set_hatch(hatches[hatch_idx])
-    patch.set_edgecolor('gray')
+    patch.set_hatch(hatch_mapping[i])  # Apply the hatch based on manual mapping
 
-# Remove duplicate legends and adjust for hatches
-handles, labels = ax.get_legend_handles_labels()
-unique_labels = dict(zip(labels, handles))  # Remove duplicates
-ax.legend(unique_labels.values(), unique_labels.keys(), title='Modalidad')
+# Remove the legend
+ax.legend().remove()
+ax.set_xticklabels(['PPPD\n ', 'Vestibular\nMigraine', 'Vestibular\n(non PPPD)', 'Healthy\nVolunteer'], weight='bold', fontsize=14)
+ax.tick_params(axis='x', labelsize=14)  # x-axis labels
 
 # Set labels and title
 ax.set_ylabel("Cummulative Search Error - CSE (normalized)", fontsize=18, weight='bold', color='darkblue')
@@ -267,6 +285,5 @@ file_name = f"{Output_Dir}CSE/Normalized_CSE_2DyRV_B.png"
 plt.savefig(file_name)
 plt.clf()
 print(f"--Completo Grafico de Resumen")
-
 
 print('End of File')
