@@ -104,5 +104,35 @@ for Bl in Bloques_de_Interes:
         plt.savefig(file_name)
         plt.clf()
         print(f"--Completo Grafico para {Ex} & {Bl[0]}")
+
+df['4X-Code'] = df['Sujeto'] + df['Categoria']
+data = df.groupby(['4X-Code', 'Categoria']).agg({'AngMagnitud_normalizada_por_Bloque': ['mean']}).reset_index()
+data.columns = ['4X-Code', 'Categoria', 'Ang']
+fig, ax = plt.subplots(figsize=(10, 8))
+
+custom_palette = [color_mapping[cat] for cat in categorias_ordenadas]
+ax = sns.boxplot(data=data, x='Categoria', y='Ang', linewidth=6, order=categorias_ordenadas, palette=custom_palette)
+sns.stripplot(data=data, x='Categoria', y='Ang', jitter=True, color='black', size=10, ax=ax, order=categorias_ordenadas)
+offsets = ax.collections[-1].get_offsets()
+#for i, (x, y) in enumerate(offsets):
+#    ax.annotate(data.iloc[i]['4X-Code'], (x, y),
+#                ha='center', va='center', fontsize=8, color='black')
+ax.set_ylabel(" f ", fontsize=18, weight='bold', color='darkblue')
+ax.set_xlabel("Category", fontsize=18, weight='bold', color='darkblue')
+#ax.set_xticks(range(len(categorias_ordenadas)))
+#ax.set_xticklabels(categorias_ordenadas)
+#ax.get_legend().remove()
+ax.set(ylim=(0, 50))
+if idx == 3:
+    ax.set(ylim=(0, 100))
+Title = f"Head Kinematics: Total head movement (angular)"
+ax.set_title(Title, fontsize=18, weight='bold', color='darkblue')
+# Determine the y position for the line and annotation
+file_name = f"{Output_Dir}HeadKinematics/Total_Angular Movement Summed.png"
+plt.savefig(file_name)
+plt.clf()
+print(f"--Completo Grafico para")
+
+
 #%%
 print('Final de script completo')
