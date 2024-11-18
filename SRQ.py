@@ -50,7 +50,8 @@ if nombre_host == 'DESKTOP-PQ9KP6K':  #Remake por situaci´ón de emergencia de 
 
 
 file = Fenrir_Processing_Dir + 'SRQ.csv'
-data = pd.read_csv(file,sep=';', index_col=0)
+#data = pd.read_csv(file,sep=';', index_col=0)
+data = pd.read_csv(file, index_col=0, encoding='utf-8', errors='replace')
 
     # Aqui leo el CSV que descargué de Google Forms. Ojo que le cambié el nombre para dejar marcada
     # la fecha en que lo bajé.
