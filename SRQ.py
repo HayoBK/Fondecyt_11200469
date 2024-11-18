@@ -12,11 +12,44 @@ import numpy as np      # Libreria de calculos científicos
 import seaborn as sns   #Estetica de gráficos
 import matplotlib.pyplot as plt    #Graficos
 from pathlib import Path # Una sola función dentro de la Bilioteca Path para encontrar archivos en el disco duro
+import socket
+
+#home= str(Path.home())
+#Fenrir_Processing_Dir=home+"/OneDrive/2-Casper/00-CurrentResearch/001-FONDECYT_11200469/006-Writing/04 - Paper Fondecyt 1/DataFrames/"
+#file = Fenrir_Processing_Dir+'SRQ.csv'
+#data = pd.read_csv(file,sep=';', index_col=0)
+
+print('H-Identifiquemos compu... ')
+nombre_host = socket.gethostname()
+print(nombre_host)
+
+if nombre_host == 'DESKTOP-PQ9KP6K':
+    home="D:/Mumin_UCh_OneDrive"
+    home_path = Path("D:/Mumin_UCh_OneDrive")
+    base_path= home_path / "OneDrive/2-Casper/00-CurrentResearch/001-FONDECYT_11200469/002-LUCIEN/SUJETOS"
+    Py_Processing_Dir = home + "/OneDrive/2-Casper/00-CurrentResearch/001-FONDECYT_11200469/002-LUCIEN/Py_Processing/"
+
+if nombre_host == 'MSI':
+    print('Estamos ok con ', nombre_host)
+    home="D:/Titan-OneDrive"
+    home_path = Path("D:/Titan-OneDrive")
+    base_path= home_path / "OneDrive/2-Casper/00-CurrentResearch/001-FONDECYT_11200469/002-LUCIEN/SUJETOS"
+    Py_Processing_Dir = home + "/OneDrive/2-Casper/00-CurrentResearch/001-FONDECYT_11200469/002-LUCIEN/Py_Processing/"
+    Output_Dir = home + "/OneDrive/2-Casper/00-CurrentResearch/001-FONDECYT_11200469/002-LUCIEN/Outputs/Barany2024/"
+    # Directorios version 2024 Agosto 22
+    Py_Processing_Dir = home + "/OneDrive/2-Casper/00-CurrentResearch/001-FONDECYT_11200469/002-LUCIEN/PyPro_traveling_2/Py_Processing/"
+    Output_Dir = home + "/OneDrive/2-Casper/00-CurrentResearch/001-FONDECYT_11200469/002-LUCIEN/PyPro_traveling_2/Outputs/Barany2024/"
+    Fenrir_Processing_Dir = home + "/OneDrive/2-Casper/00-CurrentResearch/001-FONDECYT_11200469/002-LUCIEN/Py_INFINITE/df_PsicoCognitivo/"
+
+if nombre_host == 'DESKTOP-PQ9KP6K':  #Remake por situaci´ón de emergencia de internet
+    home="D:/Mumin_UCh_OneDrive"
+    home_path = Path("D:/Mumin_UCh_OneDrive")
+    base_path= home_path / "OneDrive/2-Casper/00-CurrentResearch/001-FONDECYT_11200469/002-LUCIEN/SUJETOS"
+    Py_Processing_Dir = home + "/OneDrive/2-Casper/00-CurrentResearch/001-FONDECYT_11200469/002-LUCIEN/PyPro_traveling/Py_Processing/"
+    Output_Dir = home + "/OneDrive/2-Casper/00-CurrentResearch/001-FONDECYT_11200469/002-LUCIEN/PyPro_traveling/Outputs/Barany2024/"
 
 
-home= str(Path.home())
-Fenrir_Processing_Dir=home+"/OneDrive/2-Casper/00-CurrentResearch/001-FONDECYT_11200469/006-Writing/04 - Paper Fondecyt 1/DataFrames/"
-file = Fenrir_Processing_Dir+'SRQ.csv'
+file = Fenrir_Processing_Dir + 'SRQ.csv'
 data = pd.read_csv(file,sep=';', index_col=0)
 
     # Aqui leo el CSV que descargué de Google Forms. Ojo que le cambié el nombre para dejar marcada

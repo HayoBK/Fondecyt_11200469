@@ -2,11 +2,47 @@ import pandas as pd     #Bilioteca para manejar Base de datos. Es el equivalente
 import seaborn as sns   #Biblioteca para generar graficos con linda Estetica de gráficos
 import matplotlib.pyplot as plt    #Biblioteca para generar Graficos en general
 from pathlib import Path # Una sola función dentro de la Bilioteca Path para encontrar archivos en el disco duro
+import socket
 
 home= str(Path.home())
 Py_Processing_Dir=home+"/OneDrive/2-Casper/00-CurrentResearch/001-FONDECYT_11200469/002-LUCIEN/Py_Processing/"
 Fenrir_Processing_Dir=home+"/OneDrive/2-Casper/00-CurrentResearch/001-FONDECYT_11200469/006-Writing/04 - Paper Fondecyt 1/DataFrames/"
 file = Fenrir_Processing_Dir+'CODEX_FENRIR.xlsx'
+
+# ------------------------------------------------------------
+#Identificar primero en que computador estamos trabajando
+#-------------------------------------------------------------
+print('H-Identifiquemos compu... ')
+nombre_host = socket.gethostname()
+print(nombre_host)
+
+if nombre_host == 'DESKTOP-PQ9KP6K':
+    home="D:/Mumin_UCh_OneDrive"
+    home_path = Path("D:/Mumin_UCh_OneDrive")
+    base_path= home_path / "OneDrive/2-Casper/00-CurrentResearch/001-FONDECYT_11200469/002-LUCIEN/SUJETOS"
+    Py_Processing_Dir = home + "/OneDrive/2-Casper/00-CurrentResearch/001-FONDECYT_11200469/002-LUCIEN/Py_Processing/"
+
+if nombre_host == 'MSI':
+    print('Estamos ok con ', nombre_host)
+    home="D:/Titan-OneDrive"
+    home_path = Path("D:/Titan-OneDrive")
+    base_path= home_path / "OneDrive/2-Casper/00-CurrentResearch/001-FONDECYT_11200469/002-LUCIEN/SUJETOS"
+    Py_Processing_Dir = home + "/OneDrive/2-Casper/00-CurrentResearch/001-FONDECYT_11200469/002-LUCIEN/Py_Processing/"
+    Output_Dir = home + "/OneDrive/2-Casper/00-CurrentResearch/001-FONDECYT_11200469/002-LUCIEN/Outputs/Barany2024/"
+    # Directorios version 2024 Agosto 22
+    Py_Processing_Dir = home + "/OneDrive/2-Casper/00-CurrentResearch/001-FONDECYT_11200469/002-LUCIEN/PyPro_traveling_2/Py_Processing/"
+    Output_Dir = home + "/OneDrive/2-Casper/00-CurrentResearch/001-FONDECYT_11200469/002-LUCIEN/PyPro_traveling_2/Outputs/Barany2024/"
+    Fenrir_Processing_Dir = home + "/OneDrive/2-Casper/00-CurrentResearch/001-FONDECYT_11200469/002-LUCIEN/Py_INFINITE/df_PsicoCognitivo/"
+
+if nombre_host == 'DESKTOP-PQ9KP6K':  #Remake por situaci´ón de emergencia de internet
+    home="D:/Mumin_UCh_OneDrive"
+    home_path = Path("D:/Mumin_UCh_OneDrive")
+    base_path= home_path / "OneDrive/2-Casper/00-CurrentResearch/001-FONDECYT_11200469/002-LUCIEN/SUJETOS"
+    Py_Processing_Dir = home + "/OneDrive/2-Casper/00-CurrentResearch/001-FONDECYT_11200469/002-LUCIEN/PyPro_traveling/Py_Processing/"
+    Output_Dir = home + "/OneDrive/2-Casper/00-CurrentResearch/001-FONDECYT_11200469/002-LUCIEN/PyPro_traveling/Outputs/Barany2024/"
+
+file = Fenrir_Processing_Dir+'CODEX_FENRIR.xlsx'
+
 
 df = pd.read_excel(file, index_col=0) #Aqui cargamos tu base de datos en la variable "df"
 
@@ -111,5 +147,5 @@ df_N = pd.read_excel(file,index_col=1)
 del df_N[df_N.columns[0]]
 df_merged = pd.merge(df_merged,df_N,left_index=True,right_index=True, how='left')
 
-df_merged.to_excel((Py_Processing_Dir + 'FENRIR_CODEX.xlsx'))
+df_merged.to_excel((Fenrir_Processing_Dir + 'INFINITE_CODEX.xlsx'))
 print('Done')
