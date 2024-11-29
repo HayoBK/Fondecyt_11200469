@@ -53,7 +53,9 @@ def keep_first_3letter(text):
 
 # BDI
 file =Fenrir_Processing_Dir+'BDI.csv'
-df_BDI = pd.read_csv(file,sep=';',index_col=1) #sep es porque un csv procesado en NUMBERS de MAC usa ; en vez de , como separador
+#df_BDI = pd.read_csv(file,sep=';',index_col=1) #sep es porque un csv procesado en NUMBERS de MAC usa ; en vez de , como separador
+df_BDI = pd.read_csv(file,encoding='utf-8',index_col=1) #sep es porque un csv procesado en NUMBERS de MAC usa ; en vez de , como separador
+
 del df_BDI[df_BDI.columns[0]]
 df_BDI = df_BDI.applymap(keep_first_letter)
 df_BDI = df_BDI.apply(pd.to_numeric, errors='coerce')
@@ -64,7 +66,8 @@ df_merged = pd.merge(df,df_BDI,left_index=True,right_index=True, how='left')
 
 # DHI
 file =Fenrir_Processing_Dir+'DHI.csv'
-df_N = pd.read_csv(file,sep=';',index_col=1) #sep es porque un csv procesado en NUMBERS de MAC usa ; en vez de , como separador
+#df_N = pd.read_csv(file,sep=';',index_col=1) #sep es porque un csv procesado en NUMBERS de MAC usa ; en vez de , como separador
+df_N = pd.read_csv(file,encoding='utf-8',index_col=1)
 del df_N[df_N.columns[0]]
 df_N.columns = [*df_N.columns[:-1], 'EVA']
 df_N = df_N.applymap(keep_first_letter)
@@ -79,7 +82,8 @@ df_merged = pd.merge(df_merged,df_N,left_index=True,right_index=True, how='left'
 
 # Edinburgo
 file =Fenrir_Processing_Dir+'EDINBURGO.csv'
-df_N = pd.read_csv(file,sep=';',index_col=1) #sep es porque un csv procesado en NUMBERS de MAC usa ; en vez de , como separador
+#df_N = pd.read_csv(file,sep=';',index_col=1) #sep es porque un csv procesado en NUMBERS de MAC usa ; en vez de , como separador
+df_N = pd.read_csv(file,encoding='utf-8',index_col=1)
 del df_N[df_N.columns[0]]
 df_N = df_N.applymap(keep_first_3letter)
 value_to_score_DER = {'DER': 2, 'Der': 1, 'Pue': 1, 'Izq': 0, 'IZQ': 0}
@@ -100,7 +104,8 @@ df_merged = pd.merge(df_merged,df_N,left_index=True,right_index=True, how='left'
 
 #Niigata
 file =Fenrir_Processing_Dir+'NIIGATA.csv'
-df_N = pd.read_csv(file,sep=';',index_col=1) #sep es porque un csv procesado en NUMBERS de MAC usa ; en vez de , como separador
+#df_N = pd.read_csv(file,sep=';',index_col=1) #sep es porque un csv procesado en NUMBERS de MAC usa ; en vez de , como separador
+df_N = pd.read_csv(file,encoding='utf-8',index_col=1)
 del df_N[df_N.columns[0]]
 
 df_N['Niigata'] = df_N.sum(axis=1)
@@ -109,7 +114,8 @@ df_merged = pd.merge(df_merged,df_N,left_index=True,right_index=True, how='left'
 
 #STAI_A
 file =Fenrir_Processing_Dir+'STAI_A.csv'
-df_N = pd.read_csv(file,sep=';',index_col=1) #sep es porque un csv procesado en NUMBERS de MAC usa ; en vez de , como separador
+#df_N = pd.read_csv(file,sep=';',index_col=1) #sep es porque un csv procesado en NUMBERS de MAC usa ; en vez de , como separador
+df_N = pd.read_csv(file,encoding='utf-8',index_col=1)
 del df_N[df_N.columns[0]]
 df_N = df_N.applymap(keep_first_letter)
 df_N = df_N.apply(pd.to_numeric, errors='coerce')
@@ -119,7 +125,8 @@ df_merged = pd.merge(df_merged,df_N,left_index=True,right_index=True, how='left'
 
 #STAI_E
 file =Fenrir_Processing_Dir+'STAI_E.csv'
-df_N = pd.read_csv(file,sep=';',index_col=1) #sep es porque un csv procesado en NUMBERS de MAC usa ; en vez de , como separador
+#df_N = pd.read_csv(file,sep=';',index_col=1) #sep es porque un csv procesado en NUMBERS de MAC usa ; en vez de , como separador
+df_N = pd.read_csv(file,encoding='utf-8',index_col=1)
 del df_N[df_N.columns[2]]
 del df_N[df_N.columns[0]]
 df_N = df_N.applymap(keep_first_letter)
