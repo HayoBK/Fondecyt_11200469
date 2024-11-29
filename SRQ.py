@@ -1,12 +1,12 @@
 # ---------------------------------------------------------
-# Lab ONCE - Diciembre 2022
+# Lab ONCE - Diciembre 2022   --> Version Updated MSI 2024.11.29
 # Fondecyt 11200469
 # Hayo Breinbauer
 # ---------------------------------------------------------
 # Procesar formulario SRQ para tesis Rosario Garrido
 # ---------------------------------------------------------
 
-
+#%%
 import pandas as pd     #Base de datos
 import numpy as np      # Libreria de calculos científicos
 import seaborn as sns   #Estetica de gráficos
@@ -51,7 +51,7 @@ if nombre_host == 'DESKTOP-PQ9KP6K':  #Remake por situaci´ón de emergencia de 
 
 file = Fenrir_Processing_Dir + 'SRQ.csv'
 #data = pd.read_csv(file,sep=';', index_col=0)
-data = pd.read_csv(file, index_col=0, encoding='utf-8', errors='replace')
+data = pd.read_csv(file, index_col=0, encoding='utf-8')
 
     # Aqui leo el CSV que descargué de Google Forms. Ojo que le cambié el nombre para dejar marcada
     # la fecha en que lo bajé.
@@ -68,9 +68,23 @@ User = data.pop('User')
 
 data = data.dropna()
     # Aqui saque todas las filas que tienen al menos una casilla vacia (sacando las que no se identificaron con PXX en la encuesta
-
-data = data.replace(regex=[r'\D+'], value="").astype(int)
+#%%
+#data = data.replace(regex=[r'\D+'], value="").astype(int)
     # Aqui elimine todo el texto que no sea numeros de la base de dato. Simplifica mucho todo
+
+data = data.replace(regex=[r'\D+'], value="")
+
+# Reemplazar valores vacíos o nulos con NaN
+data = data.replace('', np.nan)
+
+# Verifica si aún hay valores vacíos
+print(data.isnull().sum())
+
+# Convertir a tipo entero, ignorando las filas con NaN
+data = data.astype('Int64')  # Usa el tipo Int64 que soporta NaN
+#%%
+data = data.dropna(subset=['PXX'])
+
 
 def correct_PXX(p):
     corrected = 'P'+"{:02d}".format(p)
