@@ -63,6 +63,7 @@ for col in m_df.columns:
     print(col)
 FirstRow=True
 MegaList = []
+
 for row in m_df.itertuples():
     if FirstRow: #En la primera linea de un Unique Trial
         AssesedTrial = row.Trial_Unique_ID
