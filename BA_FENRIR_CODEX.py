@@ -146,10 +146,10 @@ file =Fenrir_Processing_Dir+'VEST.xlsx'
 df_N = pd.read_excel(file,index_col=0)
 df_N = df_N.applymap(keep_first_letter)
 df_N = df_N.apply(pd.to_numeric, errors='coerce')
-df_merged = pd.merge(df_merged,df_N,left_index=True,right_index=True, how='left')
+df_merged = pd.merge(df_merged,df_r_ProN,left_index=True,right_index=True, how='left')
 
 # SRQ
-file =Fenrir_Processing_Dir+'SRQ_c.xlsx'
+file =Fenricessing_Dir+'SRQ_c.xlsx'
 df_N = pd.read_excel(file,index_col=1)
 del df_N[df_N.columns[0]]
 df_merged = pd.merge(df_merged,df_N,left_index=True,right_index=True, how='left')
