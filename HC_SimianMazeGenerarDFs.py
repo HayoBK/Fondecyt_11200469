@@ -412,5 +412,17 @@ for file_path in glob.glob(os.path.join(output_dir, "AB*")):
         print(f"Error al intentar eliminar {file_path}: {e}")
 
 print('100% todo listo ')
+durations = m_df.groupby('Trial_Unique_ID')['P_timeMilliseconds'].agg(Duration=lambda x: x.max() - x.min())
+
+# 2. Combinar las duraciones con el DataFrame resumen short_df
+short_df = short_df.merge(durations, on='Trial_Unique_ID', how='left')
+
+# 3. Exportar short_df a un archivo Excel
+output_file = Py_Processing_Dir+"FaundezDiciembre.xlsx"
+short_df.to_excel(output_file, index=False)
+
+# Confirmación
+print(f"Archivo exportado como {output_file}")
+
 #%%
 print('Terminamos')
