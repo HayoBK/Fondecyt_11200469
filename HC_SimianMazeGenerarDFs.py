@@ -19,6 +19,8 @@ import seaborn as sns   #Estetica de gráficos
 import math
 import os
 import glob
+from scipy.stats import entropy
+
 pd.options.mode.chained_assignment = None  # default='warn'
 
 #from pathlib import Path
@@ -31,7 +33,7 @@ Py_Processing_Dir = H_Mod.Nombrar_HomePath("002-LUCIEN/Py_INFINITE/")
 m_df = pd.read_csv((Py_Processing_Dir+'B_SimianMaze_Z1_RawMotion.csv'), index_col=0)
 m_df.rename(columns = {'platformPosition.x':'platformPosition_x', 'platformPosition.y':'platformPosition_y'}, inplace = True)
 m_df = m_df[m_df.True_Trial < 8] #Aqui eliminamos esos primeros sujetos en que hicimios demasiados trials por bloques
-#%%
+
 def DEL_POSZERO(data): # ELiminamos todos los primeros momentos muertos antes que el sujeto empiece a moverse...
     Ban=[]
     First=0
@@ -392,13 +394,13 @@ codex_df['Grupo'].replace(Codex_Dict['Grupo'], inplace=True)
 
 #Resumen_codex_df = codex_df.groupby('Grupo')['Edad'].agg(Conteo='size', Edad_promedio='mean').reset_index()
 
-codex_df.to_csv(Py_Processing_Dir+'AB_SimianMaze_Z4_Resumen_Pacientes_Analizados.csv')
-m_df.to_csv(Py_Processing_Dir+'C_SimianMaze_Z2_NaviData_con_posicion.csv')
-print('25%')
+#codex_df.to_csv(Py_Processing_Dir+'AB_SimianMaze_Z4_Resumen_Pacientes_Analizados.csv')
+#m_df.to_csv(Py_Processing_Dir+'C_SimianMaze_Z2_NaviData_con_posicion.csv')
+
 #m_df.to_excel('AB_SimianMaze_Z2_NaviData_con_posicion.xlsx')
-print('50%')
-short_df.to_csv(Py_Processing_Dir+'D_SimianMaze_Z3_NaviDataBreve_con_calculos.csv')
-print('75%')
+
+#short_df.to_csv(Py_Processing_Dir+'D_SimianMaze_Z3_NaviDataBreve_con_calculos.csv')
+
 #short_df.to_excel('AB_SimianMaze_Z3_NaviDataBreve_con_calculos.xlsx')
 
 output_dir = Py_Processing_Dir  # Asegúrate de que Py_Processing_Dir esté definido
@@ -412,17 +414,202 @@ for file_path in glob.glob(os.path.join(output_dir, "AB*")):
         print(f"Error al intentar eliminar {file_path}: {e}")
 
 print('100% todo listo ')
-durations = m_df.groupby('Trial_Unique_ID')['P_timeMilliseconds'].agg(Duration=lambda x: x.max() - x.min())
+durations = m_df.groupby('Trial_Unique_ID')['P_timeMilliseconds'].agg(Latencia=lambda x: x.max() - x.min())
 
 # 2. Combinar las duraciones con el DataFrame resumen short_df
 short_df = short_df.merge(durations, on='Trial_Unique_ID', how='left')
 
 # 3. Exportar short_df a un archivo Excel
-output_file = Py_Processing_Dir+"FaundezDiciembre.xlsx"
-short_df.to_excel(output_file, index=False)
+#output_file = Py_Processing_Dir+"FaundezDiciembre.xlsx"
+#short_df.to_excel(output_file, index=False)
 
-# Confirmación
-print(f"Archivo exportado como {output_file}")
+def calcular_distancia(x1, y1, x2, y2):
+    """Calcula la distancia euclidiana entre dos puntos."""
+    return np.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2)
+
+# Métricas
+def calcular_metricas_por_trial(m_df, short_df):
+    resultados = []
+
+    for trial_id in m_df['Trial_Unique_ID'].unique():
+        trial_data = m_df[m_df['Trial_Unique_ID'] == trial_id].copy()
+        trial_data = trial_data.sort_values('P_timeMilliseconds')  # Asegurar orden temporal
+
+        # Variables necesarias
+        platform_x, platform_y = trial_data.iloc[0][['platformPosition_x', 'platformPosition_y']]
+        pos_x, pos_y = trial_data['P_position_x'].values, trial_data['P_position_y'].values
+        timestamps = trial_data['P_timeMilliseconds'].values
+
+        # 1. Velocidad promedio
+        total_distance = np.sum(calcular_distancia(pos_x[:-1], pos_y[:-1], pos_x[1:], pos_y[1:]))
+        total_time = (timestamps[-1] - timestamps[0]) / 1000  # Convertir a segundos
+        velocidad_promedio = total_distance / total_time if total_time > 0 else 0
+
+        # 2. Inmovilidad (freezing)
+        velocidades = calcular_distancia(pos_x[:-1], pos_y[:-1], pos_x[1:], pos_y[1:]) / np.diff(timestamps)
+        freezing = np.sum(velocidades < 0.001) / len(velocidades) if len(velocidades) > 0 else 0
+
+        # 3. Índice de eficiencia
+        distancia_directa = calcular_distancia(pos_x[0], pos_y[0], platform_x, platform_y)
+        indice_eficiencia = distancia_directa / total_distance if total_distance > 0 else np.nan
+
+        # 4. Entropía espacial
+        hist, _, _ = np.histogram2d(pos_x, pos_y, bins=10, density=True)
+        entropia_espacial = entropy(hist.ravel())
+
+        # 5. Clasificación de estrategias (simplificada)
+        if indice_eficiencia > 0.9:
+            estrategia = 'Directa'
+        elif freezing > 0.5:
+            estrategia = 'Estática'
+        elif total_distance > distancia_directa * 3:
+            estrategia = 'Exploratoria'
+        else:
+            estrategia = 'Intermedia'
+
+        # Agregar resultados
+        resultados.append({
+            'Trial_Unique_ID': trial_id,
+            'Velocidad_Promedio': velocidad_promedio,
+            'Freezing': freezing,
+            'Indice_Eficiencia': indice_eficiencia,
+            'Entropia_Espacial': entropia_espacial,
+            'Estrategia_Simple': estrategia
+        })
+
+    # Convertir resultados a DataFrame
+    resultados_df = pd.DataFrame(resultados)
+
+    # Merge con short_df
+    short_df = short_df.merge(resultados_df, on='Trial_Unique_ID', how='left')
+
+    return short_df
+
+short_df = calcular_metricas_por_trial(m_df, short_df)
+
+
+def clasificar_estrategia(trial_data):
+    """
+    Clasifica la estrategia de búsqueda basada en parámetros del ensayo.
+
+    Estrategias posibles:
+    - Directa
+    - Exploratoria
+    - Circular
+    - Perimetral (thigmotaxis)
+    - Estática
+    """
+    # Coordenadas de inicio y plataforma
+    platform_x, platform_y = trial_data.iloc[0][['platformPosition_x', 'platformPosition_y']]
+    pos_x, pos_y = trial_data['P_position_x'].values, trial_data['P_position_y'].values
+
+    # Distancia total recorrida
+    distancia_total = np.sum(calcular_distancia(pos_x[:-1], pos_y[:-1], pos_x[1:], pos_y[1:]))
+
+    # Distancia directa (inicio → plataforma)
+    distancia_directa = calcular_distancia(pos_x[0], pos_y[0], platform_x, platform_y)
+
+    # Índice de eficiencia
+    indice_eficiencia = distancia_directa / distancia_total if distancia_total > 0 else np.nan
+
+    # Tiempo en áreas perimetrales y cercanas
+    radio_lab = max(pos_x.max() - pos_x.min(), pos_y.max() - pos_y.min()) / 2
+    distancia_a_plataforma = calcular_distancia(pos_x, pos_y, platform_x, platform_y)
+    tiempo_cerca_plataforma = np.sum(distancia_a_plataforma < radio_lab * 0.3) / len(distancia_a_plataforma)
+    tiempo_en_perimetro = np.sum(distancia_a_plataforma > radio_lab * 0.7) / len(distancia_a_plataforma)
+
+    # Clasificación basada en heurísticas
+    if indice_eficiencia > 0.8:
+        estrategia = "Directa"
+    elif tiempo_cerca_plataforma > 0.5:
+        estrategia = "Exploratoria"
+    elif tiempo_en_perimetro > 0.5:
+        estrategia = "Perimetral (thigmotaxis)"
+    elif distancia_total > distancia_directa * 3:
+        estrategia = "Circular"
+    else:
+        estrategia = "Estática"
+
+    return estrategia
+
+
+def agregar_estrategias(m_df, short_df):
+    """
+    Calcula estrategias de búsqueda para cada Trial_Unique_ID
+    y las agrega a short_df.
+    """
+    estrategias = []
+    for trial_id in m_df['Trial_Unique_ID'].unique():
+        trial_data = m_df[m_df['Trial_Unique_ID'] == trial_id].copy()
+        estrategia = clasificar_estrategia(trial_data)
+        estrategias.append({'Trial_Unique_ID': trial_id, 'Estrategia': estrategia})
+
+    estrategias_df = pd.DataFrame(estrategias)
+    short_df = short_df.merge(estrategias_df, on='Trial_Unique_ID', how='left')
+
+    return short_df
+
+def calcular_entropias(trial_data):
+    """
+    Calcula Herror, Hpath y Htotal para un conjunto de datos de navegación.
+    """
+    # Coordenadas del sujeto y la plataforma
+    pos_x, pos_y = trial_data['P_position_x'], trial_data['P_position_y']
+    platform_x, platform_y = trial_data.iloc[0]['platformPosition_x'], trial_data.iloc[0]['platformPosition_y']
+
+    # Distancias al objetivo (plataforma)
+    distancias = np.sqrt((pos_x - platform_x) ** 2 + (pos_y - platform_y) ** 2)
+    sigma_d = np.std(distancias)  # Desviación estándar de las distancias
+    Herror = np.log(sigma_d) if sigma_d > 0 else 0
+
+    # Calcular centroide del camino
+    centroide_x, centroide_y = np.mean(pos_x), np.mean(pos_y)
+
+    # Desviaciones estándar respecto al centroide (ejes de la elipse)
+    sigma_a = np.std(pos_x)
+    sigma_b = np.std(pos_y)
+    Hpath = np.log(sigma_a * sigma_b) if sigma_a > 0 and sigma_b > 0 else 0
+
+    # Entropía total
+    Htotal = Herror + Hpath
+
+    return Herror, Hpath, Htotal
+
+def calcular_entropias_por_trial(m_df, short_df):
+    """
+    Calcula las entropías para todos los trials en m_df y las agrega a short_df.
+    """
+    # Lista para guardar los resultados
+    resultados = []
+
+    # Iterar sobre cada Trial_Unique_ID
+    for trial_id in m_df['Trial_Unique_ID'].unique():
+        trial_data = m_df[m_df['Trial_Unique_ID'] == trial_id]
+        Herror, Hpath, Htotal = calcular_entropias(trial_data)
+        resultados.append({
+            'Trial_Unique_ID': trial_id,
+            'Herror': Herror,
+            'Hpath': Hpath,
+            'Htotal': Htotal
+        })
+
+    # Convertir los resultados a DataFrame
+    entropias_df = pd.DataFrame(resultados)
+
+    # Combinar con short_df
+    short_df = short_df.merge(entropias_df, on='Trial_Unique_ID', how='left')
+
+    return short_df
+
+# Ejemplo de uso
+# Supongamos que m_df y short_df ya están definidos
+# Calculamos las entropías y actualizamos short_df
+short_df = calcular_entropias_por_trial(m_df, short_df)
+# Ejemplo de uso
+short_df = agregar_estrategias(m_df, short_df)
+m_df.to_csv(Py_Processing_Dir+'C1_SimianMaze_Z2_PosXY.csv')
+short_df.to_csv(Py_Processing_Dir+'C2_SimianMaze_Z3_Resumen_Short_df.csv')
+print('Work is Done')
 
 #%%
 print('Terminamos')
