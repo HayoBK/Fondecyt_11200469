@@ -13,9 +13,9 @@ def Nombrar_HomePath(mi_path):
     # Busca en que compu estamos
     # y luego genera la ruta en One-Drive hasta la carpeta del Fondecyt
 
-    print('H-Identifiquemos en que computador estamos... ')
+    print('Proceso de HA_ModuloArchivos, Identificamos en que computador estamos... ')
     nombre_host = socket.gethostname()
-    print(nombre_host)
+    print('Estamos en: ',nombre_host)
 
     if nombre_host == 'DESKTOP-PQ9KP6K':
         home = "D:/Mumin_UCh_OneDrive"
@@ -24,4 +24,7 @@ def Nombrar_HomePath(mi_path):
         home = "D:/Titan-OneDrive"
 
     ruta = home + "/OneDrive/2-Casper/00-CurrentResearch/001-FONDECYT_11200469/" + mi_path
+    print('Definimos una Ruta dirigiendonos a: ',ruta)
+    print('--------------- CHECK -------------')
+    print(' ')
     return ruta

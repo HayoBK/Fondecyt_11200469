@@ -159,7 +159,7 @@ def ClearMarkers(df):
     return output
 
 #Vamos a buscar todos los archivos de datos del Pupil Labs de Felipe
-searchfiles = H_Mod.Nombrar_HomePath("004 - Alimento para LUCIEN/Pupil_labs_Faundez/*.csv")
+searchfiles = H_Mod.Nombrar_HomePath("004 - Alimento para LUCIEN/Pupil_labs_RV/*.csv")
 Pupil_files = glob2.glob(searchfiles) #obtiene una LISTA de todos los archivos que calcen con "searchfiles"
 Pupil_files = sorted(Pupil_files) # los ordena alfabeticamente
 PxxList =[]
