@@ -12,6 +12,21 @@
 # def Nombrar_HomePath(mi_path) --> Para definir ruta en cada compu
 # def Explorar_DF(Dir):  --> Para explorar .csv en un directorio y revisarlos usando "view as DataFrame"
 # def Grab_LabRecorderFile(Modalidad,mi_path): --> para capturar los archivos de LabRecorder en LUCIEN
+# def ClearMarkers(MarkersA_df):
+
+# Lexico para el Flujo de Datos a MATLAB:
+# P_LEFT = 4
+# P_RIGHT = 6
+# P_FORWARD = 8
+# P_BACK = 2
+# P_STILL = 5
+# P_TRial es igual a 100 + Numero de Trial
+# P_FULLSTOP = 202
+# P_POSSIBLE_STOP = 201
+# P_FALSE_STOP = 203
+# P_GO_ON = 200
+# P_FORCE_START = 205
+
 
 import socket
 import glob2
