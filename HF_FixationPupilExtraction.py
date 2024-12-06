@@ -49,8 +49,10 @@ for f in file:
             Markers_df = pd.DataFrame(list(zip(time_stamp, MarkersAlfa, MarkersBeta)),
                                       columns=['OverWatch_time_stamp', 'OverWatch_MarkerA', 'OverWatch_MarkerB'])
             MarkersA_df = Markers_df.loc[Markers_df['OverWatch_MarkerA'] != 'NONE']
-            # -------------------------------------------------------------
-            # Vamos a iniciar el análisis de los Markers de OverWatch para
-            # quedar con una lista confiable de marcadores
+            e, OverWatch_ClearedMarkers_df = H_Mod.ClearMarkers(MarkersA_df)
+            print(f"Porcentaje de éxito: {e:.2f}%")
 
+            e2, OverWatch_ClearedMarkers_df_Legacy = H_Mod.ClearMarkers_LEGACY(MarkersA_df)
+            print(f"Porcentaje de éxito: {e:.2f}%")
+            print(f"Porcentaje de éxito: {e2:.2f}%")
 

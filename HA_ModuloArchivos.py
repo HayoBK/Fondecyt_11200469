@@ -12,7 +12,8 @@
 # def Nombrar_HomePath(mi_path) --> Para definir ruta en cada compu
 # def Explorar_DF(Dir):  --> Para explorar .csv en un directorio y revisarlos usando "view as DataFrame"
 # def Grab_LabRecorderFile(Modalidad,mi_path): --> para capturar los archivos de LabRecorder en LUCIEN
-# def ClearMarkers(MarkersA_df):
+# def ClearMarkers(MarkersA_df):  --> Codigo para extraer de LabRecorder Time_stamps asociados a START STOP de cada Trial
+# def ClearMarkers_LEGACY(MarkersA_df):  --> Version original, efectiva, pero bien sucia
 
 # Lexico para el Flujo de Datos a MATLAB:
 # P_LEFT = 4
@@ -153,7 +154,118 @@ def Grab_LabRecorderFile(Modalidad,mi_path):
 
 # -----------------------------------------------------------------------
 
+
 def ClearMarkers(MarkersA_df):
+    # Listas para almacenar los resultados procesados
+    TimePoint = []   # Almacena los tipos de evento ("START" o "STOP")
+    TimeStamp2 = []  # Almacena las marcas de tiempo asociadas a los eventos
+    Trial = []       # Almacena los identificadores de cada trial
+
+    # Variables de estado
+    LastTrial = 0          # Último trial procesado
+    LastTrial_Length = 0   # Duración del último trial registrado
+    t1, t2 = 0, 0          # Tiempos de inicio y fin del trial activo
+    OnGoing = False        # Indica si hay un trial en curso
+    started = False        # Indica si ya se ha iniciado algún trial
+    confirmedSTOP = False  # Indica si un STOP ha sido confirmado
+    Ts = 0                 # Marca de tiempo actual
+
+
+    # Iteración sobre cada fila del DataFrame de entrada
+    for row in MarkersA_df.itertuples():
+        TP = 'NONE'  # Inicializa el tipo de evento como "NONE" (sin evento válido)
+        Tr = 1000    # Inicializa el identificador del trial con un valor de error
+        Ts = row.OverWatch_time_stamp  # Obtiene la marca de tiempo de la fila actual
+
+        # Caso 1: Detectar un evento de inicio (START)
+        if row.OverWatch_MarkerA.isdigit() and int(row.OverWatch_MarkerA) < 34:
+            started = True                 # Marca que se ha iniciado el procesamiento
+            TP = 'START'                  # Etiqueta el evento como "START"
+            Tr = int(row.OverWatch_MarkerA)  # Identificador del trial
+            OnGoing = True                # Indica que el trial está activo
+            confirmedSTOP = False         # Reinicia el estado de STOP confirmado
+
+            # Si el trial actual ya había sido registrado, elimina duplicados
+            if Tr == LastTrial:
+                TimeStamp2 = TimeStamp2[:-2]
+                TimePoint = TimePoint[:-2]
+                Trial = Trial[:-2]
+
+            # Actualiza el último trial procesado
+            LastTrial = Tr
+            t1 = Ts  # Registra el tiempo de inicio del trial
+
+        # Caso 2: Corregir un "Falso Stop"
+        if row.OverWatch_MarkerA == 'Falso Stop' and started:
+            # Si no hay un trial en curso pero hay registros previos
+            if not OnGoing and len(Trial) > 0:
+                OnGoing = True  # Marca que ahora hay un trial en curso
+                del TimeStamp2[-1]  # Elimina el último evento registrado
+                del TimePoint[-1]
+                del Trial[-1]
+
+        # Caso 3: Detectar un evento de finalización (STOP)
+        if row.OverWatch_MarkerA == 'Stop' and started:
+            if OnGoing:
+                # Si hay un trial activo, registra el STOP
+                TP = 'STOP'
+                Tr = LastTrial
+                OnGoing = False  # Marca que el trial ha finalizado
+                t2 = Ts          # Registra el tiempo de finalización
+                LastTrial_Length = t2 - t1  # Calcula la duración del trial
+            else:
+                # Si no hay un trial activo, maneja un STOP inesperado
+                if LastTrial < 32:
+                    if (Ts - LastTrial_Length) > t2:
+                        # Calcula un tiempo ficticio para un "START" previo
+                        TimeStamp2.append(Ts - LastTrial_Length)
+                    else:
+                        # Calcula un tiempo ficticio basado en el 90% del lapso
+                        Lapse90 = (Ts - t2) * 0.9
+                        TimeStamp2.append(Ts - Lapse90)
+
+                    confirmedSTOP = False  # Marca que el STOP no está confirmado
+                    TimePoint.append('START')  # Agrega un "START" ficticio
+                    LastTrial += 1  # Incrementa el identificador del trial
+                    Trial.append(LastTrial)
+                    TP = 'STOP'     # Registra el evento actual como "STOP"
+                    Tr = LastTrial
+                    OnGoing = False
+                    t2 = Ts         # Actualiza el tiempo de finalización ficticio
+                    LastTrial_Length = t2 - t1
+
+        # Caso 4: Detectar un "STOP confirmado"
+        if row.OverWatch_MarkerA == 'Stop confirmado' and started:
+            if OnGoing:
+                # Si hay un trial activo, registra un STOP confirmado
+                TP = 'STOP'
+                Tr = LastTrial
+                OnGoing = False
+                confirmedSTOP = True
+
+        # Imprime los resultados parciales para seguimiento
+
+        # Si se detectó un evento válido, almacena los resultados
+        if TP != 'NONE':
+            TimeStamp2.append(Ts)
+            TimePoint.append(TP)
+            Trial.append(Tr)
+
+    # Construcción del DataFrame de salida
+    output = pd.DataFrame(list(zip(TimeStamp2, TimePoint, Trial)),
+                          columns=['OverWatch_time_stamp', 'OverWatch_MainMarker', 'OverWatch_Trial'])
+    # Filtra los eventos "NONE" que no son válidos
+    output = output.loc[output['OverWatch_MainMarker'] != 'NONE']
+
+    # Cálculo del porcentaje de éxito
+    num_rows = len(output)  # Número de filas en el DataFrame de salida
+    exito = (num_rows / 66) * 100  # Porcentaje de éxito basado en 66 filas esperadas
+
+    return exito, output
+
+
+
+def ClearMarkers_LEGACY(MarkersA_df):
 
     TimePoint = []
     TimeStamp2 = []
@@ -241,4 +353,7 @@ def ClearMarkers(MarkersA_df):
     output = pd.DataFrame(list(zip(TimeStamp2, TimePoint, Trial)),
                           columns =['OverWatch_time_stamp', 'OverWatch_MainMarker', 'OverWatch_Trial'])
     output = output.loc[output['OverWatch_MainMarker'] != 'NONE']
-    return output
+    num_rows = len(output)  # Número de filas en el DataFrame de salida
+    exito = (num_rows / 66) * 100  # Porcentaje de éxito basado en 66 filas esperadas
+
+    return exito, output
