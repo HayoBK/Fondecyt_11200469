@@ -22,20 +22,21 @@
 import HA_ModuloArchivos as H_Mod
 import pyxdf
 import pandas as pd
+import numpy as np
 
 Py_Processing_Dir  = H_Mod.Nombrar_HomePath("002-LUCIEN/Py_INFINITE/")
 Sujetos_Dir = H_Mod.Nombrar_HomePath("002-LUCIEN/SUJETOS/")
 
 # EJEMPLO DE USO de Explorar_DF .... con esto obtuvimos la descripción de los archivos .csv
 #Explorar_Dir = Sujetos_Dir + "P02/PUPIL_LAB/P02/000/exports/000/"
-#dataframes = Explorar_DF(Explorar_Dir)
+#dataframes = H_Mod.Explorar_DF(Explorar_Dir)
 
 Dir = Sujetos_Dir + "P02/"
 Reporte, file = H_Mod.Grab_LabRecorderFile("NI", Dir)
 print(Reporte)
+file_path = Sujetos_Dir + "P02/PUPIL_LAB/P02/000/exports/000/" + "surfaces/fixations_on_surface_Hefestp 1.csv"
+Interesting_df = pd.read_csv(file_path)
 
-def Extract(lst,place):
-    return [item[place] for item in lst]
 
 for f in file:
     data, header = pyxdf.load_xdf(f)
@@ -44,15 +45,29 @@ for f in file:
     for d in data:
         if d['info']['name'][0] == 'Overwatch-Markers':
             time_stamp = d['time_stamps']
-            MarkersAlfa = Extract(d['time_series'], 0)  # Stream OverWatch Markers, Canal 0: Marker Primario
-            MarkersBeta = Extract(d['time_series'], 1)  # Stream OverWatch Markerse, Canal 1: Marker Secundario
+            MarkersAlfa = H_Mod.Extract(d['time_series'], 0)  # Stream OverWatch Markers, Canal 0: Marker Primario
+            MarkersBeta = H_Mod.Extract(d['time_series'], 1)  # Stream OverWatch Markerse, Canal 1: Marker Secundario
             Markers_df = pd.DataFrame(list(zip(time_stamp, MarkersAlfa, MarkersBeta)),
                                       columns=['OverWatch_time_stamp', 'OverWatch_MarkerA', 'OverWatch_MarkerB'])
             MarkersA_df = Markers_df.loc[Markers_df['OverWatch_MarkerA'] != 'NONE']
-            e, OverWatch_ClearedMarkers_df = H_Mod.ClearMarkers(MarkersA_df)
-            print(f"Porcentaje de éxito: {e:.2f}%")
 
-            e2, OverWatch_ClearedMarkers_df_Legacy = H_Mod.ClearMarkers_LEGACY(MarkersA_df)
+            #Ahora que hemos extraido de LabRecorder una infinidad de OverWatch Markers, tenemos que limpiar esta lista, dado
+            #que está llena de errores y quedarnos solo con 66 marcadores de inicio y final para cada Trial y sus timestamps
+            e, df = H_Mod.ClearMarkers(MarkersA_df) # e es un indicador de exito, df es la DataFrame con los indicadores de inicio, final, trial y timestamp
+            e2, OverWatch_ClearedMarkers_df_Legacy = H_Mod.ClearMarkers_LEGACY(MarkersA_df)  # Aqui la versión LEGACY es la antigua que hice exitosa, pero indecifrable. La nueva es más legible y espero igual de exitosa
+
             print(f"Porcentaje de éxito: {e:.2f}%")
             print(f"Porcentaje de éxito: {e2:.2f}%")
+            df = df.reset_index(drop=True)
+            #  Esta DF viene con 66 lineas, cada una con una timestamp, cada una con un Trial number, la mitad con un START, la mitad con un STOP.
+
+            # Limpiamos errores que tengan más de un STAR STOP por trial.
+            df = H_Mod.LimpiarErroresdeOverwatch1(df)
+
+            # Transformamos la DF por timestamp en una basada en Trials (con una columna para Timestamps de Start y otra para TimeStamps de Stop
+            # añadimo la generación de trial_labels, preparandonos para hacer bins.
+            trial_labels, trials = H_Mod.Markers_by_trial(df)
+
+            # Ahora, en base a la columna de tiempo elegida (Timestamp); genera una columna OW_Trial que designa que Trial estaba ocurriendo en cada momento.
+            Interesting_df = H_Mod.Binnear_DF(trial_labels, trials, Interesting_df, 'start_timestamp')
 

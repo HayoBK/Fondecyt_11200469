@@ -14,6 +14,13 @@
 # def Grab_LabRecorderFile(Modalidad,mi_path): --> para capturar los archivos de LabRecorder en LUCIEN
 # def ClearMarkers(MarkersA_df):  --> Codigo para extraer de LabRecorder Time_stamps asociados a START STOP de cada Trial
 # def ClearMarkers_LEGACY(MarkersA_df):  --> Version original, efectiva, pero bien sucia
+# def Extract(lst,place): --> Extrae un elemento de una lista
+# def LimpiarErroresdeOverwatch1(df)  --> Limpiamos errores de trials que tengan más de un Start-stop
+# def Markers_by_trial(df):  --> Toma la lista de OverwatchMarkers armada por timestamp y la ordena por Trial (lista para Bins)
+# def Binnear_DF(trial_labels, trials, df, TimeMarker): En base a la columna "TimeMarker" con timestamp, y usando los bins de trial_label y trials, señala en que
+#                                                       trial esta cada fila. (binnea)
+
+# -----------------------------------------------------------------------
 
 # Lexico para el Flujo de Datos a MATLAB:
 # P_LEFT = 4
@@ -36,6 +43,7 @@ from io import StringIO
 import sys
 import os
 import pandas as pd
+import numpy as np
 
 # -----------------------------------------------------------------------
 
@@ -153,7 +161,9 @@ def Grab_LabRecorderFile(Modalidad,mi_path):
     return exito, XDF_files
 
 # -----------------------------------------------------------------------
-
+def Extract(lst,place):
+    return [item[place] for item in lst]
+# -----------------------------------------------------------------------
 
 def ClearMarkers(MarkersA_df):
     # Listas para almacenar los resultados procesados
@@ -357,3 +367,35 @@ def ClearMarkers_LEGACY(MarkersA_df):
     exito = (num_rows / 66) * 100  # Porcentaje de éxito basado en 66 filas esperadas
 
     return exito, output
+
+
+def LimpiarErroresdeOverwatch1(df):
+    if not df.empty:
+        dfC = df
+        # Contar eventos por cada Trial
+        event_counts = dfC.groupby(['OverWatch_Trial', 'OverWatch_MainMarker']).size().unstack(fill_value=0)
+        # Filtrar trials que tienen exactamente un START y un STOP
+        valid_trials = event_counts[(event_counts['START'] == 1) & (event_counts['STOP'] == 1)].index
+        # Filtrar el DataFrame original para mantener solo los trials válidos
+        df = dfC[dfC['OverWatch_Trial'].isin(valid_trials)]
+        # Mostrar el DataFrame limpio
+    return df
+
+
+def Markers_by_trial(df):
+    inicios = df[df['OverWatch_MainMarker'] == 'START']['OverWatch_time_stamp'].reset_index(drop=True)
+    OW_Trials = df[df['OverWatch_MainMarker'] == 'START']['OverWatch_Trial'].reset_index(drop=True)
+    finales = df[df['OverWatch_MainMarker'] == 'STOP']['OverWatch_time_stamp'].reset_index(drop=True)
+    trials = pd.DataFrame({'Start': inicios, 'End': finales, 'OW_trials': OW_Trials})
+
+    trial_labels = list(range(1, 34))
+    trial_labels = trials['OW_trials'].tolist()  # Ojo aqui que quede bien...
+    trial_labels = np.array(trial_labels)
+    return trial_labels, trials
+
+
+def Binnear_DF(trial_labels, trials, df, TimeMarker):
+    bins = pd.IntervalIndex.from_tuples(list(zip(trials['Start'], trials['End'])), closed='left')
+    try_df = df
+    try_df['OW_Trial'] = pd.cut(df[TimeMarker], bins).map(dict(zip(bins, trial_labels)))
+    return try_df
