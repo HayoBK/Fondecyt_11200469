@@ -50,22 +50,26 @@ for f in file:
             Markers_df = pd.DataFrame(list(zip(time_stamp, MarkersAlfa, MarkersBeta)),
                                       columns=['OverWatch_time_stamp', 'OverWatch_MarkerA', 'OverWatch_MarkerB'])
             MarkersA_df = Markers_df.loc[Markers_df['OverWatch_MarkerA'] != 'NONE']
+
+            # Un segmento solo para chequear que tan sincronico es el reporte de eventos de LSL con MATLAB EEG
+            # ------------------------------------------------------------------------------------------------
             export_for_MATLAB = MarkersA_df.copy()
 
-            valid_labels = ["1", "15", "32"]
+            valid_labels = ["1", "10", "20", "30"]
             MarkersA_df_filtered = export_for_MATLAB.loc[MarkersA_df['OverWatch_MarkerA'].astype(str).isin(valid_labels)]
 
             # Renombrar las columnas
             export_for_MATLAB = MarkersA_df_filtered[['OverWatch_time_stamp', 'OverWatch_MarkerA']].rename(
                 columns={
-                    'OverWatch_time_stamp': 'latency',
-                    'OverWatch_MarkerA': 'label'
+                    'OverWatch_time_stamp': 'latencyP',
+                    'OverWatch_MarkerA': 'labelP'
                 }
             )
 
             # Exportar a CSV
             archivo = Py_Processing_Dir + 'export_for_MATLAB.csv'
             export_for_MATLAB.to_csv(archivo, index=False)
+            # ------------------------------------------------------------------------------------------------
 
             #Ahora que hemos extraido de LabRecorder una infinidad de OverWatch Markers, tenemos que limpiar esta lista, dado
             #que está llena de errores y quedarnos solo con 66 marcadores de inicio y final para cada Trial y sus timestamps
@@ -87,3 +91,44 @@ for f in file:
             # Ahora, en base a la columna de tiempo elegida (Timestamp); genera una columna OW_Trial que designa que Trial estaba ocurriendo en cada momento.
             Interesting_df = H_Mod.Binnear_DF(trial_labels, trials, Interesting_df, 'start_timestamp')
 
+file_path = Py_Processing_Dir + "P33_eventos_exportados_desdeMATLAB.csv"
+MAT_df = pd.read_csv(file_path)
+
+# 1. Mantener solo las primeras 4 filas de `MAT_df`
+MAT_df = MAT_df.iloc[:4].reset_index(drop=True)
+# 2. Renombrar columnas en `MAT_df` para diferenciarlas si no están ya diferenciadas
+MAT_df = MAT_df.rename(columns={'Label': 'labelMAT', 'Latency': 'latencyMAT'})
+MAT_df['latencyMAT'] = MAT_df['latencyMAT'] / 1000
+
+export_for_MATLAB = export_for_MATLAB.reset_index(drop=True)
+# 3. Unir `MAT_df` y `export_for_MATLAB` (que tiene columnas labelP y latencyP) lado a lado
+combined_df = pd.concat([MAT_df, export_for_MATLAB], axis=1)
+
+# 4. Crear una nueva columna con la diferencia de latencias
+combined_df['latency_diff'] = (combined_df['latencyP'] - combined_df['latencyMAT'])
+
+# 5. Calcular el promedio y la dispersión (desviación estándar) de las diferencias
+latency_mean = combined_df['latency_diff'].mean()
+latency_std = combined_df['latency_diff'].std()
+
+# 6. Mostrar resultados
+print("Diferencias de latencias:")
+print(combined_df)
+
+print("\nPromedio de diferencias:", latency_mean)
+print("Desviación estándar de diferencias:", latency_std)
+
+max_diff = combined_df['latency_diff'].max() - combined_df['latency_diff'].min()
+
+# Mostrar el resultado
+print("Máxima diferencia de latencias  (ms):", max_diff*1000)
+
+# Calcular diferencia entre el mínimo y el máximo de latencyMAT
+latencyMAT_range = MAT_df['latencyMAT'].max() - MAT_df['latencyMAT'].min()
+
+# Calcular diferencia entre el mínimo y el máximo de latencyP
+latencyP_range = export_for_MATLAB['latencyP'].max() - export_for_MATLAB['latencyP'].min()
+
+# Mostrar los resultados
+print("Rango de latencias en MAT_df (latencyMAT) (s):", latencyMAT_range)
+print("Rango de latencias en export_for_MATLAB (latencyP) (s) :", latencyP_range)
