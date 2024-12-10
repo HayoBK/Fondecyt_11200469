@@ -19,6 +19,7 @@
 # def Markers_by_trial(df):  --> Toma la lista de OverwatchMarkers armada por timestamp y la ordena por Trial (lista para Bins)
 # def Binnear_DF(trial_labels, trials, df, TimeMarker): En base a la columna "TimeMarker" con timestamp, y usando los bins de trial_label y trials, señala en que
 #                                                       trial esta cada fila. (binnea)
+# def Exportar_a_MATLAB_Sync(df,Sujetos_Dir,Sujeto): Para exportar datos del LSL Timestamps basados en los trial iniciales para marcar el delta de relojes de MATLAB y LSL
 
 # -----------------------------------------------------------------------
 
@@ -288,9 +289,9 @@ def ClearMarkers_LEGACY(MarkersA_df):
     started = False
     confirmedSTOP = False
     Ts = 0
-    print('-----------------------')
-    print('Inicio primera revisión')
-    print('-----------------------')
+    #print('-----------------------')
+    #print('Inicio primera revisión')
+    #print('-----------------------')
 
     for row in MarkersA_df.itertuples():
         TP = 'NONE' # Para alimentar la lista de TimePoints
@@ -304,7 +305,7 @@ def ClearMarkers_LEGACY(MarkersA_df):
             confirmedSTOP = False
 
             if Tr == LastTrial:
-                print('Borrados ', TimeStamp2[-2], TimeStamp2[-1])
+                #print('Borrados ', TimeStamp2[-2], TimeStamp2[-1])
                 TimeStamp2 = TimeStamp2[:len(TimeStamp2) - 2]
 
                 TimePoint = TimePoint[:len(TimePoint) - 2]
@@ -354,7 +355,7 @@ def ClearMarkers_LEGACY(MarkersA_df):
                 OnGoing = False
                 confirmedSTOP = True
 
-        print(Ts,TP,Tr)
+        #print(Ts,TP,Tr)
         if TP != 'NONE':
             TimeStamp2.append(Ts)
             TimePoint.append(TP)
@@ -399,3 +400,21 @@ def Binnear_DF(trial_labels, trials, df, TimeMarker):
     try_df = df
     try_df['OW_Trial'] = pd.cut(df[TimeMarker], bins).map(dict(zip(bins, trial_labels)))
     return try_df
+
+def Exportar_a_MATLAB_Sync(df,Sujetos_Dir,Sujeto):
+    export_for_MATLAB = df.copy()
+
+    valid_labels = ["1", "10", "20", "30"]
+    MarkersA_df_filtered = export_for_MATLAB.loc[df['OverWatch_MarkerA'].astype(str).isin(valid_labels)]
+    # Renombrar las columnas
+    export_for_MATLAB = MarkersA_df_filtered[['OverWatch_time_stamp', 'OverWatch_MarkerA']].rename(
+        columns={
+            'OverWatch_time_stamp': 'latencyLSL',
+            'OverWatch_MarkerA': 'labelLSL'
+        }
+    )
+    # Exportar a CSV
+    export_for_MATLAB = export_for_MATLAB.reset_index()
+    archivo = Sujetos_Dir + Sujeto + "/EEG/" + 'export_for_MATLAB_Sync.csv'
+    export_for_MATLAB.to_csv(archivo, index=False)
+    return export_for_MATLAB
