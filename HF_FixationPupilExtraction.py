@@ -31,10 +31,10 @@ Sujetos_Dir = H_Mod.Nombrar_HomePath("002-LUCIEN/SUJETOS/")
 #Explorar_Dir = Sujetos_Dir + "P02/PUPIL_LAB/P02/000/exports/000/"
 #dataframes = H_Mod.Explorar_DF(Explorar_Dir)
 
-Dir = Sujetos_Dir + "P02/"
+Dir = Sujetos_Dir + "P33/"
 Reporte, file = H_Mod.Grab_LabRecorderFile("NI", Dir)
 print(Reporte)
-file_path = Sujetos_Dir + "P02/PUPIL_LAB/P02/000/exports/000/" + "surfaces/fixations_on_surface_Hefestp 1.csv"
+file_path = Sujetos_Dir + "P33/PUPIL_LAB/000/exports/000/" + "surfaces/fixations_on_surface_Hefestp 1.csv"
 Interesting_df = pd.read_csv(file_path)
 
 
@@ -43,13 +43,29 @@ for f in file:
         # data es una lista de STREAMS, que me desayuno, no parecen estar siempre en el mismo orden. Mejor chequear el nombre
         # los data['info']['name'][0] son 'Overwatch-Markers'. 'Overwatch-Joy', 'Overwatch-VR', 'pupil_capture'
     for d in data:
-        if d['info']['name'][0] == 'Overwatch-Markers':
+        if (d['info']['name'][0] == 'Overwatch-Markers') and (len(d['time_stamps']>20)):
             time_stamp = d['time_stamps']
             MarkersAlfa = H_Mod.Extract(d['time_series'], 0)  # Stream OverWatch Markers, Canal 0: Marker Primario
             MarkersBeta = H_Mod.Extract(d['time_series'], 1)  # Stream OverWatch Markerse, Canal 1: Marker Secundario
             Markers_df = pd.DataFrame(list(zip(time_stamp, MarkersAlfa, MarkersBeta)),
                                       columns=['OverWatch_time_stamp', 'OverWatch_MarkerA', 'OverWatch_MarkerB'])
             MarkersA_df = Markers_df.loc[Markers_df['OverWatch_MarkerA'] != 'NONE']
+            export_for_MATLAB = MarkersA_df.copy()
+
+            valid_labels = ["1", "15", "32"]
+            MarkersA_df_filtered = export_for_MATLAB.loc[MarkersA_df['OverWatch_MarkerA'].astype(str).isin(valid_labels)]
+
+            # Renombrar las columnas
+            export_for_MATLAB = MarkersA_df_filtered[['OverWatch_time_stamp', 'OverWatch_MarkerA']].rename(
+                columns={
+                    'OverWatch_time_stamp': 'latency',
+                    'OverWatch_MarkerA': 'label'
+                }
+            )
+
+            # Exportar a CSV
+            archivo = Py_Processing_Dir + 'export_for_MATLAB.csv'
+            export_for_MATLAB.to_csv(archivo, index=False)
 
             #Ahora que hemos extraido de LabRecorder una infinidad de OverWatch Markers, tenemos que limpiar esta lista, dado
             #que está llena de errores y quedarnos solo con 66 marcadores de inicio y final para cada Trial y sus timestamps
