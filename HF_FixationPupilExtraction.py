@@ -16,6 +16,11 @@
 #       diameter & diamater_3d: diametro pupilar. Ojo que 3d tiene hartos "nan" en que no fue capturada
 #       eye_id: Identificación del ojo 0/1
 #       pupil_timestamp: momento
+#   3) Un archivo "blinks.csv"
+#       id : para identificar cada pestañeo
+#       start_timestamp
+#       duration
+#       end_timestamp
 # -----------------------------------------------------------------------
 #%%
 
@@ -27,9 +32,11 @@ import numpy as np
 Py_Processing_Dir  = H_Mod.Nombrar_HomePath("002-LUCIEN/Py_INFINITE/")
 Sujetos_Dir = H_Mod.Nombrar_HomePath("002-LUCIEN/SUJETOS/")
 
+# ------------------ EXPLORACION --------------------------------------
 # EJEMPLO DE USO de Explorar_DF .... con esto obtuvimos la descripción de los archivos .csv
-#Explorar_Dir = Sujetos_Dir + "P02/PUPIL_LAB/P02/000/exports/000/"
-#dataframes = H_Mod.Explorar_DF(Explorar_Dir)
+# Explorar_Dir = Sujetos_Dir + "P33/PUPIL_LAB/000/exports/000/"
+# dataframes = H_Mod.Explorar_DF(Explorar_Dir)
+# ---------------------------------------------------------------------
 
 Dir = Sujetos_Dir + "P33/"
 Reporte, file = H_Mod.Grab_LabRecorderFile("NI", Dir)
@@ -37,6 +44,10 @@ print(Reporte)
 file_path = Sujetos_Dir + "P33/PUPIL_LAB/000/exports/000/" + "surfaces/fixations_on_surface_Hefestp 1.csv"
 Interesting_df = pd.read_csv(file_path)
 
+file_path = Sujetos_Dir + "P33/PUPIL_LAB/000/exports/000/" + "surfaces/fixations_on_surface_Hefestp 1.csv"
+fixations_df = pd.read_csv(file_path)
+file_path = Sujetos_Dir + "P33/PUPIL_LAB/000/exports/000/" + "blinks.csv"
+blinks_df = pd.read_csv(file_path)
 
 for f in file:
     data, header = pyxdf.load_xdf(f)
@@ -76,3 +87,42 @@ for f in file:
             # Ahora, en base a la columna de tiempo elegida (Timestamp); genera una columna OW_Trial que designa que Trial estaba ocurriendo en cada momento.
             Interesting_df = H_Mod.Binnear_DF(trial_labels, trials, Interesting_df, 'start_timestamp')
 
+# ------------ Exportar los csv necesarios para analisis en MATLAB ------------------
+
+Sujeto = 'P33'
+
+# Primero para Blinks
+#--------------------->>>
+output_df = blinks_df.rename(columns={
+            'start_timestamp': 'start_time',
+            'duration': 'duration'  # Trials need start and end times, not duration
+        })
+output_df = output_df[['start_time', 'duration']]  # Keep only relevant columns
+
+archivo = Sujetos_Dir + Sujeto + "/EEG/" + 'blinks_forMATLAB.csv'
+output_df.to_csv(archivo, index=False)
+
+
+# Ahora para Fixations
+#--------------------->>>
+output_df = fixations_df.rename(columns={
+            'start_timestamp': 'start_time',
+            'duration': 'duration'  # Trials need start and end times, not duration
+        })
+output_df = output_df.drop_duplicates(subset='fixation_id', keep='first')
+output_df = output_df[['start_time', 'duration']]  # Keep only relevant columns
+
+archivo = Sujetos_Dir + Sujeto + "/EEG/" + 'fixation_forMATLAB.csv'
+output_df.to_csv(archivo, index=False)
+
+# Ahora para los TRIALS !!!!
+#--------------------->>>
+Modalidad = 'NI'
+output_df = trials.rename(columns={
+            'OW_trials': 'trial_id',
+            'Start': 'start_time',
+            'End': 'end_time'  # Trials need start and end times, not duration
+        })
+archivo = Sujetos_Dir + Sujeto + "/EEG/" + 'trials_forMATLAB_'+Modalidad+'.csv'
+output_df.to_csv(archivo, index=False)
+print(" Work's Done")
