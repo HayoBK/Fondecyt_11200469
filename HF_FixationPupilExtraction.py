@@ -49,12 +49,14 @@ fixations_df = pd.read_csv(file_path)
 file_path = Sujetos_Dir + "P33/PUPIL_LAB/000/exports/000/" + "blinks.csv"
 blinks_df = pd.read_csv(file_path)
 
+Processed_files = 0
 for f in file:
     data, header = pyxdf.load_xdf(f)
         # data es una lista de STREAMS, que me desayuno, no parecen estar siempre en el mismo orden. Mejor chequear el nombre
         # los data['info']['name'][0] son 'Overwatch-Markers'. 'Overwatch-Joy', 'Overwatch-VR', 'pupil_capture'
     for d in data:
         if (d['info']['name'][0] == 'Overwatch-Markers') and (len(d['time_stamps']>20)):
+            Processed_files += 1
             time_stamp = d['time_stamps']
             MarkersAlfa = H_Mod.Extract(d['time_series'], 0)  # Stream OverWatch Markers, Canal 0: Marker Primario
             MarkersBeta = H_Mod.Extract(d['time_series'], 1)  # Stream OverWatch Markerse, Canal 1: Marker Secundario
@@ -63,6 +65,7 @@ for f in file:
             MarkersA_df = Markers_df.loc[Markers_df['OverWatch_MarkerA'] != 'NONE']
 
             # Un segmento solo para chequear que tan sincronico es el reporte de eventos de LSL con MATLAB EEG
+            # y generar el archivo necesario para sincronizar los relojes en base a delta_promedio
             # ------------------------------------------------------------------------------------------------
             export_df = H_Mod.Exportar_a_MATLAB_Sync(MarkersA_df, Sujetos_Dir, "P33")
             # ------------------------------------------------------------------------------------------------
@@ -84,8 +87,12 @@ for f in file:
             # añadimo la generación de trial_labels, preparandonos para hacer bins.
             trial_labels, trials = H_Mod.Markers_by_trial(df)
 
-            # Ahora, en base a la columna de tiempo elegida (Timestamp); genera una columna OW_Trial que designa que Trial estaba ocurriendo en cada momento.
-            Interesting_df = H_Mod.Binnear_DF(trial_labels, trials, Interesting_df, 'start_timestamp')
+
+
+# ---------------------------------------------------------------------------------------------------------------------------------------------
+# Ahora, en base a la columna de tiempo elegida (Timestamp); genera una columna OW_Trial que designa que Trial estaba ocurriendo en cada momento.
+Interesting_df = H_Mod.Binnear_DF(trial_labels, trials, Interesting_df, 'start_timestamp')
+
 
 # ------------ Exportar los csv necesarios para analisis en MATLAB ------------------
 
