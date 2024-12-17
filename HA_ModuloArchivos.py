@@ -401,7 +401,7 @@ def Binnear_DF(trial_labels, trials, df, TimeMarker):
     try_df['OW_Trial'] = pd.cut(df[TimeMarker], bins).map(dict(zip(bins, trial_labels)))
     return try_df
 
-def Exportar_a_MATLAB_Sync(df,Sujetos_Dir,Sujeto):
+def Exportar_a_MATLAB_Sync(df):
     export_for_MATLAB = df.copy()
 
     valid_labels = ["1", "10", "20", "30"]
@@ -413,15 +413,15 @@ def Exportar_a_MATLAB_Sync(df,Sujetos_Dir,Sujeto):
             'OverWatch_MarkerA': 'labelLSL'
         }
     )
-    # Exportar a CSV
-    export_for_MATLAB = export_for_MATLAB.reset_index()
-    archivo = Sujetos_Dir + Sujeto + "/EEG/" + 'export_for_MATLAB_Sync.csv'
-    export_for_MATLAB.to_csv(archivo, index=False)
+    # Exportar a CSV --> Update --> mejor sacar la exportación ed
+    #export_for_MATLAB = export_for_MATLAB.reset_index()
+    #archivo = Sujetos_Dir + Sujeto + "/EEG/" + 'export_for_MATLAB_Sync.csv'
+    #export_for_MATLAB.to_csv(archivo, index=False)
     return export_for_MATLAB
 
 
 
-def process_xdf_files(files, Sujetos_Dir, Sujeto):
+def process_xdf_files(files):
     """
     Procesa una lista de archivos XDF y extrae información relevante.
 
@@ -458,8 +458,8 @@ def process_xdf_files(files, Sujetos_Dir, Sujeto):
                 markers_a_df = markers_df[markers_df['OverWatch_MarkerA'] != 'NONE']
 
                 # Generar archivo para sincronización
-                sync_df = Exportar_a_MATLAB_Sync(markers_a_df, Sujetos_Dir, Sujeto)
-
+                sync_df = Exportar_a_MATLAB_Sync(markers_a_df)
+                sync_df = sync_df.reset_index()
                 # Limpiar y procesar marcadores
                 success_rate, df = ClearMarkers(markers_a_df)
                 legacy_success_rate, legacy_df = ClearMarkers_LEGACY(markers_a_df)
