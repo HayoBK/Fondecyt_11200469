@@ -4,6 +4,7 @@
 # Script para procesar de Pupil Labs usando Lab Recorder como indice
 # Pero incorporando datos de Fijaciones
 # -----------------------------------------------------------------------
+
 #   Dentro de un directorio export en los directorios de PupilLabs (Hay que hacer el export con Pupil Labs Player
 #   hay:
 #   1) Un archivo "surfaces/fixation_on_surface_Hefestp 1.csv"
