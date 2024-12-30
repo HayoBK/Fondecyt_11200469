@@ -18,15 +18,15 @@ file = Py_Processing_Dir + "C2_SimianMaze_Z3_Resumen_Short_df.csv"
 main_df = pd.read_csv(file)
 
 # Filtrar por modalidad "No Inmersivo"
-main_df_filtered = main_df[main_df['Modalidad'] == "No Inmersivo"].copy()
+#main_df_filtered = main_df[main_df['Modalidad'] == "No Inmersivo"].copy()
 
 # Seleccionar solo las columnas numéricas relevantes para el análisis
-numeric_cols = main_df_filtered.select_dtypes(include=['number']).columns
-columns_to_keep = ['Sujeto', 'Grupo', 'True_Block']
+numeric_cols = main_df.select_dtypes(include=['number']).columns
+columns_to_keep = ['Sujeto', 'Grupo','Modalidad', 'True_Block']
 numeric_cols = [col for col in numeric_cols if col not in columns_to_keep]
 
 # Promediar los True_Trial para cada Sujeto y True_Block
-averaged_df = (main_df_filtered.groupby(columns_to_keep)[numeric_cols]
+averaged_df = (main_df.groupby(columns_to_keep)[numeric_cols]
                .mean()
                .reset_index())
 
@@ -38,48 +38,46 @@ output_vars = ["Entropia_Espacial", "Herror", "Hpath", "Htotal", "Indice_Eficien
 
 # Resultados para tamaños de efecto y estadísticas
 results = []
-
+modalidades =['No Inmersivo', 'Realidad Virtual']
 # Analizar cada variable output
+
+results = {
+    'Mod': [],
+    'Block': [],
+    'Var': [],
+    'P-Value': [],
+    'Effect Size (Eta-Squared)': []
+}
 for var in output_vars:
-    for block in ['HiddenTarget_1', 'HiddenTarget_2', 'HiddenTarget_3']:
-        block_df = filtered_df[filtered_df['True_Block'] == block]
+    for Mod in modalidades:
+        for block in ['HiddenTarget_1', 'HiddenTarget_2', 'HiddenTarget_3']:
+            Mod_df = filtered_df[filtered_df['Modalidad']== Mod]
+            df = Mod_df[Mod_df['True_Block'] == block]
+            print(Mod, block, var)
+            group_means = df.groupby('Grupo')[var].mean()
+            print("Promedios por grupo:")
+            print(group_means)
 
-        # Crear una tabla pivotada para ANOVA
-        pivot_df = block_df.pivot_table(index='Sujeto',
-                                         columns='Grupo',
-                                         values=var,
-                                         aggfunc='mean')
+            # Realizar ANOVA
+            groups = [df[df['Grupo'] == g][var].dropna().values for g in df['Grupo'].unique()]
+            anova_results = f_oneway(*groups)
 
-        # Filtrar valores no nulos
-        #pivot_df = pivot_df.dropna(axis=0, how='any')
-        pivot_df.reset_index(drop=True, inplace=True)
-        #pivot_df = pivot_df.drop(columns=['Grupo'])
+            # Calcular el tamaño del efecto (eta cuadrado parcial)
+            anova_df = pg.anova(data=df, dv=var, between='Grupo')
 
-        print(pivot_df.columns)
+            print("\nResultados del ANOVA:")
+            print(f"F-Value: {anova_results.statistic}")
+            print(f"P-Value: {anova_results.pvalue}")
 
-        if not pivot_df.empty and pivot_df.shape[1] > 1:
-            # ANOVA
-            anova_results = f_oneway(*[pivot_df[col] for col in pivot_df.columns])
+            print("\nTamaño del efecto (eta cuadrado parcial):")
+            print(anova_df['np2'][0])
 
-            # Calcular tamaños de efecto (eta squared)
-            eta_squared = pg.anova(data=block_df, dv=var, between='Grupo')['np2'].iloc[0]
-
-            # Guardar resultados
-            results.append({
-                'Variable': var,
-                'True_Block': block,
-                'F-Value': anova_results.statistic,
-                'p-Value': anova_results.pvalue,
-                'Eta-Squared': eta_squared
-            })
-
-
-# Convertir resultados a DataFrame
+            results['Mod'].append(Mod)
+            results['Block'].append(block)
+            results['Var'].append(var)
+            results['P-Value'].append(anova_results.pvalue)
+            results['Effect Size (Eta-Squared)'].append(anova_df['np2'][0])
 results_df = pd.DataFrame(results)
 
-# Ordenar por tamaño de efecto
-#results_df = results_df.sort_values(by=['Variable', 'True_Block', 'Eta-Squared'], ascending=[True, True, False])
 
-# Mostrar resultados
-print(results_df)
 print("Work's Done!")
