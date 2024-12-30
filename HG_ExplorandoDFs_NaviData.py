@@ -16,7 +16,9 @@ Py_Processing_Dir  = H_Mod.Nombrar_HomePath("002-LUCIEN/Py_INFINITE/")
 
 file = Py_Processing_Dir + "C2_SimianMaze_Z3_Resumen_Short_df.csv"
 main_df = pd.read_csv(file)
-
+main_df = main_df[main_df['Sujeto'] != 'P13']
+main_df = main_df[main_df['Sujeto'] != 'P37']
+main_df = main_df[main_df['Sujeto'] != 'P44']
 # Filtrar por modalidad "No Inmersivo"
 #main_df_filtered = main_df[main_df['Modalidad'] == "No Inmersivo"].copy()
 
