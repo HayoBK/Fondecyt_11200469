@@ -10,22 +10,23 @@ import HA_ModuloArchivos as H_Mod
 import pandas as pd
 import pingouin as pg
 from scipy.stats import f_oneway
+from scipy.stats import kruskal
 
 Py_Processing_Dir  = H_Mod.Nombrar_HomePath("002-LUCIEN/Py_INFINITE/")
-Sujetos_Dir = H_Mod.Nombrar_HomePath("002-LUCIEN/SUJETOS/")
 
-# A_INFINITE_BASAL_DF.xlsx
-# C2_SimianMaze_Z3_Resumen_Short_df
 file = Py_Processing_Dir + "C2_SimianMaze_Z3_Resumen_Short_df.csv"
 main_df = pd.read_csv(file)
-
 
 # Filtrar por modalidad "No Inmersivo"
 main_df_filtered = main_df[main_df['Modalidad'] == "No Inmersivo"].copy()
 
+# Seleccionar solo las columnas numéricas relevantes para el análisis
+numeric_cols = main_df_filtered.select_dtypes(include=['number']).columns
+columns_to_keep = ['Sujeto', 'Grupo', 'True_Block']
+numeric_cols = [col for col in numeric_cols if col not in columns_to_keep]
+
 # Promediar los True_Trial para cada Sujeto y True_Block
-averaged_df = (main_df_filtered
-               .groupby(['Sujeto', 'Grupo', 'True_Block'])
+averaged_df = (main_df_filtered.groupby(columns_to_keep)[numeric_cols]
                .mean()
                .reset_index())
 
@@ -40,37 +41,45 @@ results = []
 
 # Analizar cada variable output
 for var in output_vars:
-    # Crear una tabla pivotada para ANOVA
-    pivot_df = filtered_df.pivot_table(index='Sujeto',
-                                       columns='Grupo',
-                                       values=var,
-                                       aggfunc='mean')
+    for block in ['HiddenTarget_1', 'HiddenTarget_2', 'HiddenTarget_3']:
+        block_df = filtered_df[filtered_df['True_Block'] == block]
 
-    # Filtrar valores no nulos
-    pivot_df = pivot_df.dropna(axis=0, how='any')
+        # Crear una tabla pivotada para ANOVA
+        pivot_df = block_df.pivot_table(index='Sujeto',
+                                         columns='Grupo',
+                                         values=var,
+                                         aggfunc='mean')
 
-    # ANOVA
-    anova_results = f_oneway(*[pivot_df[col] for col in pivot_df.columns])
+        # Filtrar valores no nulos
+        #pivot_df = pivot_df.dropna(axis=0, how='any')
+        pivot_df.reset_index(drop=True, inplace=True)
+        #pivot_df = pivot_df.drop(columns=['Grupo'])
 
-    # Calcular tamaños de efecto (eta squared)
-    eta_squared = pg.anova(data=filtered_df, dv=var, between='Grupo')['np2'][0]
+        print(pivot_df.columns)
 
-    # Guardar resultados
-    results.append({
-        'Variable': var,
-        'F-Value': anova_results.statistic,
-        'p-Value': anova_results.pvalue,
-        'Eta-Squared': eta_squared
-    })
+        if not pivot_df.empty and pivot_df.shape[1] > 1:
+            # ANOVA
+            anova_results = f_oneway(*[pivot_df[col] for col in pivot_df.columns])
+
+            # Calcular tamaños de efecto (eta squared)
+            eta_squared = pg.anova(data=block_df, dv=var, between='Grupo')['np2'].iloc[0]
+
+            # Guardar resultados
+            results.append({
+                'Variable': var,
+                'True_Block': block,
+                'F-Value': anova_results.statistic,
+                'p-Value': anova_results.pvalue,
+                'Eta-Squared': eta_squared
+            })
+
 
 # Convertir resultados a DataFrame
 results_df = pd.DataFrame(results)
 
 # Ordenar por tamaño de efecto
-results_df = results_df.sort_values(by='Eta-Squared', ascending=False)
+#results_df = results_df.sort_values(by=['Variable', 'True_Block', 'Eta-Squared'], ascending=[True, True, False])
 
 # Mostrar resultados
 print(results_df)
-
-
-print(" Work's Done! ")
+print("Work's Done!")
