@@ -108,7 +108,7 @@ for sujeto in df_filtered["Sujeto"].unique():
 
                 # Identificar outliers basado en Z-scores
                 df_mod_block[f"zscore_{var}"] = zscore(df_mod_block[var].dropna())
-                df_outliers = df_mod_block[df_mod_block[f"zscore_{var}"].abs() > 3]
+                df_outliers = df_mod_block[df_mod_block[f"zscore_{var}"].abs() > 1.28]
 
                 with open(result_txt, "a") as f:
                     if not df_outliers.empty:
