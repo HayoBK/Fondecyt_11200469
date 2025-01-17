@@ -57,7 +57,7 @@ for sujeto in df_filtered["Sujeto"].unique():
                                                       (promedios_grupo["True_Block"] == block)]
                 if df_mod_block.empty or promedios_mod_block.empty:
                     continue
-
+                """
                 # Crear gráfico de barras con barras de error
                 plt.figure(figsize=(10, 6))
                 promedios_mod_block[f"{var}_std"] = (
@@ -96,7 +96,7 @@ for sujeto in df_filtered["Sujeto"].unique():
                 plt.legend(title="Categoría")
                 plt.savefig(os.path.join(var_dir, f"{modalidad}_{block}.png"))
                 plt.close()
-
+                """
                 # Crear archivo .txt con resultados
                 result_txt = os.path.join(var_dir, f"{modalidad}_{block}.txt")
                 with open(result_txt, "w") as f:
@@ -108,7 +108,7 @@ for sujeto in df_filtered["Sujeto"].unique():
 
                 # Identificar outliers basado en Z-scores
                 df_mod_block[f"zscore_{var}"] = zscore(df_mod_block[var].dropna())
-                df_outliers = df_mod_block[df_mod_block[f"zscore_{var}"].abs() > 2]
+                df_outliers = df_mod_block[df_mod_block[f"zscore_{var}"].abs() > 2]  # (Equivalente al 98%)
 
                 with open(result_txt, "a") as f:
                     if not df_outliers.empty:
@@ -133,4 +133,14 @@ df_detalles_outliers = pd.DataFrame(detalles_outliers)
 outliers_file = os.path.join(output_dir, "H1_outliers_identificados.csv")
 df_detalles_outliers.to_csv(outliers_file, index=False)
 
+# Filtrar el DataFrame original para eliminar los outliers
+outlier_ids = df_detalles_outliers["Trial_Unique_ID"].unique()
+df_no_outliers = df[~df["Trial_Unique_ID"].isin(outlier_ids)]
+
+# Guardar el DataFrame filtrado
+filtered_file = os.path.join(Py_Processing_Dir, "H_SimianMaze_ShortDf_NoOutliers.csv")
+df_no_outliers.to_csv(filtered_file, index=False)
+
 print("Outliers identificados guardados en:", outliers_file)
+print("DataFrame sin outliers guardado en:", filtered_file)
+
