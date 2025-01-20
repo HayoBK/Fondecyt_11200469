@@ -168,8 +168,8 @@ print("\nVariables ordenadas por mayor diferencia en tamaño del efecto entre gr
 print(effect_diff_sorted)
 
 # Guardar los resultados
-comparison_file = os.path.join(Py_Processing_Dir, "H_SimianMaze_ComparisonResults_ByGroup.csv")
-effect_diff_file = os.path.join(Py_Processing_Dir, "H_SimianMaze_EffectSizeDifferences_ByGroup.csv")
+comparison_file = os.path.join(Output_Dir, "H_SimianMaze_ComparisonResults_ByGroup.csv")
+effect_diff_file = os.path.join(Output_Dir, "H_SimianMaze_EffectSizeDifferences_ByGroup.csv")
 comparison_df.to_csv(comparison_file, index=False)
 effect_diff_sorted.to_csv(effect_diff_file, index=False)
 
@@ -183,6 +183,8 @@ for _, row in hpath_results.iterrows():
     print(f"Grupo: {row['Grupo']}, Modalidad: {row['Modalidad']}, T-Statistic: {row['T-Statistic']:.2f}, "
           f"p-Value: {row['p-Value']:.4f}, Cohen's d: {row['Cohens d']:.4f}")
 
-hpath_report_file = os.path.join(Py_Processing_Dir, "H_SimianMaze_Hpath_Report.csv")
+hpath_report_file = os.path.join(Output_Dir, "H_SimianMaze_Hpath_Report.csv")
 hpath_results.to_csv(hpath_report_file, index=False)
 print(f"Reporte detallado de Hpath guardado en: {hpath_report_file}")
+
+print ('Work is Done')
