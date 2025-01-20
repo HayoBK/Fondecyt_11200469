@@ -26,9 +26,8 @@
 #%%
 
 import HA_ModuloArchivos as H_Mod
-import pyxdf
 import pandas as pd
-import numpy as np
+
 
 Py_Processing_Dir  = H_Mod.Nombrar_HomePath("002-LUCIEN/Py_INFINITE/")
 Sujetos_Dir = H_Mod.Nombrar_HomePath("002-LUCIEN/SUJETOS/")

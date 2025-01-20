@@ -136,7 +136,7 @@ def Grab_LabRecorderFile(Modalidad,mi_path):
                 # Verificar si hubo mensajes de corrupción
                 stderr_output = stderr_capture.getvalue()
                 if "likely XDF file corruption" in stderr_output:
-                    e = stderr_capture + ' en ' + mi_path
+                    e = str(stderr_capture) + ' en ' + mi_path
                     exito.append(e)
                     raise ValueError(f"Archivo corrupto detectado por stderr: {stderr_output.strip()}")
 

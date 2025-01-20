@@ -15,6 +15,7 @@ from scipy.stats import ttest_ind, zscore
 
 
 Py_Processing_Dir = H_Mod.Nombrar_HomePath("002-LUCIEN/Py_INFINITE/")
+Output_Dir = H_Mod.Nombrar_HomePath("002-LUCIEN/Py_INFINITE/HI_CompAloEgo/")
 file = os.path.join(Py_Processing_Dir, "H_SimianMaze_ShortDf_NoOutliers.csv")
 df = pd.read_csv(file)
 
@@ -105,7 +106,7 @@ for var in ["CSE_norm", "Htotal_norm", "Hpath", "Path_length"]:
     plt.xlabel("Grupo")
     plt.ylabel(var)
     plt.legend(title="Bloque de Interés")
-    plot_file = os.path.join(Py_Processing_Dir, f"Boxplot_{var}.png")
+    plot_file = os.path.join(Output_Dir, f"Boxplot_{var}.png")
     plt.savefig(plot_file)
     plt.show()
     print(f"Gráfico guardado en: {plot_file}")
