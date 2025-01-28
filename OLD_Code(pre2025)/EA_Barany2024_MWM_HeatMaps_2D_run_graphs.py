@@ -18,42 +18,15 @@ import socket
 from tqdm import tqdm
 import time
 from pathlib import Path
-
+import HA_ModuloArchivos as H_Mod
 # ------------------------------------------------------------
 #Identificar primero en que computador estamos trabajando
 #-------------------------------------------------------------
-print('H-Identifiquemos compu... ')
-nombre_host = socket.gethostname()
-print(nombre_host)
 
-if nombre_host == 'DESKTOP-PQ9KP6K':
-    home="D:/Mumin_UCh_OneDrive"
-    home_path = Path("D:/Mumin_UCh_OneDrive")
-    base_path= home_path / "OneDrive/2-Casper/00-CurrentResearch/001-FONDECYT_11200469/002-LUCIEN/SUJETOS"
-    Py_Processing_Dir = home + "/OneDrive/2-Casper/00-CurrentResearch/001-FONDECYT_11200469/002-LUCIEN/Py_Processing/"
 
-if nombre_host == 'MSI':
-    home="D:/Titan-OneDrive"
-    home_path = Path("D:/Titan-OneDrive")
-    base_path= home_path / "OneDrive/2-Casper/00-CurrentResearch/001-FONDECYT_11200469/002-LUCIEN/SUJETOS"
-    Py_Processing_Dir = home + "/OneDrive/2-Casper/00-CurrentResearch/001-FONDECYT_11200469/002-LUCIEN/Py_Processing/"
-    Output_Dir = home + "/OneDrive/2-Casper/00-CurrentResearch/001-FONDECYT_11200469/002-LUCIEN/Outputs/Barany2024/"
-    # Directorios version 2024 Agosto 22
-    Py_Processing_Dir = home + "/OneDrive/2-Casper/00-CurrentResearch/001-FONDECYT_11200469/002-LUCIEN/PyPro_traveling_2/Py_Processing/"
-    Output_Dir = home + "/OneDrive/2-Casper/00-CurrentResearch/001-FONDECYT_11200469/002-LUCIEN/PyPro_traveling_2/Outputs/Barany2024/"
+Py_Processing_Dir = H_Mod.Nombrar_HomePath("002-LUCIEN/Py_Legacy/")
+Output_Dir = H_Mod.Nombrar_HomePath("006-Writing/09 - PAPER FONDECYT 2/Py_Output/Figuras 4-5/")
 
-if nombre_host == 'DESKTOP-PQ9KP6K':  #Remake por situaci´ón de emergencia de internet
-    home="D:/Mumin_UCh_OneDrive"
-    home_path = Path("D:/Mumin_UCh_OneDrive")
-    base_path= home_path / "OneDrive/2-Casper/00-CurrentResearch/001-FONDECYT_11200469/002-LUCIEN/SUJETOS"
-    Py_Processing_Dir = home + "/OneDrive/2-Casper/00-CurrentResearch/001-FONDECYT_11200469/002-LUCIEN/PyPro_traveling/Py_Processing/"
-    Output_Dir = home + "/OneDrive/2-Casper/00-CurrentResearch/001-FONDECYT_11200469/002-LUCIEN/PyPro_traveling/Outputs/Barany2024/"
-
-if nombre_host == 'Hayos-MacBook-Pro.local':
-    home = str(Path.home())
-    Py_Processing_Dir = home + "/Py_Adventure/PyPro_traveling_3/Py_Processing/"
-    Output_Dir = home + "/Py_Adventure/PyPro_traveling_3/Outputs/Barany2024_Air/"
-print('Compu identificado.')
 
 df = pd.read_csv((Py_Processing_Dir+'EA_MWM_Position_withMV_2D.csv'), low_memory=False, index_col=0)
 df= df.reset_index(drop=True)
@@ -63,8 +36,8 @@ def remove_extreme_timestamps(group):
     group = group.sort_values(by='P_timeMilliseconds')
 
     # Calculate the indices for the 20% and 80% thresholds
-    lower_index = int(len(group) * 0.15)
-    upper_index = int(len(group) * 0.9999)
+    lower_index = int(len(group) * 0.0001)
+    upper_index = int(len(group) * 0.999)
 
     # Keep only the middle 60% of the data
     return group.iloc[lower_index:upper_index]
@@ -104,11 +77,11 @@ def MapaDeCalor(dat, Mod, Bloc, Grupo, Titulo):
         plt.tight_layout()
 
 
-        file_name = f"{Output_Dir}MWM_Heat_Maps_2D/{Mod}/{Bloc}/{Grupo}_Navi_MAP.png"
+        file_name = f"{Output_Dir}F{Mod}_{Bloc}_{Grupo}_Navi_MAP.png"
         plt.savefig(file_name)
 
         plt.clf()
-        print('Mapa de Calor ' + Title + ' Listo')
+        print('Mapa de Calor ' + file_name + ' Listo')
 
 # Heat Maps!
 
@@ -116,6 +89,12 @@ categorias_ordenadas = ['PPPD', 'Vestibular Migraine', 'Vestibular (non PPPD)', 
 Group_List = categorias_ordenadas
 Mod_List=['No Inmersivo','Realidad Virtual']
 Block_List = ['HiddenTarget_1','HiddenTarget_2','HiddenTarget_3']
+
+categorias_ordenadas = ['PPPD', 'Vestibular (non PPPD)', 'Healthy Volunteer']
+Group_List = categorias_ordenadas
+Mod_List=['Realidad Virtual']
+Block_List = ['HiddenTarget_3']
+
 
 for B in Block_List:
     for M in Mod_List:

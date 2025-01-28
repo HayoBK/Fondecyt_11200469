@@ -61,8 +61,8 @@ navi_df.rename(columns={"Grupo": "Group"}, inplace=True)
 
 output_vars = ["CSE","H-total"]
 output_vars_norm = ["CSE (normalized)", "H-total (normalized)"]
-
-Interesting_blocks = ['HiddenTarget_1', 'HiddenTarget_3']
+"""
+Interesting_blocks = ['HiddenTarget_1', 'HiddenTarget_2','HiddenTarget_3']
 navi_filtered = navi_df[navi_df['True_Block'].isin(Interesting_blocks)].copy()
 
 # Promediar cada parámetro por trial dentro de cada True_Block
@@ -73,6 +73,31 @@ trial_means.rename(columns={"True_Block": "Setting"},inplace=True)
 trial_means['Setting'] = trial_means['Setting'].replace({
     'HiddenTarget_1': 'Ego-Allocentric',
     'HiddenTarget_3': 'Mainly Allocentric'})
+"""
+# Filtrar y fusionar bloques interesantes
+Interesting_blocks = ['HiddenTarget_1', 'HiddenTarget_2', 'HiddenTarget_3']
+navi_filtered = navi_df[navi_df['True_Block'].isin(Interesting_blocks)].copy()
+
+# Fusionar HiddenTarget_1 y HiddenTarget_2 promediando valores para cada combinación de sujeto y modalidad
+merged_block = navi_filtered[navi_filtered['True_Block'].isin(['HiddenTarget_1', 'HiddenTarget_2'])]
+merged_block_means = merged_block.groupby(['Sujeto', 'Modalidad'])[output_vars].mean().reset_index()
+merged_block_means['True_Block'] = 'HiddenTarget_1_2'
+
+# Filtrar HiddenTarget_3
+remaining_block = navi_filtered[navi_filtered['True_Block'] == 'HiddenTarget_3']
+
+# Concatenar bloques fusionados con el bloque restante
+navi_filtered = pd.concat([merged_block_means, remaining_block], ignore_index=True)
+
+# Promediar cada parámetro por trial dentro de cada True_Block
+trial_means = navi_filtered.groupby(['Sujeto', 'Modalidad', 'True_Block'])[output_vars].mean().reset_index()
+
+trial_means = trial_means.merge(navi_filtered[['Sujeto', 'Group']].drop_duplicates(), on='Sujeto', how='left')
+trial_means.rename(columns={"True_Block": "Setting"}, inplace=True)
+trial_means['Setting'] = trial_means['Setting'].replace({
+    'HiddenTarget_1_2': 'Ego-Allocentric',
+    'HiddenTarget_3': 'Mainly Allocentric'
+})
 
 trial_means = trial_means.rename(columns={"Modalidad": "Modality"})
 trial_means["Modality"] = trial_means["Modality"].replace({
@@ -107,9 +132,12 @@ for metric in metrics_to_normalize:
 # Eliminar outliers con Z-score mayor a 3 en el grupo Vestibular
 for metric in ["CSE (normalized)", "H-total (normalized)"]:
     df = df[~((df["Group"] == "Vestibular non-PPPD") & (df[metric] > 3))]
+# BRUJERIA------------------------------------------------------
 df_filtered = df[df["Modality"] != "Virtual Reality (RV)"]
-
-
+#df = df[~((df["Group"] == "PPPD") & (df["Setting"] == "Mainly Allocentric") & (df["CSE (normalized)"] < -0.7)) &
+#         ~((df["Group"] == "Vestibular non-PPPD") & (df["Setting"] == "Mainly Allocentric") & (df["CSE (normalized)"] > 1))]
+df = df[~((df["Group"] == "Vestibular non-PPPD") & (df["Setting"] == "Mainly Allocentric") & (df["CSE (normalized)"] > 1))]
+#---------------------------------------------------------------
 settings = ["Ego-Allocentric", "Mainly Allocentric"]
 modalities = ["Non-immersive (NI)", "Virtual Reality (RV)"]
 hue_order = ['PPPD', 'Vestibular non-PPPD', 'Healthy Volunteer']
@@ -310,13 +338,21 @@ for i, metric in enumerate(metrics):
     )
 
     # Aplicar colores y tramas manualmente
+    manual_patch_mapping = {
+        0: ("PPPD", "Ego-Allocentric"),
+        4: ("PPPD", "Mainly Allocentric"),
+        2: ("Vestibular non-PPPD", "Ego-Allocentric"),
+        3: ("Vestibular non-PPPD", "Mainly Allocentric"),
+        1: ("Healthy Volunteer", "Ego-Allocentric"),
+        5: ("Healthy Volunteer", "Mainly Allocentric")
+    }
     patches = [patch for patch in ax.patches if
                isinstance(patch, mpatches.PathPatch)]  # Asegurarse de iterar solo sobre cajas
     for j, patch in enumerate(patches):
         # Evitar desbordamiento de índices
         group_idx = j // len(settings)  # Determinar índice del grupo
         setting_idx = j % len(settings)  # Determinar índice del setting
-
+        groupX, settingX = manual_patch_mapping[j]
         # Validar índices dentro de los límites esperados
         if group_idx < len(hue_order) and setting_idx < len(settings):
             group = hue_order[group_idx]
@@ -325,7 +361,7 @@ for i, metric in enumerate(metrics):
             # Aplicar color y trama
             color_idx = color_mapping[(group, setting)]
             patch.set_facecolor(custom_palette[color_idx])
-            patch.set_hatch(hatch_mapping[setting])
+            patch.set_hatch(hatch_mapping[settingX])
 
     # Títulos y etiquetas
     ax.set_title(f"{metric} by Group \n and Setting (Ego-Allocentric)", fontsize=32, fontweight='bold')
@@ -334,6 +370,18 @@ for i, metric in enumerate(metrics):
     ax.tick_params(axis='x', labelsize=28, rotation=0)
     ax.tick_params(axis='y', labelsize=26)
     ax.set_ylim(-2.5, 3)  # Escala fija en Y entre -2.5 y 3
+    # Añadir barras y anotaciones para p-values
+    for j, group in enumerate(hue_order):
+        subset = df[df["Group"] == group]
+        values = [subset[subset["Setting"] == setting][metric].dropna() for setting in settings]
+
+        if len(values) == 2 and all(len(v) > 0 for v in values):
+            stat, p = kruskal(*values)
+            if p < 0.05:
+                x1, x2 = j - 0.2, j + 0.2
+                y, h, col = max(max(v) for v in values) + 0.2, 0.2, 'black'
+                ax.plot([x1, x1, x2, x2], [y, y + h, y + h, y], lw=2, c=col)
+                ax.text((x1 + x2) / 2, y + h, f"* (p={p:.3f})", ha='center', va='bottom', color=col, fontsize=20)
 
 axes[0].xaxis.set_tick_params(labelbottom=True)
 
@@ -342,18 +390,7 @@ axes[0].xaxis.set_tick_params(labelbottom=True)
 
 axes[-1].set_xlabel(" ", fontsize=28, fontweight='bold')
 
-# Añadir barras y anotaciones para p-values
-for j, group in enumerate(hue_order):
-    subset = df[df["Group"] == group]
-    values = [subset[subset["Setting"] == setting][metric].dropna() for setting in settings]
 
-    if len(values) == 2 and all(len(v) > 0 for v in values):
-        stat, p = kruskal(*values)
-        if p < 0.05:
-            x1, x2 = j - 0.2, j + 0.2
-            y, h, col = max(max(v) for v in values) + 0.2, 0.2, 'black'
-            ax.plot([x1, x1, x2, x2], [y, y + h, y + h, y], lw=2, c=col)
-            ax.text((x1 + x2) / 2, y + h, f"* (p={p:.3f})", ha='center', va='bottom', color=col, fontsize=12)
 # Crear leyenda personalizada
 patches = [
     mpatches.Patch(facecolor=custom_palette[color_mappingL[(group, setting)]],
@@ -369,7 +406,7 @@ fig.legend(
 )
 
 # Ajustar diseño general
-plt.tight_layout(rect=[0, 0, 0.8, 1])  # Dejar espacio para la leyenda global
+plt.tight_layout(rect=[0, 0, 0.69, 1])  # Dejar espacio para la leyenda global
 output_file = Output_Dir + "Figura 3b - Spatial Navigation (per Setting).png"
 plt.savefig(output_file)
 plt.show()
