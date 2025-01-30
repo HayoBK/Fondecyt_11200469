@@ -110,10 +110,22 @@ hue_order = ['PPPD', 'Vestibular non-PPPD', 'Healthy Volunteer']
 settings = ['Ego-Allocentric', 'Mainly Allocentric']
 
 # Paleta de colores personalizada
-custom_palette = [
+custom_palette_old = [
     "#ADD8E6", "#92BCD1",  # Light Blue, Darker Blue
     "#FFA07A", "#E08A6D",  # Light Salmon, Darker Salmon
     "#98FB98", "#82D782"  # Light Green, Darker Green
+]
+
+custom_palette = [
+    "#4682B4", "#1E6091",  # Steel Blue, Darker Blue
+    "#FF6347", "#CC4F3A",  # Tomato Red, Darker Red
+    "#32CD32", "#249624"   # Lime Green, Darker Green
+]
+
+custom_palette_2 = [
+    "#6495ED", "#4169E1",  # Cornflower Blue, Royal Blue
+    "#FF4500", "#C83700",  # Orange Red, Darker Orange Red
+    "#3CB371", "#2E8B57"   # Medium Sea Green, Darker Sea Green
 ]
 
 # Mapeo manual de colores y tramas
@@ -231,3 +243,7 @@ plt.tight_layout(rect=[0, 0, 0.6, 1])
 output_file = Output_Dir + "Figura 6.png"
 plt.savefig(output_file)
 plt.show()
+
+Py_Processing_Dir = H_Mod.Nombrar_HomePath("002-LUCIEN/Py_INFINITE/")
+file_path = Py_Processing_Dir + "Paper2_df.csv"
+df.to_csv(file_path, index=False)

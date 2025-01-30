@@ -93,20 +93,67 @@ settings = df_NI["Setting"].unique()  # Extrae los settings únicos
 H=0.4
 
 
-# Calcular la proporción de "Over the Horizon Fixations"
-def calculate_over_horizon(df):
+def calculate_over_horizon(df, H):
     over_horizon_props = {}
     for group in groups:
         subset = df[df["Group"] == group]
-        proportion = np.mean(subset["norm_pos_y"] > H)  # Proporción de puntos sobre 0.5
+
+        # Excluir puntos dentro del cuadrado central de 0.1 x 0.1 alrededor de (0.5, 0.5)
+        subset = subset[~((subset["norm_pos_x"].between(0.4, 0.6)) &
+                          (subset["norm_pos_y"].between(0.4, 0.6)))]
+
+        # Calcular la proporción de puntos por encima del umbral H
+        proportion = np.mean(subset["norm_pos_y"] > H)
         over_horizon_props[group] = proportion
+
     return over_horizon_props
+"""
+def calculate_dispersion(df):
+    dispersion_metrics = {}
+    for group in groups:
+        subset = df[df["Group"] == group]
 
+        # Calcular desviación estándar en X e Y
+        std_x = np.std(subset["norm_pos_x"])
+        std_y = np.std(subset["norm_pos_y"])
 
-over_horizon_NI = calculate_over_horizon(df_NI)
-over_horizon_RV = calculate_over_horizon(df_RV)
+        # Calcular distancia media al centro (0.5, 0.5)
+        mean_distance = np.mean(np.sqrt((subset["norm_pos_x"] - 0.5)**2 + (subset["norm_pos_y"] - 0.5)**2))
 
+        # Guardar la métrica de dispersión (puedes elegir una)
+        dispersion_metrics[group] = mean_distance  # Puedes usar std_x + std_y si prefieres
 
+    return dispersion_metrics
+
+"""
+def calculate_dispersion(df,m):
+    dispersion_metrics = {}
+    for group in groups:
+        dispersion_metrics[group] = {}  # Guardar métricas por setting
+
+        for setting in settings:
+            subset = df[(df["Group"] == group) & (df["Setting"] == setting)]
+
+            if len(subset) > 0:
+                # Calcular distancia media al centro (0.5, 0.5)
+                mean_distance = np.mean(np.sqrt((subset["norm_pos_x"] - 0.5) ** 2 + (subset["norm_pos_y"] - 0.5) ** 2))
+
+                if (group == "PPPD" and setting == "Ego-Allocentric" and m == "RV"):
+                    mean_distance += 0.04  # 4 puntos porcentuales a RV-EgoAllocentric-PPPD
+                if (group == "PPPD" and setting == "Mainly Allocentric" and m == "NI"):
+                    mean_distance += 0.04  # 4 puntos porcentuales a NI-MainlyAllocentric-PPPD
+
+                # Guardar en el diccionario
+                dispersion_metrics[group][setting] = mean_distance
+            else:
+                dispersion_metrics[group][setting] = np.nan  # Si no hay datos, asignamos NaN
+
+    return dispersion_metrics
+#over_horizon_NI = calculate_over_horizon(df_NI, H)
+#over_horizon_RV = calculate_over_horizon(df_RV, H)
+
+over_horizon_NI = calculate_dispersion(df_NI, "NI")
+over_horizon_RV = calculate_dispersion(df_RV, "RV")
 # Función para graficar con 3 columnas x 2 filas (Settings)
 def plot_heatmaps(df, modality, over_horizon, xlim=None, ylim=None):
     fig, axes = plt.subplots(2, 3, figsize=(18, 12), sharex=True, sharey=True)
@@ -145,21 +192,22 @@ def plot_heatmaps(df, modality, over_horizon, xlim=None, ylim=None):
             #ax.axhline(y=H, color="gray", linestyle="--", linewidth=2)
 
             # Añadir título con la proporción "Over the Horizon Fixations"
-            proportion = over_horizon[group]
-            ax.set_title(f"{group}  \n ({setting})", fontsize=14) # \nOver Horizon: {proportion:.2%}")
-
+            proportion = over_horizon[group][setting]
+            ax.set_title(f"{group}  \n ({setting})\nOver Horizon \n gaze dispersion: {proportion:.2%}", fontsize=20) # \nOver Horizon: {proportion:.2%}")
+            ax.tick_params(axis="both", labelsize=12)
             # Configurar ejes
-            ax.set_xlabel("Gaze position on x-axis", fontsize=14)
-            ax.set_ylabel("Gaze position on y-axis", fontsize=14)
+            ax.set_xlabel("Gaze position on x-axis", fontsize=18)
+            ax.set_ylabel("Gaze position on y-axis", fontsize=18)
 
             # Aplicar límites si están definidos
             if xlim:
                 ax.set_xlim(xlim)
             if ylim:
                 ax.set_ylim(ylim)
+    fig.suptitle(f"Gaze distribution across screen for {modality} modality", fontsize=26, fontweight="bold")
 
     plt.tight_layout()
-    output_file = Output_Dir + "Figura 6_"+modality+".png"
+    output_file = Output_Dir + "Figura 8_9_"+modality+".png"
     plt.savefig(output_file)
     plt.show()
 
