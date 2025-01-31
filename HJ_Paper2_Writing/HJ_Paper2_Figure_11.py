@@ -19,6 +19,8 @@ from tqdm import tqdm
 import time
 from pathlib import Path
 import HA_ModuloArchivos as H_Mod
+import scipy.stats as stats
+from scikit_posthocs import posthoc_dunn
 
 # ------------------------------------------------------------
 #Identificar primero en que computador estamos trabajando
@@ -39,6 +41,8 @@ df = df[df["Categoria"] != "Vestibular Migraine"]
 categorias_ordenadas = ['PPPD', 'Vestibular (non PPPD)', 'Healthy Volunteer']
 Ejes = ['vRoll_normalizada_por_Bloque','vYaw_normalizada_por_Bloque','vPitch_normalizada_por_Bloque','AngMagnitud_normalizada_por_Bloque']
 
+
+
 color_mapping = {
     'PPPD': "#56B4E9",
     'Vestibular (non PPPD)': "#E66100" ,
@@ -52,6 +56,7 @@ for Bl in Bloques_de_Interes:
         data=df
     print(f"Generando Grafico para {Bl[0]}")
     for idx, Ex in enumerate(Ejes):
+
         fig, ax = plt.subplots(figsize=(10, 8))
         custom_palette = [color_mapping[cat] for cat in categorias_ordenadas]
         ax = sns.boxplot(data=data, x='Categoria', y=Ex, linewidth=6, order=categorias_ordenadas, palette=custom_palette)
@@ -80,6 +85,23 @@ data = df.groupby(['4X-Code', 'Categoria']).agg({'AngMagnitud_normalizada_por_Bl
 data.columns = ['4X-Code', 'Categoria', 'Ang']
 fig, ax = plt.subplots(figsize=(10, 8))
 
+
+# PRUEBA DE KRUSKAL-WALLIS
+kruskal_result = stats.kruskal(
+    data[data['Categoria'] == 'PPPD']['Ang'],
+    data[data['Categoria'] == 'Vestibular (non PPPD)']['Ang'],
+    data[data['Categoria'] == 'Healthy Volunteer']['Ang']
+)
+
+print(f"Kruskal-Wallis Result: H = {kruskal_result.statistic:.3f}, p = {kruskal_result.pvalue:.4f}")
+
+# PRUEBA POST-HOC DE DUNN CON CORRECCIÓN DE BONFERRONI SI KRUSKAL ES SIGNIFICATIVA
+dunn_result = None
+if kruskal_result.pvalue < 0.05:
+    dunn_result = posthoc_dunn(data, val_col='Ang', group_col='Categoria', p_adjust='bonferroni')
+    print(dunn_result)
+
+
 custom_palette = [color_mapping[cat] for cat in categorias_ordenadas]
 ax = sns.boxplot(data=data, x='Categoria', y='Ang', linewidth=6, order=categorias_ordenadas, palette=custom_palette)
 sns.stripplot(data=data, x='Categoria', y='Ang', jitter=True, color='black', size=10, ax=ax, order=categorias_ordenadas)
@@ -97,6 +119,26 @@ ax.set_xlabel("Group", fontsize=18, weight='bold', color='black')
 ax.set(ylim=(0, 50))
 if idx == 3:
     ax.set(ylim=(0, 100))
+
+
+# AGREGAR SIGNIFICANCIA ESTADÍSTICA
+if dunn_result is not None:
+    y_max = data['Ang'].max()
+    increment = y_max * 0.08
+
+    for i, grupo1 in enumerate(categorias_ordenadas):
+        for j, grupo2 in enumerate(categorias_ordenadas):
+            if i < j:  # Evitar comparaciones duplicadas
+                p_val = dunn_result.loc[grupo1, grupo2]
+                if p_val < 0.05:  # Solo si es significativo
+                    x1 = categorias_ordenadas.index(grupo1)
+                    x2 = categorias_ordenadas.index(grupo2)
+                    y = y_max + (i + 1) * increment
+                    ax.plot([x1, x1, x2, x2], [y, y + 2, y + 2, y], color='black', lw=2)
+                    ax.text((x1 + x2) / 2, y + 3, f"* (p={p_val:.3f})", ha='center', va='bottom', fontsize=14, color='black', fontweight='bold')
+
+
+
 Title = f"Head Kinematics: Total head movement (angular)"
 ax.set_title(Title, fontsize=18, weight='bold', color='black')
 # Determine the y position for the line and annotation

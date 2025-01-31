@@ -15,7 +15,7 @@ Output_Dir = H_Mod.Nombrar_HomePath("006-Writing/09 - PAPER FONDECYT 2/Py_Output
 file_path = Py_Processing_Dir + "DA_Gaze_2D_reducido_All_HT.csv"
 GazeNI_df = pd.read_csv(file_path)
 
-file_path = Py_Processing_Dir + "DA_Gaze_2D_reducido_All_HT.csv"
+file_path = Py_Processing_Dir + "DA_Gaze_RV_reducido_All_HT.csv"
 GazeRV_df = pd.read_csv(file_path)
 
 
@@ -114,7 +114,10 @@ for i, modality in enumerate(modalities):
         ax=ax
     )
     ax.tick_params(axis='x', labelsize=18, rotation=0)
-    ax.set_ylim(0, 80)  # Ajustar rango Y según los datos
+    if modality == "Non-immersive (NI)":
+        ax.set_ylim(0, 80)  # Ajustar rango Y según los datos
+    else:
+        ax.set_ylim(0, 500)
     ax.set_ylabel("Gaze scanned path", fontsize=16)
     ax.set_xlabel("Group", fontsize=16)
     ax.set_title(f"{modality}", fontsize=20)
@@ -185,6 +188,8 @@ plt.show()
 group_order = ["PPPD", "Vestibular non PPPD", "Healthy Volunteer"]
 palette = ["#6495ED", "#FF4500", "#3CB371"]  # Azul, Naranja, Verde
 
+Gaze_df = Gaze_df[(Gaze_df['Modality'] == 'Non-immersive (NI)') ]
+
 # Crear la figura
 fig, ax = plt.subplots(figsize=(8, 6))
 
@@ -199,6 +204,10 @@ sns.scatterplot(
     alpha=0.7,
     ax=ax
 )
+
+r, p = stats.spearmanr(Gaze_df["CSE"], Gaze_df["Scanned_Path_per_time_per_Block"], nan_policy='omit')
+correlation_results= (r, p)
+print('result', r, p)
 
 # Agregar líneas de regresión separadas por grupo y calcular correlaciones
 correlation_results = {}
@@ -237,7 +246,7 @@ text_y = ax.get_ylim()[1] - (ax.get_ylim()[1] - ax.get_ylim()[0]) * 0.1  # Ajust
 correlation_text = "\n".join([
     f"{group}: r = {r:.2f}, p = {p:.3f}" for group, (r, p) in correlation_results.items()
 ])
-#ax.text(text_x, text_y, correlation_text, fontsize=14, bbox=dict(facecolor='white', alpha=0.5))
+ax.text(text_x, text_y, correlation_text, fontsize=14, bbox=dict(facecolor='white', alpha=0.5))
 
 # Ajustar diseño y guardar la figura
 plt.tight_layout()
