@@ -57,6 +57,8 @@ output_vars_norm = ["Path_length_norm", "Efficiency Index_norm", "Latency_norm",
 # -----------------------------------------------------------------------
 # FIGURA 1
 # -----------------------------------------------------------------------
+#navi_df = navi_df[navi_df['Sujeto'].str.extract('(\d+)', expand=False).astype(int) >= 30]
+
 # Filtrar datos para solo analizar bloques interesantes
 Interesting_blocks = ['HiddenTarget_1', 'HiddenTarget_3']
 navi_filtered = navi_df[navi_df['True_Block'].isin(Interesting_blocks)].copy()
