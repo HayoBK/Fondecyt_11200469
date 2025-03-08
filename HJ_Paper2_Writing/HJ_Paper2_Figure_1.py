@@ -51,6 +51,7 @@ navi_df['Grupo'] = navi_df['Grupo'].replace({
 
 navi_df.rename(columns={"Grupo": "Group"}, inplace=True)
 
+
 output_vars = ["Path_length", "Efficiency Index", "Latency", "CSE", "H-error", "H-path", "H-total"]
 output_vars_norm = ["Path_length_norm", "Efficiency Index_norm", "Latency_norm", "CSE_norm", "H-error_norm",
                     "H-path_norm", "H-total_norm"]
