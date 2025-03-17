@@ -199,7 +199,8 @@ for i, var in enumerate(output_vars):
         ax.set_title(f"{var}", fontsize=32, fontweight='bold')
         ax.set_xlabel(" ")
         ax.set_ylabel(y_labels.get(var, var), weight='bold')
-
+        if var =='Efficiency Index':
+            ax.set_ylim(0.2,1.5)
         stat, p_value = stat_p_values[var]
         annotation_text = f"H = {stat:.2f}, p = {p_value:.3f}"
         ax.text(0.95, 0.97, annotation_text, transform=ax.transAxes, fontsize=20,

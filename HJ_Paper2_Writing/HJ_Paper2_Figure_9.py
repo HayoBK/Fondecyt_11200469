@@ -253,3 +253,81 @@ plt.tight_layout()
 output_file = Output_Dir + "Figura 10.png"
 plt.savefig(output_file)
 plt.show()
+
+# Definir el orden de los grupos y la paleta de colores
+group_order = ["PPPD", "Vestibular non PPPD", "Healthy Volunteer"]
+palette = ["#6495ED", "#FF4500", "#3CB371"]  # Azul, Naranja, Verde
+
+Gaze_df = Gaze_df[(Gaze_df['Modality'] == 'Non-immersive (NI)')]
+
+# Crear la figura
+fig, ax = plt.subplots(figsize=(8, 6))
+
+# Gráfico de dispersión
+sns.scatterplot(
+    data=Gaze_df,
+    x="CSE",
+    y="Scanned_Path_per_time_per_Block",
+    hue="Group",
+    hue_order=group_order,
+    palette=palette,
+    alpha=0.7,
+    ax=ax
+)
+
+r_spearman, p_spearman = stats.spearmanr(Gaze_df["CSE"], Gaze_df["Scanned_Path_per_time_per_Block"], nan_policy='omit')
+print(f"Spearman's rho (all data): r = {r_spearman:.2f}, p = {p_spearman:.3f}")
+
+# Agregar líneas de regresión separadas por grupo y calcular correlaciones
+correlation_results = {}
+for group in group_order:
+    subset = Gaze_df[Gaze_df["Group"] == group]
+
+    if len(subset) > 1:  # Asegurar que hay datos suficientes para correlación
+        r_spearman, p_spearman = stats.spearmanr(subset["CSE"], subset["Scanned_Path_per_time_per_Block"], nan_policy='omit')
+        r_pearson, p_pearson = stats.pearsonr(subset["CSE"].dropna(), subset["Scanned_Path_per_time_per_Block"].dropna())
+
+        correlation_results[group] = (r_spearman, p_spearman, r_pearson, p_pearson)
+
+        # Agregar línea de regresión
+        sns.regplot(
+            data=subset,
+            x="CSE",
+            y="Scanned_Path_per_time_per_Block",
+            scatter=False,
+            ax=ax,
+            line_kws={"linewidth": 2}
+        )
+
+# Imprimir los valores de correlación para PPPD
+if "PPPD" in correlation_results:
+    rho, p_rho, r_pearson, p_pearson = correlation_results["PPPD"]
+    print(f"PPPD Group:")
+    print(f" - Spearman's rho: r = {rho:.2f}, p = {p_rho:.3f}")
+    print(f" - Pearson's r: r = {r_pearson:.2f}, p = {p_pearson:.3f}")
+
+# Etiquetas y título
+ax.set_title("Correlation between CSE and Gaze scanned path", fontsize=16)
+ax.set_ylabel("Gaze scanned path", fontsize=14)
+ax.set_xlabel("CSE", fontsize=14)
+
+# Ajustar tamaño de la leyenda dentro del gráfico
+legend = ax.legend(title="Group", fontsize=12, title_fontsize=14, loc="best", frameon=False)
+for text in legend.get_texts():
+    text.set_fontsize(14)  # Aumentar tamaño de los textos de la leyenda
+legend.get_title().set_fontsize(16)  # Aumentar tamaño del título de la leyenda
+
+# Agregar texto con los valores de correlación en la esquina superior izquierda
+text_x = ax.get_xlim()[0] + (ax.get_xlim()[1] - ax.get_xlim()[0]) * 0.05  # Ajuste de posición X
+text_y = ax.get_ylim()[1] - (ax.get_ylim()[1] - ax.get_ylim()[0]) * 0.1  # Ajuste de posición Y
+
+correlation_text = "\n".join([
+    f"{group}: Spearman r = {r_s:.2f}, p = {p_s:.3f}" for group, (r_s, p_s, _, _) in correlation_results.items()
+])
+ax.text(text_x, text_y, correlation_text, fontsize=14, bbox=dict(facecolor='white', alpha=0.5))
+
+# Ajustar diseño y guardar la figura
+plt.tight_layout()
+output_file = Output_Dir + "Figura 10.png"
+plt.savefig(output_file)
+plt.show()
