@@ -300,7 +300,7 @@ for group in group_order:
         )
 
 # Imprimir los valores de correlación para PPPD
-if "PPPD" in correlation_results:
+if "PPPD_X" in correlation_results:
     rho, p_rho, r_pearson, p_pearson = correlation_results["PPPD"]
     print(f"PPPD Group:")
     print(f" - Spearman's rho: r = {rho:.2f}, p = {p_rho:.3f}")
@@ -324,7 +324,7 @@ text_y = ax.get_ylim()[1] - (ax.get_ylim()[1] - ax.get_ylim()[0]) * 0.1  # Ajust
 correlation_text = "\n".join([
     f"{group}: Spearman r = {r_s:.2f}, p = {p_s:.3f}" for group, (r_s, p_s, _, _) in correlation_results.items()
 ])
-ax.text(text_x, text_y, correlation_text, fontsize=14, bbox=dict(facecolor='white', alpha=0.5))
+#ax.text(text_x, text_y, correlation_text, fontsize=14, bbox=dict(facecolor='white', alpha=0.5))
 
 # Ajustar diseño y guardar la figura
 plt.tight_layout()
