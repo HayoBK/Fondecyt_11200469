@@ -10,15 +10,24 @@
 
 #%%
 import HA_ModuloArchivos as H_Mod
-import EEG00_HMod
+
 import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
 import matplotlib
 matplotlib.use('Qt5Agg') # <- Esto fuerza el backend Qt5 para visualización dinámica
 import mne
+import sys
+import os
 
+print("Current working directory:", os.getcwd())
+eeg1_dir = os.path.abspath('./EEG1')  # O pon ruta absoluta manual
 
+print("Intentando agregar:", eeg1_dir)
+if eeg1_dir not in sys.path:
+    sys.path.append(eeg1_dir)
+
+import EEG00_HMod
 
 Py_Processing_Dir = H_Mod.Nombrar_HomePath("002-LUCIEN/Py_INFINITE/")
 Py_Sujetos_Dir = H_Mod.Nombrar_HomePath("002-LUCIEN/SUJETOS/")
