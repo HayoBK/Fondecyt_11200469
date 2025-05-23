@@ -60,10 +60,12 @@ for Sujeto in sujetos:
 
         output_df = fixations_df.rename(columns={
             'start_timestamp': 'start_time',
-            'duration': 'duration'
+            'duration': 'duration',
+            'norm_pos_x': 'eye_x',
+            'norm_pos_y': 'eye_y'
         })
         output_df = output_df.drop_duplicates(subset='fixation_id', keep='first')
-        output_df = output_df[['start_time', 'duration']]
+        output_df = output_df[['start_time', 'duration','eye_x','eye_y']]
         archivo = Sujetos_Dir + f"{Sujeto}/EEG/fixation_forMATLAB_NI.csv"
         output_df.to_csv(archivo, index=False)
 
@@ -119,10 +121,12 @@ for Sujeto in sujetos:
 
         output_df = fixations_df.rename(columns={
             'start_timestamp': 'start_time',
-            'duration': 'duration'
+            'duration': 'duration',
+            'norm_pos_x': 'eye_x',
+            'norm_pos_y': 'eye_y'
         })
         output_df = output_df.drop_duplicates(subset='id', keep='first')
-        output_df = output_df[['start_time', 'duration']]
+        output_df = output_df[['start_time', 'duration','eye_x','eye_y']]
         archivo = Sujetos_Dir + f"{Sujeto}/EEG/fixation_forMATLAB_RV.csv"
         output_df.to_csv(archivo, index=False)
 
