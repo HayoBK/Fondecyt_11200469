@@ -64,7 +64,13 @@ def Nombrar_HomePath(mi_path):
     if nombre_host == 'MSI':
         home = "D:/Titan-OneDrive"
 
+    if nombre_host == 'iMac-de-Hayo.local':
+        home = "/Users/hayo/OneDrive-Personal (archivo)"
+
     ruta = home + "/OneDrive/2-Casper/00-CurrentResearch/001-FONDECYT_11200469/" + mi_path
+    if nombre_host == 'iMac-de-Hayo.local':
+        home = "/Users/hayo/OneDrive-Personal (archivo)"
+        ruta = home + "/2-Casper/00-CurrentResearch/001-FONDECYT_11200469/" + mi_path
     print('Definimos una Ruta dirigiendonos a: ',ruta)
     print('--------------- CHECK -------------')
     print(' ')
