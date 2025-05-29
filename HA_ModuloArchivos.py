@@ -474,3 +474,77 @@ def process_xdf_files(files):
                 trials_per_timestamp = df
 
     return processed_files, sync_df, trials_per_timestamp, trials_per_trialLabel, trial_labels
+
+
+def enriquecer_fijaciones_firstfix(fixfile_path, trialfile_path, modalidad):
+    # Base de etiquetas
+    MWM_labels_base = [
+        'T01_FreeNav', 'T02_Training',
+        'T03_NaviVT1_i1', 'T04_NaviVT1_i2', 'T05_NaviVT1_i3', 'T06_NaviVT1_i4',
+        'T07_NaviHT1_i1', 'T08_NaviHT1_i2', 'T09_NaviHT1_i3', 'T10_NaviHT1_i4',
+        'T11_NaviHT1_i5', 'T12_NaviHT1_i6', 'T13_NaviHT1_i7', 'T14_Rest1',
+        'T15_NaviHT2_i1', 'T16_NaviHT2_i2', 'T17_NaviHT2_i3', 'T18_NaviVT2_i4',
+        'T19_NaviHT2_i5', 'T20_NaviHT2_i6', 'T21_NaviHT2_i7', 'T22_Rest2',
+        'T23_NaviHT3_i1', 'T24_NaviHT3_i2', 'T25_NaviHT3_i3', 'T26_NaviHT3_i4',
+        'T27_NaviHT3_i5', 'T28_NaviHT3_i6', 'T29_NaviHT3_i7', 'T30_Rest3',
+        'T31_NaviVT2_i1', 'T32_NaviVT2_i2', 'T33_NaviVT2_i3'
+    ]
+    MWM_labels = [f"{modalidad}_{label}" for label in MWM_labels_base]
+    label_map = {i + 1: MWM_labels[i] for i in range(len(MWM_labels))}
+
+    # Cargar archivos
+    if not os.path.exists(fixfile_path) or not os.path.exists(trialfile_path):
+        print(f"⚠️ No se encontró el archivo de fijaciones o de trials.")
+        return
+
+    df = pd.read_csv(fixfile_path)
+    trials = pd.read_csv(trialfile_path)
+
+    # Agregar columna Real_Trial (texto enriquecido)
+    if 'Real_Trial' not in df.columns:
+        df['trial_id'] = np.nan
+        for _, row in trials.iterrows():
+            mask = (df['start_time'] >= row['start_time']) & (df['start_time'] <= row['end_time'])
+            df.loc[mask, 'trial_id'] = row['trial_id']
+        df['trial_id'] = df['trial_id'].astype('Int64')  # permitir NA
+        df['Real_Trial'] = df['trial_id'].map(label_map)
+
+    if 'is_first_fixation' in df.columns:
+        print("✅ Ya contiene 'is_first_fixation'. No se recalcula.")
+    else:
+        print("🛠️ Calculando primeras fijaciones...")
+
+        if not all(col in df.columns for col in ['start_time', 'duration', 'eye_x', 'eye_y']):
+            print("❌ Faltan columnas necesarias.")
+            return
+
+        df['on_screen'] = df['eye_x'].between(0, 1) & df['eye_y'].between(0, 1)
+        df = df.sort_values(by='start_time').reset_index(drop=True)
+
+        df['prev_x'] = df['eye_x'].shift(1)
+        df['prev_y'] = df['eye_y'].shift(1)
+        df['dist'] = np.sqrt((df['eye_x'] - df['prev_x']) ** 2 + (df['eye_y'] - df['prev_y']) ** 2)
+
+        df['is_first_fixation'] = df['dist'] > 0.2
+        df.loc[0, 'is_first_fixation'] = True
+        df['group_id'] = df['is_first_fixation'].cumsum()
+
+    # Guardar archivo enriquecido
+    enriched_path = fixfile_path.replace('.csv', '_enriched.csv')
+    df.to_csv(enriched_path, index=False)
+    print(f"✅ Guardado archivo enriquecido: {enriched_path}")
+
+    # Agrupar por group_id y Real_Trial
+    group_stats = df.groupby(['group_id', 'Real_Trial']).agg(
+        first_start=('start_time', 'first'),
+        n_fijaciones=('start_time', 'count'),
+        duracion_total=('duration', 'sum'),
+        std_x=('eye_x', 'std'),
+        std_y=('eye_y', 'std'),
+        x_inicio=('eye_x', 'first'),
+        y_inicio=('eye_y', 'first')
+    ).reset_index()
+
+    resumen_path = fixfile_path.replace('.csv', '_group_summary.csv')
+    group_stats.to_csv(resumen_path, index=False)
+    print(f"📄 Guardado resumen de grupos: {resumen_path}")
