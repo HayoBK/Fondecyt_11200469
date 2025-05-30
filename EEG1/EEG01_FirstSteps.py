@@ -44,9 +44,16 @@ raw = mne.io.read_raw_brainvision(eegfile, preload=True)
 
 #Intentemos aqui trbajar con las anotaciones
 annotations = raw.annotations
-new_ann_df = EEG00_HMod.traducir_anotaciones_originales_EEG(annotations)
+ori_ann_df, new_ann_df = EEG00_HMod.traducir_anotaciones_originales_EEG(annotations)
+Markers_df = new_ann_df.rename(columns={
+    'onset': 'OverWatch_time_stamp',
+    'description': 'OverWatch_MarkerA'
+})[['OverWatch_time_stamp', 'OverWatch_MarkerA']]
+Markers_df['OverWatch_MarkerA'] = Markers_df['OverWatch_MarkerA'].astype(str)
 
-#%%
+exito, output = H_Mod.ClearMarkers_LEGACY(Markers_df)
+output2 = H_Mod.LimpiarErroresdeOverwatch1(output)
+
 
 resultados_sync = EEG00_HMod.calcular_delta_sync('P33', raw, H_Mod) # Calcular la diferencia de sincronización entre LSL y marcadores del EEG
 print(resultados_sync)
@@ -54,7 +61,12 @@ print(resultados_sync)
 delta_promedio_NI = resultados_sync['NI']['promedio']
 delta_promedio_RV = resultados_sync['RV']['promedio']
 
+
 print(delta_promedio_NI, delta_promedio_RV)
+file= Py_Specific_Dir + 'trials_forMATLAB_NI.csv'
+trials_by_LSL = pd.read_csv(file)
+trials_by_LSL['start_time']+=delta_promedio_NI
+trials_by_LSL['end_time']+=delta_promedio_NI
 #%%
 # Integrar los eventos de modalidad NI
 raw, unique_trials_NI = EEG00_HMod.integrar_time_markers_en_raw(

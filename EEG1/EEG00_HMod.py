@@ -341,7 +341,7 @@ def traducir_anotaciones_originales_EEG(anotaciones):
 
     # Aplicar conversión
     new_anotaciones = annotations_df.copy()
-    new_anotaciones['description_translated'] = new_anotaciones['description'].apply(traducir_y_contar)
+    new_anotaciones['description'] = new_anotaciones['description'].apply(traducir_y_contar)
 
     # Imprimir el resumen de conversiones
     print("\nResumen de conversiones:")
@@ -352,4 +352,4 @@ def traducir_anotaciones_originales_EEG(anotaciones):
             print(f"{original} → {traducido}: {count} veces")
 
 
-    return new_anotaciones
+    return annotations_df, new_anotaciones
