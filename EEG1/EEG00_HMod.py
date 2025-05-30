@@ -23,6 +23,14 @@ def generar_Sync_Markers_Files(sujeto, H_Mod):
 
         # Guardar sync_df
         archivo_sync = f"{Sujetos_Dir}{sujeto}/EEG/export_for_MATLAB_Sync_{modalidad}.csv"
+        print(archivo_sync)
+        carpeta_destino = os.path.dirname(archivo_sync)
+        if not os.path.exists(carpeta_destino):
+            print(f"❌ La carpeta no existe: {carpeta_destino}")
+            raise FileNotFoundError(f"Directorio no encontrado: {carpeta_destino}")
+        else:
+            print(f"✅ Carpeta existe: {carpeta_destino}")
+            sync_df.to_csv(archivo_sync, index=False)
         sync_df.to_csv(archivo_sync, index=False)
 
         # Cargar archivos de Fixations y Blinks

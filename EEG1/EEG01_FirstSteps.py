@@ -74,6 +74,8 @@ raw, unique_trials_RV = EEG00_HMod.integrar_time_markers_en_raw(
 df_annot = raw.annotations.to_data_frame()
 print(df_annot.head())
 # Guardar el EEG anotado
+
+
 raw.save(Py_Specific_Dir + f"{Sujeto}_conLSLMarkers_eeg.fif", overwrite=True)
 
 events, event_id = mne.events_from_annotations(raw)
