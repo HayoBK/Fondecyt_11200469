@@ -67,8 +67,7 @@ file= Py_Specific_Dir + 'trials_forMATLAB_NI.csv'
 trials_by_LSL = pd.read_csv(file)
 trials_by_LSL['start_time']+=delta_promedio_NI
 trials_by_LSL['end_time']+=delta_promedio_NI
-#%%
-# Integrar los eventos de modalidad NI
+#%% Integrar los eventos de modalidad NI
 raw, unique_trials_NI = EEG00_HMod.integrar_time_markers_en_raw(
     raw, Py_Specific_Dir,
     'trials_forMATLAB_NI.csv',
