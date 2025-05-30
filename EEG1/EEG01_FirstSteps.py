@@ -42,6 +42,12 @@ eegfile = Py_Specific_Dir + Sujeto + '_NAVI.vhdr'  # Cargamos el EEG File crudo
 # Cargar los datos
 raw = mne.io.read_raw_brainvision(eegfile, preload=True)
 
+#Intentemos aqui trbajar con las anotaciones
+annotations = raw.annotations
+new_ann_df = EEG00_HMod.traducir_anotaciones_originales_EEG(annotations)
+
+#%%
+
 resultados_sync = EEG00_HMod.calcular_delta_sync('P33', raw, H_Mod) # Calcular la diferencia de sincronización entre LSL y marcadores del EEG
 print(resultados_sync)
 
@@ -49,7 +55,7 @@ delta_promedio_NI = resultados_sync['NI']['promedio']
 delta_promedio_RV = resultados_sync['RV']['promedio']
 
 print(delta_promedio_NI, delta_promedio_RV)
-
+#%%
 # Integrar los eventos de modalidad NI
 raw, unique_trials_NI = EEG00_HMod.integrar_time_markers_en_raw(
     raw, Py_Specific_Dir,

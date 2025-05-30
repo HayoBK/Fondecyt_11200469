@@ -259,3 +259,97 @@ def integrar_time_markers_en_raw(raw, ruta, archivo_trials, archivo_fijaciones, 
 
     print(f"[✓] Anotaciones integradas en modalidad {modalidad}. Reporte guardado en {reporte_path}")
     return raw, unique_trials
+
+def traducir_anotaciones_originales_EEG(anotaciones):
+    from collections import defaultdict
+
+    # Convertir a DataFrame
+    annotations_df = pd.DataFrame({
+        'onset': anotaciones.onset,  # en segundos desde el comienzo de la grabación
+        'duration': anotaciones.duration,  # duración del evento en segundos
+        'description': anotaciones.description  # etiqueta del evento
+    })
+    diccionario={
+    # S101 a S139 (todos los intermedios)
+    'Stimulus/S101': 1,
+    'Stimulus/S102': 2,
+    'Stimulus/S103': 3,
+    'Stimulus/S104': 4,
+    'Stimulus/S105': 5,
+    'Stimulus/S106': 6,
+    'Stimulus/S107': 7,
+    'Stimulus/S108': 8,
+    'Stimulus/S109': 9,
+    'Stimulus/S110': 10,
+    'Stimulus/S111': 11,
+    'Stimulus/S112': 12,
+    'Stimulus/S113': 13,
+    'Stimulus/S114': 14,
+    'Stimulus/S115': 15,
+    'Stimulus/S116': 16,
+    'Stimulus/S117': 17,
+    'Stimulus/S118': 18,
+    'Stimulus/S119': 19,
+    'Stimulus/S120': 20,
+    'Stimulus/S121': 21,
+    'Stimulus/S122': 22,
+    'Stimulus/S123': 23,
+    'Stimulus/S124': 24,
+    'Stimulus/S125': 25,
+    'Stimulus/S126': 26,
+    'Stimulus/S127': 27,
+    'Stimulus/S128': 28,
+    'Stimulus/S129': 29,
+    'Stimulus/S130': 30,
+    'Stimulus/S131': 31,
+    'Stimulus/S132': 32,
+    'Stimulus/S133': 33,
+    'Stimulus/S134': 34,
+    'Stimulus/S135': 35,
+    'Stimulus/S136': 36,
+    'Stimulus/S137': 37,
+    'Stimulus/S138': 38,
+    'Stimulus/S139': 39,
+
+    # Comandos de navegación
+    'Stimulus/S  2': 'J_Back',     # P_BACK
+    'Stimulus/S  4': 'J_Left',     # P_LEFT
+    'Stimulus/S  5': 'J_Still',     # P_STILL
+    'Stimulus/S  6': 'J_Right',     # P_RIGHT
+    'Stimulus/S  8': 'J_Forward',     # P_FORWARD
+
+    # Eventos de control
+    'Stimulus/S200': 'Go On', # P_GO_ON
+    'Stimulus/S201': 'Stop', # P_POSSIBLE_STOP
+    'Stimulus/S202': 'Stop Confirmado', # P_FULLSTOP
+    'Stimulus/S203': 'Falso Stop', # P_FALSE_STOP
+    'Stimulus/S205': 'Partida Forzada', # P_FORCE_START
+    }
+
+    # Diccionario para contar ocurrencias de cada conversión
+    conversion_counts = defaultdict(int)
+
+    # Función para traducir y contar
+    def traducir_y_contar(codigo):
+        if codigo in diccionario:
+            nuevo_valor = diccionario[codigo]
+            conversion_counts[(codigo, nuevo_valor)] += 1
+            return nuevo_valor
+        else:
+            conversion_counts[(codigo, 'NO_CONVERSION')] += 1
+            return codigo  # O puedes retornar None si prefieres
+
+    # Aplicar conversión
+    new_anotaciones = annotations_df.copy()
+    new_anotaciones['description_translated'] = new_anotaciones['description'].apply(traducir_y_contar)
+
+    # Imprimir el resumen de conversiones
+    print("\nResumen de conversiones:")
+    for (original, traducido), count in sorted(conversion_counts.items(), key=lambda x: x[1], reverse=True):
+        if traducido == 'NO_CONVERSION':
+            print(f"No se encontró traducción para '{original}': {count} veces")
+        else:
+            print(f"{original} → {traducido}: {count} veces")
+
+
+    return new_anotaciones
