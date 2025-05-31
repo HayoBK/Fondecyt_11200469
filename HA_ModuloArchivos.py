@@ -426,6 +426,59 @@ def Exportar_a_MATLAB_Sync(df):
     return export_for_MATLAB
 
 
+def process_xdf_filesb(files):
+    """
+    Procesa una lista de archivos XDF y extrae información relevante.
+
+    Parámetros:
+    files (list): Lista de rutas de archivos XDF a procesar.
+
+    Retorna:
+    tuple: Contiene las siguientes variables:
+        - processed_files (int): Número de archivos procesados exitosamente.
+        - sync_df (DataFrame): DataFrame para sincronización de eventos.
+        - trials_per_timestamp (DataFrame): DataFrame con información de trials por timestamp.
+        - trials_per_trialLabel (DataFrame): DataFrame con información de trials por etiqueta.
+        - trial_labels (list): Lista de etiquetas de trials.
+    """
+    processed_files = 0
+    sync_df = pd.DataFrame()
+    trials_per_timestamp = pd.DataFrame()
+    trials_per_trialLabel = pd.DataFrame()
+    trial_labels = []
+
+    for f in files:
+        data, header = pyxdf.load_xdf(f)
+        for d in data:
+            if (d['info']['name'][0] == 'Overwatch-Markers') and (len(d['time_stamps']) > 20):
+                processed_files += 1
+                time_stamp = d['time_stamps']
+                markers_alfa = Extract(d['time_series'], 0)
+                markers_beta = Extract(d['time_series'], 1)
+                markers_df = pd.DataFrame({
+                    'OverWatch_time_stamp': time_stamp,
+                    'OverWatch_MarkerA': markers_alfa,
+                    'OverWatch_MarkerB': markers_beta
+                })
+                markers_a_df = markers_df[markers_df['OverWatch_MarkerA'] != 'NONE']
+
+                # Generar archivo para sincronización
+                sync_df = Exportar_a_MATLAB_Sync(markers_a_df)
+                sync_df = sync_df.reset_index()
+                # Limpiar y procesar marcadores
+                success_rate, df = ClearMarkers(markers_a_df)
+                legacy_success_rate, legacy_df = ClearMarkers_LEGACY(markers_a_df)
+                print("Comprobación de éxito en la extracción de marcadores de LSL")
+                print(f"Porcentaje de éxito (versión nueva): {success_rate:.2f}%")
+                print(f"Porcentaje de éxito (versión LEGACY): {legacy_success_rate:.2f}%")
+                df = df.reset_index(drop=True)
+
+                # Limpiar errores y estructurar datos por trial
+                df = LimpiarErroresdeOverwatch1(df)
+                trial_labels, trials_per_trialLabel = Markers_by_trial(df)
+                trials_per_timestamp = df
+
+    return processed_files, sync_df, trials_per_timestamp, trials_per_trialLabel, trial_labels, markers_df
 
 def process_xdf_files(files):
     """

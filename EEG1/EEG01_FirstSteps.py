@@ -35,7 +35,7 @@ print('Chequeando si MNE está ok, (pregunto por su version): ', mne.__version__
 
 Sujeto = 'P33'
 
-EEG00_HMod.generar_Sync_Markers_Files(Sujeto,H_Mod)  # Extramos de LSL los marcadores de Eventos
+markersTest = EEG00_HMod.generar_Sync_Markers_Filesb(Sujeto,H_Mod)  # Extramos de LSL los marcadores de Eventos
 Py_Specific_Dir = Py_Sujetos_Dir + Sujeto + '/EEG/'
 eegfile = Py_Specific_Dir + Sujeto + '_NAVI.vhdr'  # Cargamos el EEG File crudo
 
@@ -67,6 +67,7 @@ file= Py_Specific_Dir + 'trials_forMATLAB_NI.csv'
 trials_by_LSL = pd.read_csv(file)
 trials_by_LSL['start_time']+=delta_promedio_NI
 trials_by_LSL['end_time']+=delta_promedio_NI
+markersTest['OverWatch_time_stamp']+=(delta_promedio_NI-1581.26565)
 #%% Integrar los eventos de modalidad NI
 raw, unique_trials_NI = EEG00_HMod.integrar_time_markers_en_raw(
     raw, Py_Specific_Dir,

@@ -2,6 +2,81 @@ import pandas as pd
 import numpy as np
 import os
 import mne
+def generar_Sync_Markers_Filesb(sujeto, H_Mod):
+    # Directorios base
+    Py_Processing_Dir = H_Mod.Nombrar_HomePath("002-LUCIEN/Py_INFINITE/")
+    Sujetos_Dir = H_Mod.Nombrar_HomePath("002-LUCIEN/SUJETOS/")
+    Dir = Sujetos_Dir + sujeto + "/"
+
+    # ------------------- Modalidades: NI y RV -------------------
+    for modalidad, carpeta_idx in zip(["NI", "RV"], ["000", "001"]):
+        print(f"Procesando sujeto {sujeto}, modalidad {modalidad}...")
+
+        # Buscar archivo XDF
+        Reporte, file = H_Mod.Grab_LabRecorderFile(modalidad, Dir)
+        print(Reporte)
+
+        # Procesar archivo XDF
+        processed_files, sync_df, trials_per_timestamp, trials_per_trialLabel, trial_labels, markersA = H_Mod.process_xdf_filesb(file)
+        print(f'Se procesaron archivos XDF: {processed_files}')
+
+        # Guardar sync_df
+        archivo_sync = f"{Sujetos_Dir}{sujeto}/EEG/export_for_MATLAB_Sync_{modalidad}.csv"
+        print(archivo_sync)
+        carpeta_destino = os.path.dirname(archivo_sync)
+        if not os.path.exists(carpeta_destino):
+            print(f"❌ La carpeta no existe: {carpeta_destino}")
+            raise FileNotFoundError(f"Directorio no encontrado: {carpeta_destino}")
+        else:
+            print(f"✅ Carpeta existe: {carpeta_destino}")
+            sync_df.to_csv(archivo_sync, index=False)
+        sync_df.to_csv(archivo_sync, index=False)
+
+        # Cargar archivos de Fixations y Blinks
+        base_path = f"{Sujetos_Dir}{sujeto}/PUPIL_LAB/{carpeta_idx}/exports/000/"
+        fix_file = base_path + ("surfaces/fixations_on_surface_Hefestp 1.csv" if modalidad == "NI" else "fixations.csv")
+        blink_file = base_path + "blinks.csv"
+
+        fixations_df = pd.read_csv(fix_file)
+        blinks_df = pd.read_csv(blink_file)
+        Interesting_df = pd.read_csv(fix_file)
+
+        # Asignar OW_Trial a los timestamps
+        Interesting_df = H_Mod.Binnear_DF(trial_labels, trials_per_trialLabel, Interesting_df, 'start_timestamp')
+
+        # Guardar Blinks
+        output_df_blinks = blinks_df.rename(columns={
+            'start_timestamp': 'start_time',
+            'duration': 'duration'
+        })
+        output_df_blinks = output_df_blinks[['start_time', 'duration']]
+        archivo_blinks = f"{Sujetos_Dir}{sujeto}/EEG/blinks_forMATLAB_{modalidad}.csv"
+        output_df_blinks.to_csv(archivo_blinks, index=False)
+
+        # Guardar Fixations
+        output_df_fix = fixations_df.rename(columns={
+            'start_timestamp': 'start_time',
+            'duration': 'duration'
+        })
+        id_col = 'fixation_id' if modalidad == 'NI' else 'id'
+        output_df_fix = output_df_fix.drop_duplicates(subset=id_col, keep='first')
+        output_df_fix = output_df_fix[['start_time', 'duration']]
+        archivo_fix = f"{Sujetos_Dir}{sujeto}/EEG/fixation_forMATLAB_{modalidad}.csv"
+        output_df_fix.to_csv(archivo_fix, index=False)
+
+        # Guardar Trials
+        output_df_trials = trials_per_trialLabel.rename(columns={
+            'OW_trials': 'trial_id',
+            'Start': 'start_time',
+            'End': 'end_time'
+        })
+        archivo_trials = f"{Sujetos_Dir}{sujeto}/EEG/trials_forMATLAB_{modalidad}.csv"
+        output_df_trials.to_csv(archivo_trials, index=False)
+
+    print('--------------------------------------------------------------------------------------------------- ')
+    print(f"\u2713 Extraccion de LSL y generación de Archivos para sincronización completo para {sujeto}.")
+    print('--------------------------------------------------------------------------------------------------- ')
+    return markersA
 
 def generar_Sync_Markers_Files(sujeto, H_Mod):
     # Directorios base
