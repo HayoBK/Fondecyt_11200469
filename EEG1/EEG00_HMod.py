@@ -17,7 +17,7 @@ def generar_Sync_Markers_Filesb(sujeto, H_Mod):
         print(Reporte)
 
         # Procesar archivo XDF
-        processed_files, sync_df, trials_per_timestamp, trials_per_trialLabel, trial_labels, markersA = H_Mod.process_xdf_filesb(file)
+        processed_files, sync_df, trials_per_timestamp, trials_per_trialLabel, trial_labels, markersA, data = H_Mod.process_xdf_filesb(file)
         print(f'Se procesaron archivos XDF: {processed_files}')
 
         # Guardar sync_df
@@ -76,7 +76,7 @@ def generar_Sync_Markers_Filesb(sujeto, H_Mod):
     print('--------------------------------------------------------------------------------------------------- ')
     print(f"\u2713 Extraccion de LSL y generación de Archivos para sincronización completo para {sujeto}.")
     print('--------------------------------------------------------------------------------------------------- ')
-    return markersA
+    return markersA, data
 
 def generar_Sync_Markers_Files(sujeto, H_Mod):
     # Directorios base
@@ -428,3 +428,76 @@ def traducir_anotaciones_originales_EEG(anotaciones):
 
 
     return annotations_df, new_anotaciones
+
+
+def filtrar_marcadores(df, nombre_df='DF'):
+    # Convertir a string por seguridad
+    df['OverWatch_MarkerA'] = df['OverWatch_MarkerA'].astype(str)
+
+    # Definir condiciones
+    es_numero_trial = df['OverWatch_MarkerA'].str.fullmatch(r'[1-9]|[1-2][0-9]|3[0-3]')
+    es_stop = df['OverWatch_MarkerA'].isin(['Stop', 'Stop Confirmado'])
+
+    # Filtrar
+    df_filtrado = df[es_numero_trial | es_stop].copy()
+
+    print(f"{nombre_df}: {len(df_filtrado)} marcadores relevantes encontrados.")
+    return df_filtrado
+
+
+def limpiar_trials_eeg(EEGMarkers):
+    EEGMarkers = EEGMarkers.copy()
+    EEGMarkers['OverWatch_MarkerA'] = EEGMarkers['OverWatch_MarkerA'].astype(str)
+
+    # Solo nos interesan números 1–33 y stops
+    es_trial = EEGMarkers['OverWatch_MarkerA'].str.fullmatch(r'[1-9]|[1-2][0-9]|3[0-3]')
+    es_stop = EEGMarkers['OverWatch_MarkerA'].isin(['Stop', 'Stop Confirmado'])
+    df_filtrada = EEGMarkers[es_trial | es_stop].reset_index(drop=True)
+
+    trials_limpios = []
+    ronda = 0
+    esperado = 1
+    modalidad = 'NI'
+
+    i = 0
+    while i < len(df_filtrada):
+        fila = df_filtrada.iloc[i]
+        marcador = fila['OverWatch_MarkerA']
+
+        # Buscar inicio esperado del trial
+        if marcador.isdigit() and int(marcador) == esperado:
+            trial_id = int(marcador)
+            start_time = fila['OverWatch_time_stamp']
+
+            # Buscar el siguiente Stop o Stop Confirmado
+            end_time = None
+            for j in range(i + 1, len(df_filtrada)):
+                siguiente = df_filtrada.iloc[j]
+                if siguiente['OverWatch_MarkerA'] in ['Stop', 'Stop Confirmado']:
+                    end_time = siguiente['OverWatch_time_stamp']
+                    break
+            if end_time is not None:
+                trials_limpios.append({
+                    'Trial_id': trial_id,
+                    'start_time': start_time,
+                    'end_time': end_time,
+                    'Modalidad': modalidad
+                })
+                # Avanzar a siguiente trial esperado
+                esperado += 1
+                i = j + 1
+            else:
+                # No se encontró STOP después → descartamos este trial
+                i += 1
+        else:
+            i += 1
+
+        # Cuando se completa una ronda
+        if esperado > 33:
+            esperado = 1
+            ronda += 1
+            modalidad = 'RV' if ronda == 1 else 'UNKNOWN'
+
+    # Convertir resultado a DataFrame final
+    df_resultado = pd.DataFrame(trials_limpios)
+    return df_resultado

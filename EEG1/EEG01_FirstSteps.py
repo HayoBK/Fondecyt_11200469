@@ -8,6 +8,8 @@
 # 1) MNE tiene una forma de cargar nativamente  BrainVision files de los que usa Billeke
 # 2) MNE necesita además de cargar MNE, cargar la biblioteca PyQt5
 
+# Este script es una mierda desordenada para poder aprender a manejar MNE y analizar los problemas de sincronización entre EEG y LSL
+
 #%%
 import HA_ModuloArchivos as H_Mod
 
@@ -35,7 +37,9 @@ print('Chequeando si MNE está ok, (pregunto por su version): ', mne.__version__
 
 Sujeto = 'P33'
 
-markersTest = EEG00_HMod.generar_Sync_Markers_Filesb(Sujeto,H_Mod)  # Extramos de LSL los marcadores de Eventos
+LSLmarkers, LSLdata = EEG00_HMod.generar_Sync_Markers_Filesb(Sujeto,H_Mod)  # Extramos de LSL los marcadores de Eventos
+LSLmarkers = LSLmarkers[LSLmarkers['OverWatch_MarkerA'] != 'NONE']
+
 Py_Specific_Dir = Py_Sujetos_Dir + Sujeto + '/EEG/'
 eegfile = Py_Specific_Dir + Sujeto + '_NAVI.vhdr'  # Cargamos el EEG File crudo
 
@@ -45,13 +49,13 @@ raw = mne.io.read_raw_brainvision(eegfile, preload=True)
 #Intentemos aqui trbajar con las anotaciones
 annotations = raw.annotations
 ori_ann_df, new_ann_df = EEG00_HMod.traducir_anotaciones_originales_EEG(annotations)
-Markers_df = new_ann_df.rename(columns={
+EEGMarkers = new_ann_df.rename(columns={
     'onset': 'OverWatch_time_stamp',
     'description': 'OverWatch_MarkerA'
 })[['OverWatch_time_stamp', 'OverWatch_MarkerA']]
-Markers_df['OverWatch_MarkerA'] = Markers_df['OverWatch_MarkerA'].astype(str)
+EEGMarkers['OverWatch_MarkerA'] = EEGMarkers['OverWatch_MarkerA'].astype(str)
 
-exito, output = H_Mod.ClearMarkers_LEGACY(Markers_df)
+exito, output = H_Mod.ClearMarkers_LEGACY(EEGMarkers)
 output2 = H_Mod.LimpiarErroresdeOverwatch1(output)
 
 
@@ -67,7 +71,44 @@ file= Py_Specific_Dir + 'trials_forMATLAB_NI.csv'
 trials_by_LSL = pd.read_csv(file)
 trials_by_LSL['start_time']+=delta_promedio_NI
 trials_by_LSL['end_time']+=delta_promedio_NI
-markersTest['OverWatch_time_stamp']+=(delta_promedio_NI-1581.26565)
+
+
+print (raw.info['meas_date'].timestamp())
+
+EEGMarkers_filtrada = EEG00_HMod.filtrar_marcadores(EEGMarkers, 'EEG')
+LSLmarkers_filtrada = EEG00_HMod.filtrar_marcadores(LSLmarkers, 'LSL')
+
+EEGMarkers_filtrada = EEGMarkers_filtrada.reset_index(drop=True)
+LSLmarkers_filtrada = LSLmarkers_filtrada.reset_index(drop=True)
+
+# Agrupar por tipo de marcador para comparar por tipo
+tipos_comunes = set(EEGMarkers_filtrada['OverWatch_MarkerA']).intersection(
+                 set(LSLmarkers_filtrada['OverWatch_MarkerA']))
+
+def orden_marcadores(x):
+    try:
+        return (0, int(x))  # los numéricos primero
+    except ValueError:
+        return (1, x)        # luego los strings como "Stop"
+
+
+for tipo in sorted(tipos_comunes, key=orden_marcadores):
+    eeg_times = EEGMarkers_filtrada.query("OverWatch_MarkerA == @tipo")['OverWatch_time_stamp'].reset_index(drop=True)
+    lsl_times = LSLmarkers_filtrada.query("OverWatch_MarkerA == @tipo")['OverWatch_time_stamp'].reset_index(drop=True)
+
+    n = min(len(eeg_times), len(lsl_times))
+    print(f"\n🔍 Comparando marcador: {tipo} (primeros {n} eventos)")
+
+    for i in range(n):
+        delta = eeg_times[i] - lsl_times[i]
+        print(f"  Evento {i + 1}: EEG = {eeg_times[i]:.3f}  |  LSL = {lsl_times[i]:.3f}  |  Δ = {delta:.3f} s")
+
+    if len(eeg_times) != len(lsl_times):
+        print(f"⚠️ Diferente número de eventos para '{tipo}': EEG = {len(eeg_times)} vs LSL = {len(lsl_times)}")
+
+EEGTrials_limpios = EEG00_HMod.limpiar_trials_eeg(EEGMarkers)
+
+
 #%% Integrar los eventos de modalidad NI
 raw, unique_trials_NI = EEG00_HMod.integrar_time_markers_en_raw(
     raw, Py_Specific_Dir,

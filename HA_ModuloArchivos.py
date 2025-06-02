@@ -478,7 +478,7 @@ def process_xdf_filesb(files):
                 trial_labels, trials_per_trialLabel = Markers_by_trial(df)
                 trials_per_timestamp = df
 
-    return processed_files, sync_df, trials_per_timestamp, trials_per_trialLabel, trial_labels, markers_df
+    return processed_files, sync_df, trials_per_timestamp, trials_per_trialLabel, trial_labels, markers_df, data
 
 def process_xdf_files(files):
     """
