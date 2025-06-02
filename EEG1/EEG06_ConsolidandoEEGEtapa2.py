@@ -11,7 +11,6 @@ import mne
 import pandas as pd
 import json
 
-
 # Confirmación de ruta actual
 print("Current working directory:", os.getcwd())
 
