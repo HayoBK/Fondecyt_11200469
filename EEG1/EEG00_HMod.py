@@ -419,13 +419,14 @@ def traducir_anotaciones_originales_EEG(anotaciones):
     new_anotaciones['description'] = new_anotaciones['description'].apply(traducir_y_contar)
 
     # Imprimir el resumen de conversiones
+    """
     print("\nResumen de conversiones:")
     for (original, traducido), count in sorted(conversion_counts.items(), key=lambda x: x[1], reverse=True):
         if traducido == 'NO_CONVERSION':
             print(f"No se encontró traducción para '{original}': {count} veces")
         else:
             print(f"{original} → {traducido}: {count} veces")
-
+    """
 
     return annotations_df, new_anotaciones
 
@@ -476,18 +477,31 @@ def limpiar_trials_eeg(EEGMarkers):
                 if siguiente['OverWatch_MarkerA'] in ['Stop', 'Stop Confirmado']:
                     end_time = siguiente['OverWatch_time_stamp']
                     break
+
+            # Si no se encontró STOP, estimar fin usando 90% del lapso al siguiente trial
+            if end_time is None:
+                for k in range(i + 1, len(df_filtrada)):
+                    siguiente = df_filtrada.iloc[k]
+                    if siguiente['OverWatch_MarkerA'].isdigit() and int(siguiente['OverWatch_MarkerA']) == esperado + 1:
+                        siguiente_start = siguiente['OverWatch_time_stamp']
+                        intervalo = siguiente_start - start_time
+                        end_time = start_time + 0.9 * intervalo
+                        print(
+                            f"⚠️ Estimado fin para trial {trial_id}: no se encontró STOP, se usó el 90% del tiempo al siguiente trial.")
+                        break
+
+            # Si se logró estimar un end_time, registrar el trial
             if end_time is not None:
                 trials_limpios.append({
-                    'Trial_id': trial_id,
+                    'trial_id': trial_id,
                     'start_time': start_time,
                     'end_time': end_time,
                     'Modalidad': modalidad
                 })
-                # Avanzar a siguiente trial esperado
                 esperado += 1
-                i = j + 1
+                i = j + 1 if end_time in df_filtrada['OverWatch_time_stamp'].values else k
             else:
-                # No se encontró STOP después → descartamos este trial
+                print(f"❌ Trial {trial_id} descartado: no se encontró STOP ni trial siguiente.")
                 i += 1
         else:
             i += 1
