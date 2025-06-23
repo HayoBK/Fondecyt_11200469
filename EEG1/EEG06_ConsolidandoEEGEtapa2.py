@@ -113,5 +113,11 @@ for sujeto in sujetos_validos:
             print(f"❌ {sujeto}: Ningún archivo de trials encontrado. Se omite el procesamiento dependiente.")
             LSL_df_trials_combinado = None  # para manejar lógica condicional más adelante
 
+        # 2025.06.23
+        # Tengo entonces (LSL_df_trials_combinado) & (EEGTrials_limpios)
+        # (TASK 01) : Quiero compararlos, ver el nivel de sincronización entre ambos y evaluar si hay uno
+        # mejor que el otro para definir con cual me quedo y cual ocupar en el archivo final de EEG raw markers
+        # Luego (TASK 02)
+
     except Exception as e:
         print(f"❌ ERROR en {sujeto}: {str(e)}")
