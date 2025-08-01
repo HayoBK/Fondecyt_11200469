@@ -10,7 +10,7 @@ import sys
 import mne
 import pandas as pd
 import json
-
+from pathlib import Path
 # Confirmación de ruta actual
 print("Current working directory:", os.getcwd())
 
@@ -48,11 +48,22 @@ for sujeto in sujetos_validos:
 
     try:
         eeg_path = path_raws_por_sujeto[sujeto]
+        eeg_path_parts = Path(eeg_path).parts
+        if "SUJETOS" not in eeg_path_parts:
+            raise ValueError("La palabra 'SUJETOS' no fue encontrada en el path original.")
+
+        index_sujetos = eeg_path_parts.index("SUJETOS")
+
+        # Paso 2: Construir el path relativo a partir de "SUJETOS"
+        relative_path = Path(*eeg_path_parts[index_sujetos + 1:])
+
+        # Paso 3: Construir el nuevo path
+        eeg_path = Py_Sujetos_Dir / relative_path
 
         # === Cargar raw ===
-        if eeg_path.endswith('.fif'):
+        if str(eeg_path).endswith('.fif'):
             raw = mne.io.read_raw_fif(eeg_path, preload=True)
-        elif eeg_path.endswith('.vhdr'):
+        elif str(eeg_path).endswith('.vhdr'):
             raw = mne.io.read_raw_brainvision(eeg_path, preload=True)
         else:
             raise ValueError(f"Formato no soportado: {eeg_path}")
@@ -118,6 +129,42 @@ for sujeto in sujetos_validos:
         # (TASK 01) : Quiero compararlos, ver el nivel de sincronización entre ambos y evaluar si hay uno
         # mejor que el otro para definir con cual me quedo y cual ocupar en el archivo final de EEG raw markers
         # Luego (TASK 02)
+
+        # Contar trial_id únicos por modalidad
+        eeg_trial_counts = EEGTrials_limpios.groupby('Modalidad')['trial_id'].nunique().reset_index(
+            name='EEG_trial_count')
+        lsl_trial_counts = LSL_df_trials_combinado.groupby('Modalidad')['trial_id'].nunique().reset_index(
+            name='LSL_trial_count')
+
+        # Unir resultados
+        trial_comparison = pd.merge(eeg_trial_counts, lsl_trial_counts, on='Modalidad', how='outer')
+
+        # Mostrar resultados
+        print("\nComparación de número de trials únicos por modalidad:")
+        print(trial_comparison)
+
+        # Fusionar por Modalidad + trial_id
+        merged_trials = pd.merge(
+            EEGTrials_limpios,
+            LSL_df_trials_combinado,
+            on=['Modalidad', 'trial_id'],
+            suffixes=('_eeg', '_lsl'),
+            how='inner'
+        )
+
+        # Calcular offset trial por trial
+        merged_trials['start_offset'] = merged_trials['start_time_lsl'] - merged_trials['start_time_eeg']
+
+        # Calcular métricas globales
+        offset_mean = merged_trials['start_offset'].mean()
+        offset_std = merged_trials['start_offset'].std()
+        offset_max_diff = merged_trials['start_offset'].max() - merged_trials['start_offset'].min()
+
+        # Mostrar resultados
+        print("=== Comparación de relojes entre DataFrames ===")
+        print(f"Promedio del offset (LSL - EEG): {offset_mean:.3f} milisegundos")
+        print(f"Desviación estándar: {offset_std:.3f} milisegundos")
+        print(f"Diferencia máxima entre offsets trial a trial: {offset_max_diff:.3f} milisegundos")
 
     except Exception as e:
         print(f"❌ ERROR en {sujeto}: {str(e)}")
