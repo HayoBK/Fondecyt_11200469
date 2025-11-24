@@ -19,7 +19,13 @@ file_path = Py_Processing_Dir + "F_Fixations_4All.csv"
 fix_df = pd.read_csv(file_path)
 file_path = Py_Processing_Dir + "H_SimianMaze_ShortDf_Normalized.csv"
 navi_df = pd.read_csv(file_path)
+file_path = Py_Processing_Dir + "C2_SimianMaze_Z3_Resumen_Short_df.csv"
+quick_df = pd.read_csv(file_path)
+file_path = Py_Processing_Dir + "Datos Navegacion resumidos 2025.xlsx"
 
+quick_df.to_excel(file_path, index=False)
+
+#%%
 #------------------------------------------------------------------------
 # Exploratorio, veamos que pasa con las fijaciones antes de ponernos
 # a escribir en serio.
