@@ -2,6 +2,9 @@
 #----------------------------------------------------------------------------------
 # Script para consolidar todos mis datos de EEG para analisis.
 # HF2 deberia haber corrido antes de generar este archivo! y luego EEG04
+# Ok... Es Diciembre de 2025 y es tiempo suficiente. Esto empieza a acabarse HOY.
+# Analiza paso por paso lo que ocurre en este script, y desde ahi termina la sincronización de eventos
+# en tus EEG para POR FIN comenzar a LIMPIAR!!!!!!
 #----------------------------------------------------------------------------------
 #%%
 import HA_ModuloArchivos as H_Mod
